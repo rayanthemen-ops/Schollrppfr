@@ -5,6 +5,7 @@ gui.ResetOnSpawn = false
 local dragging = false
 local dragStart = nil
 local frameStart = nil
+local isMinimized = false
 
 -- MAIN FRAME (Ultra moderne)
 local frame = Instance.new("Frame")
@@ -55,7 +56,7 @@ titleBlack.Font = Enum.Font.GothamBlack
 titleBlack.Position = UDim2.new(0, 2, 0, 2)
 titleBlack.Parent = titleBg
 
--- Texte vert
+-- Texte blanc
 local titleGreen = Instance.new("TextLabel")
 titleGreen.Size = UDim2.new(1, 0, 1, 0)
 titleGreen.BackgroundTransparency = 1
@@ -65,11 +66,29 @@ titleGreen.TextSize = 36
 titleGreen.Font = Enum.Font.GothamBlack
 titleGreen.Parent = titleBg
 
+-- BOUTON MINIMIZE (−)
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Name = "MinimizeBtn"
+minimizeBtn.Size = UDim2.new(0, 50, 0, 50)
+minimizeBtn.Position = UDim2.new(1, -110, 0, 10)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+minimizeBtn.Text = "−"
+minimizeBtn.TextSize = 26
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.BorderSizePixel = 0
+minimizeBtn.ZIndex = 100
+minimizeBtn.Parent = topBar
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 10)
+minCorner.Parent = minimizeBtn
+
 -- BOUTON FERMER (X)
 local closeBtn = Instance.new("TextButton")
 closeBtn.Name = "CloseBtn"
 closeBtn.Size = UDim2.new(0, 50, 0, 50)
-closeBtn.Position = UDim2.new(1, -60, 0, 10)
+closeBtn.Position = UDim2.new(1, -55, 0, 10)
 closeBtn.BackgroundColor3 = Color3.fromRGB(255, 71, 87)
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeBtn.Text = "✕"
@@ -83,7 +102,15 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 10)
 closeCorner.Parent = closeBtn
 
--- Hover effect
+-- Hover effects
+minimizeBtn.MouseEnter:Connect(function()
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 230, 0)
+end)
+
+minimizeBtn.MouseLeave:Connect(function()
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+end)
+
 closeBtn.MouseEnter:Connect(function()
     closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 70)
 end)
@@ -167,9 +194,33 @@ decPage.TextColor3 = Color3.fromRGB(200, 200, 200)
 decPage.TextSize = 18
 decPage.Font = Enum.Font.Gotham
 decPage.TextWrapped = true
-decPage.Text = "⚙️ OPTIONS DÉCOOL\n\n✨ Fonctionnalités:\n\n• 🖱️ Déplace le panel\n• ✕ Ferme le panel\n• − Réduit le panel\n• + Agrandit le panel\n\n💚 Ultra moderne et fluide!"
+decPage.Text = "⚙️ OPTIONS DÉCOOL\n\n✨ Fonctionnalités:\n\n• 🖱️ Déplace le panel\n• − Minimize le panel\n• ✕ Ferme le panel\n\n💚 Ultra moderne et fluide!"
 decPage.Parent = contentFrame
 decPage.Visible = false
+
+-- MINI BUTTON (Quand minimisé)
+local miniBtn = Instance.new("TextButton")
+miniBtn.Name = "MiniBtn"
+miniBtn.Size = UDim2.new(0, 80, 0, 80)
+miniBtn.Position = UDim2.new(0.05, 0, 0.9, -90)
+miniBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+miniBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+miniBtn.Text = "nom sf"
+miniBtn.TextSize = 14
+miniBtn.Font = Enum.Font.GothamBold
+miniBtn.BorderSizePixel = 0
+miniBtn.Visible = false
+miniBtn.ZIndex = 50
+miniBtn.Parent = gui
+
+local miniCorner = Instance.new("UICorner")
+miniCorner.CornerRadius = UDim.new(0, 15)
+miniCorner.Parent = miniBtn
+
+local miniStroke = Instance.new("UIStroke")
+miniStroke.Color = Color3.fromRGB(0, 255, 150)
+miniStroke.Thickness = 2
+miniStroke.Parent = miniBtn
 
 -- NAVIGATION LOGIC
 accBtn.MouseButton1Click:Connect(function()
@@ -186,12 +237,29 @@ decBtn.MouseButton1Click:Connect(function()
     decBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 150)
 end)
 
--- CLOSE BUTTON
-closeBtn.MouseButton1Click:Connect(function()
-    frame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.4, true)
-    wait(0.4)
+-- MINIMIZE BUTTON
+minimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = true
+    frame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
     frame.Visible = false
+    miniBtn.Visible = true
+    print("📦 Panel minimisé")
+end)
+
+-- CLOSE BUTTON (Ferme vraiment)
+closeBtn.MouseButton1Click:Connect(function()
+    frame.Visible = false
+    miniBtn.Visible = false
     print("❌ Panel fermé")
+end)
+
+-- RESTORE BUTTON (Clique sur mini bouton)
+miniBtn.MouseButton1Click:Connect(function()
+    isMinimized = false
+    frame.Visible = true
+    frame:TweenSize(UDim2.new(0, 500, 0, 600), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+    miniBtn.Visible = false
+    print("✅ Panel restauré")
 end)
 
 -- DRAGGING (TopBar)
@@ -219,4 +287,4 @@ UIS.InputEnded:Connect(function(input, gp)
     end
 end)
 
-print("✅✅✅ PANEL ULTRA MODERNE CHARGÉ! ✅✅✅")
+print("✅✅✅ PANEL ULTRA MODERNE AVEC MINIMIZE! ✅✅✅")
