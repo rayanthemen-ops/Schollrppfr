@@ -1,0 +1,281 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+
+local player = Players.LocalPlayer
+
+---------------------------------------------------
+-- GUI
+---------------------------------------------------
+local gui = Instance.new("ScreenGui")
+gui.Name = "SOUSOU_V9"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+---------------------------------------------------
+-- BLUR
+---------------------------------------------------
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = Lighting
+
+local function setBlur(on)
+	TweenService:Create(blur, TweenInfo.new(0.3), {
+		Size = on and 18 or 0
+	}):Play()
+end
+
+---------------------------------------------------
+-- SOUND
+---------------------------------------------------
+local function clickSound()
+	local s = Instance.new("Sound")
+	s.SoundId = "rbxassetid://9118823101"
+	s.Volume = 0.4
+	s.Parent = SoundService
+	s:Play()
+	game:GetService("Debris"):AddItem(s,2)
+end
+
+---------------------------------------------------
+-- THEME SYSTEM
+---------------------------------------------------
+local Theme = {
+	Bg = Color3.fromRGB(15,15,25),
+	Dark = Color3.fromRGB(30,30,45),
+	Accent = Color3.fromRGB(0,170,255)
+}
+
+local function applyTheme(c)
+	Theme = c
+	if frame then
+		frame.BackgroundColor3 = c.Bg
+		topBar.BackgroundColor3 = c.Dark
+		stroke.Color = c.Accent
+	end
+end
+
+---------------------------------------------------
+-- START
+---------------------------------------------------
+local start = Instance.new("Frame")
+start.Size = UDim2.new(0,420,0,260)
+start.Position = UDim2.new(0.5,0,0.5,0)
+start.AnchorPoint = Vector2.new(0.5,0.5)
+start.BackgroundColor3 = Color3.fromRGB(25,25,35)
+start.Parent = gui
+Instance.new("UICorner", start)
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0,200,0,60)
+btn.Position = UDim2.new(0.5,-100,0.5,-30)
+btn.Text = "OPEN UI"
+btn.Parent = start
+Instance.new("UICorner", btn)
+
+---------------------------------------------------
+-- MAIN FRAME
+---------------------------------------------------
+frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,0,0,0)
+frame.Position = UDim2.new(0.5,0,0.5,0)
+frame.AnchorPoint = Vector2.new(0.5,0.5)
+frame.BackgroundColor3 = Theme.Bg
+frame.Visible = false
+frame.Parent = gui
+Instance.new("UICorner", frame)
+
+stroke = Instance.new("UIStroke", frame)
+stroke.Thickness = 2
+stroke.Color = Theme.Accent
+
+---------------------------------------------------
+-- TOPBAR
+---------------------------------------------------
+topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1,0,0,55)
+topBar.BackgroundColor3 = Theme.Dark
+topBar.Parent = frame
+Instance.new("UICorner", topBar)
+
+---------------------------------------------------
+-- CONTENT
+---------------------------------------------------
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,0,1,-55)
+content.Position = UDim2.new(0,0,0,55)
+content.BackgroundTransparency = 1
+content.Parent = frame
+
+local pages = {}
+
+local function page(name,text)
+	local p = Instance.new("Frame")
+	p.Size = UDim2.new(1,0,1,0)
+	p.BackgroundTransparency = 1
+	p.Visible = false
+	p.Parent = content
+
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.new(1,-20,1,-20)
+	t.Position = UDim2.new(0,10,0,10)
+	t.Text = text
+	t.TextWrapped = true
+	t.BackgroundTransparency = 1
+	t.Font = Enum.Font.Gotham
+	t.TextSize = 18
+	t.TextColor3 = Color3.fromRGB(230,230,230)
+	t.Parent = p
+
+	pages[name] = p
+end
+
+page("Home","🏠 HOME")
+page("Themes","🎨 THEMES")
+page("About","ℹ️ ABOUT")
+page("Decolle","🚀 DÉCOLLE")
+page("TP","😎 TP BASE")
+
+local function show(n)
+	for _,v in pairs(pages) do v.Visible = false end
+	if pages[n] then pages[n].Visible = true end
+end
+
+show("Home")
+
+---------------------------------------------------
+-- SIDEBAR
+---------------------------------------------------
+local side = Instance.new("Frame")
+side.Size = UDim2.new(0,150,1,-55)
+side.Position = UDim2.new(0,0,0,55)
+side.BackgroundColor3 = Color3.fromRGB(25,25,40)
+side.Parent = frame
+Instance.new("UICorner", side)
+
+local layout = Instance.new("UIListLayout", side)
+layout.Padding = UDim.new(0,10)
+
+local function tab(name,text)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1,-10,0,40)
+	b.Text = text
+	b.Parent = side
+	Instance.new("UICorner", b)
+
+	b.MouseButton1Click:Connect(function()
+		clickSound()
+		show(name)
+	end)
+end
+
+tab("Home","🏠 Home")
+tab("Themes","🎨 Themes")
+tab("About","ℹ️ About")
+tab("Decolle","🚀 Décolle")
+tab("TP","😎 TP Base")
+
+---------------------------------------------------
+-- THEMES UI (FULL COLOR CHANGER)
+---------------------------------------------------
+local themePage = Instance.new("Frame")
+themePage.Size = UDim2.new(1,0,1,0)
+themePage.BackgroundTransparency = 1
+themePage.Parent = content
+themePage.Visible = false
+pages["Themes"] = themePage
+
+local function themeButton(txt,color,y)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0,240,0,45)
+	b.Position = UDim2.new(0,20,0,y)
+	b.Text = txt
+	b.Parent = themePage
+	Instance.new("UICorner", b)
+
+	b.MouseButton1Click:Connect(function()
+		clickSound()
+
+		applyTheme({
+			Bg = color:Lerp(Color3.fromRGB(10,10,15),0.7),
+			Dark = color:Lerp(Color3.fromRGB(0,0,0),0.4),
+			Accent = color
+		})
+	end)
+end
+
+themeButton("🌊 Ocean",Color3.fromRGB(0,170,255),40)
+themeButton("🟣 Neon",Color3.fromRGB(180,90,255),100)
+themeButton("🔥 Lava",Color3.fromRGB(255,80,80),160)
+themeButton("🟢 Toxic",Color3.fromRGB(0,255,120),220)
+
+---------------------------------------------------
+-- OPEN / CLOSE + SF ANIMATION FIX
+---------------------------------------------------
+local closed = false
+
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(0,40,0,40)
+toggle.Position = UDim2.new(1,-45,0,7)
+toggle.Text = "X"
+toggle.BackgroundColor3 = Color3.fromRGB(200,60,60)
+toggle.Parent = topBar
+Instance.new("UICorner", toggle)
+
+local function openUI()
+	closed = false
+	frame.Visible = true
+	setBlur(true)
+
+	frame.Size = UDim2.new(0,0,0,0)
+
+	TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0,560,0,650)
+	}):Play()
+end
+
+local function closeUI()
+	closed = true
+	setBlur(false)
+
+	local t = TweenService:Create(frame, TweenInfo.new(0.25), {
+		Size = UDim2.new(0,0,0,0)
+	})
+
+	t:Play()
+	t.Completed:Connect(function()
+		frame.Visible = false
+	end)
+
+	toggle.Parent = gui
+	toggle.Size = UDim2.new(0,60,0,60)
+	toggle.Position = UDim2.new(0,20,0,200)
+	toggle.Text = "SF"
+	toggle.BackgroundColor3 = Color3.fromRGB(0,200,120)
+end
+
+toggle.MouseButton1Click:Connect(function()
+	if not closed then
+		closeUI()
+	else
+		toggle.Parent = topBar
+		toggle.Size = UDim2.new(0,40,0,40)
+		toggle.Position = UDim2.new(1,-45,0,7)
+		toggle.Text = "X"
+		toggle.BackgroundColor3 = Color3.fromRGB(200,60,60)
+
+		openUI()
+	end
+end)
+
+---------------------------------------------------
+-- START OPEN
+---------------------------------------------------
+btn.MouseButton1Click:Connect(function()
+	clickSound()
+	start:Destroy()
+	openUI()
+end)
