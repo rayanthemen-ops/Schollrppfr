@@ -1,0 +1,391 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "SF_HUB"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = PlayerGui
+
+--------------------------------------------------
+-- THEME
+--------------------------------------------------
+
+local Theme = {
+	Bg = Color3.fromRGB(15,15,15),
+	Dark = Color3.fromRGB(25,25,25),
+	Accent = Color3.fromRGB(255,140,0)
+}
+
+--------------------------------------------------
+-- BLUR
+--------------------------------------------------
+
+local blur = Lighting:FindFirstChild("SF_Blur")
+
+if not blur then
+	blur = Instance.new("BlurEffect")
+	blur.Name = "SF_Blur"
+	blur.Size = 0
+	blur.Parent = Lighting
+end
+
+local function Blur(state)
+	TweenService:Create(
+		blur,
+		TweenInfo.new(0.25),
+		{Size = state and 18 or 0}
+	):Play()
+end
+
+--------------------------------------------------
+-- OPEN BUTTON
+--------------------------------------------------
+
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(0,60,0,60)
+openBtn.Position = UDim2.new(0,20,0.5,-30)
+openBtn.Text = "SF"
+openBtn.Font = Enum.Font.GothamBlack
+openBtn.TextSize = 24
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.BackgroundColor3 = Theme.Accent
+openBtn.Parent = gui
+
+Instance.new("UICorner", openBtn)
+
+--------------------------------------------------
+-- MAIN FRAME
+--------------------------------------------------
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,650,0,420)
+frame.Position = UDim2.new(0.5,-325,0.5,-210)
+frame.BackgroundColor3 = Theme.Bg
+frame.Visible = false
+frame.Parent = gui
+
+Instance.new("UICorner", frame)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Theme.Accent
+stroke.Thickness = 3
+stroke.Parent = frame
+
+--------------------------------------------------
+-- TOPBAR
+--------------------------------------------------
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1,0,0,50)
+topBar.BackgroundColor3 = Theme.Dark
+topBar.Parent = frame
+
+Instance.new("UICorner", topBar)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,1,0)
+title.BackgroundTransparency = 1
+title.Text = "SF HUB"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = topBar
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0,40,0,40)
+close.Position = UDim2.new(1,-45,0,5)
+close.Text = "X"
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = Color3.fromRGB(180,50,50)
+close.Parent = topBar
+
+Instance.new("UICorner", close)
+
+--------------------------------------------------
+-- SIDEBAR
+--------------------------------------------------
+
+local side = Instance.new("Frame")
+side.Size = UDim2.new(0,160,1,-50)
+side.Position = UDim2.new(0,0,0,50)
+side.BackgroundColor3 = Theme.Dark
+side.Parent = frame
+
+Instance.new("UICorner", side)
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,8)
+layout.Parent = side
+
+--------------------------------------------------
+-- CONTENT
+--------------------------------------------------
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,-160,1,-50)
+content.Position = UDim2.new(0,160,0,50)
+content.BackgroundTransparency = 1
+content.Parent = frame
+
+local Pages = {}
+
+local function CreatePage(name,text)
+
+	local page = Instance.new("Frame")
+	page.Size = UDim2.new(1,0,1,0)
+	page.BackgroundTransparency = 1
+	page.Visible = false
+	page.Parent = content
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,-20,1,-20)
+	label.Position = UDim2.new(0,10,0,10)
+	label.BackgroundTransparency = 1
+	label.TextWrapped = true
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 24
+	label.Text = text
+	label.Parent = page
+
+	Pages[name] = page
+end
+
+--------------------------------------------------
+-- PAGES
+--------------------------------------------------
+
+CreatePage("Home",[[
+🏠 Bienvenue sur SF
+
+🚧 Arrive bientôt...
+
+Merci d'utiliser SF HUB.
+]])
+
+CreatePage("Player",[[
+👤 Joueur
+
+🚧 Arrive bientôt...
+]])
+
+CreatePage("Themes",[[
+🎨 Thèmes
+
+🚧 Arrive bientôt...
+]])
+
+CreatePage("Settings",[[
+⚙️ Paramètres
+
+🚧 Arrive bientôt...
+]])
+
+CreatePage("About",[[
+ℹ️ SF HUB
+
+Version V1
+
+🚧 Arrive bientôt...
+]])
+
+local function ShowPage(name)
+	for _,v in pairs(Pages) do
+		v.Visible = false
+	end
+
+	if Pages[name] then
+		Pages[name].Visible = true
+	end
+end
+
+ShowPage("Home")
+--------------------------------------------------
+-- TABS
+--------------------------------------------------
+
+local function CreateTab(name,text)
+
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1,-10,0,40)
+	b.Text = text
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 16
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	b.Parent = side
+
+	Instance.new("UICorner", b)
+
+	b.MouseEnter:Connect(function()
+		TweenService:Create(
+			b,
+			TweenInfo.new(0.15),
+			{BackgroundColor3 = Theme.Accent}
+		):Play()
+	end)
+
+	b.MouseLeave:Connect(function()
+		TweenService:Create(
+			b,
+			TweenInfo.new(0.15),
+			{BackgroundColor3 = Color3.fromRGB(35,35,35)}
+		):Play()
+	end)
+
+	b.MouseButton1Click:Connect(function()
+		ShowPage(name)
+	end)
+end
+
+CreateTab("Home","🏠 Home")
+CreateTab("Player","👤 Player")
+CreateTab("Themes","🎨 Themes")
+CreateTab("Settings","⚙️ Settings")
+CreateTab("About","ℹ️ About")
+
+--------------------------------------------------
+-- OPEN / CLOSE
+--------------------------------------------------
+
+local opened = false
+
+local function OpenUI()
+
+	opened = true
+	frame.Visible = true
+
+	frame.Size = UDim2.new(0,0,0,0)
+
+	TweenService:Create(
+		frame,
+		TweenInfo.new(
+			0.4,
+			Enum.EasingStyle.Quint,
+			Enum.EasingDirection.Out
+		),
+		{
+			Size = UDim2.new(0,650,0,420)
+		}
+	):Play()
+
+	Blur(true)
+end
+
+local function CloseUI()
+
+	opened = false
+
+	local tween = TweenService:Create(
+		frame,
+		TweenInfo.new(0.2),
+		{
+			Size = UDim2.new(0,0,0,0)
+		}
+	)
+
+	tween:Play()
+
+	tween.Completed:Connect(function()
+		frame.Visible = false
+	end)
+
+	Blur(false)
+end
+
+openBtn.MouseButton1Click:Connect(function()
+
+	if opened then
+		CloseUI()
+	else
+		OpenUI()
+	end
+
+end)
+
+close.MouseButton1Click:Connect(function()
+	CloseUI()
+end)
+
+--------------------------------------------------
+-- DRAG PC + MOBILE
+--------------------------------------------------
+
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+topBar.InputBegan:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+
+		input.Changed:Connect(function()
+
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+
+		end)
+	end
+end)
+
+topBar.InputChanged:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+	or input.UserInputType == Enum.UserInputType.Touch then
+
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+	if input == dragInput and dragging then
+
+		local delta = input.Position - dragStart
+
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+
+	end
+end)
+
+--------------------------------------------------
+-- STARTUP
+--------------------------------------------------
+
+task.wait(0.5)
+
+TweenService:Create(
+	openBtn,
+	TweenInfo.new(
+		1,
+		Enum.EasingStyle.Sine,
+		Enum.EasingDirection.InOut,
+		-1,
+		true
+	),
+	{
+		Rotation = 5
+	}
+):Play()
