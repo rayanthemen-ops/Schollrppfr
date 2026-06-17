@@ -426,48 +426,58 @@ local function buildUI()
 		camSpeed = val
 	end)
 
-	createPlayerToggle("🎥 Bypass Freecam", function(enabled)
-		freecamActive = enabled
-		local root = getRoot()
-		local hum = getHum()
-		
-		if enabled then
-			-- Activation
-			if root then 
-				root.Anchored = true 
-				root.CanCollide = false
-			end
-			if hum then 
-				hum.PlatformStand = true 
-			end
-			
-			camera.CameraType = Enum.CameraType.Scriptable
-			camera.CameraSubject = nil 
-			
-			freecamConn = RunService.RenderStepped:Connect(function(dt)
-				if not freecamActive then return end
-				
-				-- 1. On empêche le jeu de déplacer la caméra (Force la position)
-				camera.CameraType = Enum.CameraType.Scriptable
-				camera.CameraSubject = nil
-				
-				local hum = getHum()
-				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
-				
-				if moveDir.Magnitude > 0 then
-					local look = camera.CFrame.LookVector
-					local right = camera.CFrame.RightVector
-					
-					local move = (right * moveDir.X) + (look * -moveDir.Z)
-					-- 2. On met à jour la position
-					camera.CFrame = camera.CFrame + (move * (camSpeed * 3))
-				end
-                
-				-- 3. AJOUT CRUCIAL : On force la caméra à regarder devant elle
-				-- Sans cette ligne, certains jeux forcent la caméra à regarder le personnage
-				local pos = camera.CFrame.Position
-				camera.CFrame = CFrame.new(pos, pos + camera.CFrame.LookVector)
-			end)
+	-- VARIABLES GLOBALES (À mettre en haut du script)
+local camera = workspace.CurrentCamera
+local freecamActive = false
+local freecamConn = nil
+local camSpeed = 1.5
+
+-- OPTION VITESSE
+createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
+    camSpeed = val
+end)
+
+-- FONCTION DE DÉPLACEMENT (Extérieure pour éviter les conflits)
+local function updateFreecam(dt)
+    if not freecamActive then return end
+    
+    -- On force les paramètres de caméra
+    if camera.CameraType ~= Enum.CameraType.Scriptable then camera.CameraType = Enum.CameraType.Scriptable end
+    if camera.CameraSubject ~= nil then camera.CameraSubject = nil end
+    
+    local hum = getHum()
+    local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
+    
+    if moveDir.Magnitude > 0 then
+        local look = camera.CFrame.LookVector
+        local right = camera.CFrame.RightVector
+        local move = (right * moveDir.X) + (look * -moveDir.Z)
+        camera.CFrame = camera.CFrame + (move * (camSpeed * 3))
+    end
+end
+
+-- TOGGLE
+createPlayerToggle("🎥 Bypass Freecam", function(enabled)
+    freecamActive = enabled
+    local root = getRoot()
+    local hum = getHum()
+    
+    if enabled then
+        if root then root.Anchored = true; root.CanCollide = false end
+        if hum then hum.PlatformStand = true end
+        
+        -- On connecte la fonction ici
+        freecamConn = RunService.RenderStepped:Connect(updateFreecam)
+    else
+        -- On déconnecte proprement
+        if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
+        if root then root.Anchored = false; root.CanCollide = true end
+        if hum then hum.PlatformStand = false end
+        
+        camera.CameraType = Enum.CameraType.Custom
+        camera.CameraSubject = hum
+    end
+end)
 
 
 
