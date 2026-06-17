@@ -419,25 +419,20 @@ local function buildUI()
 	-- FREECAM CONFIG
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
-	local freecamConn
-	local camSpeed = 1.5 -- Tu peux changer cette valeur par défaut
+	local freecamConn = nil
+	local camSpeed = 1.5
 
-	-- Ajout de l'option de vitesse dans le menu (Place ceci avec tes autres createPlayerOption)
 	createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
 		camSpeed = val
 	end)
 
--- 1. Déclare ces variables avant ta fonction (Si ce n'est pas déjà fait)
-local freecamConn = nil
-local camSpeed = 1.5 
-
--- 2. Utilise bien le 'c' minuscule
-createPlayerToggle("🎥 Bypass Freecam", function(enabled)
-    freecamActive = enabled
-    local root = getRoot()
-    local hum = getHum()
-    
+	createPlayerToggle("🎥 Bypass Freecam", function(enabled)
+		freecamActive = enabled
+		local root = getRoot()
+		local hum = getHum()
+		
 		if enabled then
+			-- Activation
 			if root then 
 				root.Anchored = true 
 				root.CanCollide = false
@@ -447,26 +442,38 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 			end
 			
 			camera.CameraType = Enum.CameraType.Scriptable
-			camera.CameraSubject = nil -- C'EST LA LIGNE MAGIQUE POUR DÉBLOQUER LA CAMÉRA
+			camera.CameraSubject = nil 
 			
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
 				
 				local hum = getHum()
-				-- On récupère la direction du joystick
 				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
 				
 				if moveDir.Magnitude > 0 then
 					local look = camera.CFrame.LookVector
 					local right = camera.CFrame.RightVector
 					
-					-- On calcule le mouvement. Le -moveDir.Z permet d'avancer quand le joystick est poussé en haut
+					-- Mouvement
 					local move = (right * moveDir.X) + (look * -moveDir.Z)
-					
-					-- On applique le mouvement
 					camera.CFrame = camera.CFrame + (move * (camSpeed * 3))
 				end
 			end)
+		else
+			-- Désactivation (Le "else" est obligatoire pour tout remettre en ordre)
+			if freecamConn then freecamConn:Disconnect() end
+			if root then 
+				root.Anchored = false 
+				root.CanCollide = true
+			end
+			if hum then 
+				hum.PlatformStand = false 
+			end
+			camera.CameraType = Enum.CameraType.Custom
+			camera.CameraSubject = hum
+		end
+	end)
+
 
 
 	--------------------------------------------------
