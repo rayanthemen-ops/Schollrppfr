@@ -514,6 +514,39 @@ local function buildUI()
 
 	-- Logique intelligente de recherche pour casser le système de colle
 	autoEscapeBtn.MouseButton1Click:Connect(function()
+    local char = Player.Character
+    local root = getRoot(char)
+    local hum = getHum(char)
+    if not root or not hum then return end
+    
+    statusLabel.Text = "🔍 Analyse..."
+    hum.Sit = false
+    
+    -- Technique : On met le personnage dans un état spécifique pour éviter le rollback
+    -- On désactive la détection de vitesse et on réduit la gravité locale si possible
+    local function blinkTeleport(targetPos)
+        -- Au lieu d'un seul TP, on déplace le personnage en plusieurs étapes très rapides
+        -- ou on change la CFrame en étant "inactif" pour le serveur
+        root.Anchored = true
+        task.wait(0.1) -- Petit délai pour laisser le serveur "oublier" l'ancienne position
+        root.CFrame = targetCFrame * CFrame.new(0, 3, 0)
+        task.wait(0.1)
+        root.Anchored = false
+    end
+
+    -- [Ton code existant pour trouver foundTarget...]
+    -- ... (garde ton bloc de recherche ici) ...
+
+    if foundTarget and targetCFrame then
+        statusLabel.Text = "🔓 Déplacement sécurisé..."
+        blinkTeleport(targetCFrame) -- Utilise la fonction blink
+        statusLabel.Text = "✅ Libéré !"
+    else
+        statusLabel.Text = "⚠️ Éjection forcée..."
+        root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
+    end
+end)
+
 
 		statusLabel.Text = "🔍 Analyse des scripts et de la map..."
 		statusLabel.TextColor3 = Theme.Accent
