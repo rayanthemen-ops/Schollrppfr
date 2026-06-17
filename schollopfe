@@ -3,6 +3,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -383,7 +384,7 @@ local function buildUI()
 	local noclipConn
 	createPlayerToggle("👻 Noclip (Murs)", function(enabled)
 		if enabled then
-			noclipConn = game:GetService("RunService").Stepped:Connect(function()
+			noclipConn = RunService.Stepped:Connect(function()
 				if Player.Character then
 					for _, part in pairs(Player.Character:GetDescendants()) do
 						if part:IsA("BasePart") then part.CanCollide = false end
@@ -412,7 +413,7 @@ local function buildUI()
 		end
 	end)
 
-	-- 🎥 FREECAM DIRECTIONNELLE EN FONCTION DU REGARD (JOYYSTICK SEUL)
+	-- 🎥 FREECAM DIRECTIONNELLE EN FONCTION DU REGARD (JOYSTICK SEUL)
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
@@ -425,7 +426,6 @@ local function buildUI()
 			camCFrame = camera.CFrame
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			-- Rotation fluide au glissement de doigt standard
 			local dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
 				if processed then return end
 				local delta = touch.Delta
@@ -433,46 +433,25 @@ local function buildUI()
 				camCFrame = CFrame.new(camCFrame.Position) * rotation
 			end)
 
-			freecamConn = game:GetService("RunService").RenderStepped:Connect(function(dt)
+			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
-				
 				local lSpeed = camSpeed * (dt * 60)
-				
-				-- Récupère la direction exacte demandée via le Joystick de Roblox
 				local moveDirection = Player.Character and getHum() and getHum().MoveDirection
 				
 				if moveDirection and moveDirection.Magnitude > 0 then
-					-- Convertit l'inclinaison de ton regard (3D complète) dans l'espace de la caméra
 					local lookVector = camera.CFrame.LookVector
 					local rightVector = camera.CFrame.RightVector
-					
-					-- Calcule le déplacement basé sur l'inclinaison de la caméra (regarder en haut = monter)
-					-- Le Joystick gère le déplacement relatif à l'écran
 					local localMove = (lookVector * -moveDirection.Z) + (rightVector * moveDirection.X)
-					if localMove.Magnitude > 0 then
-						localMove = localMove.Unit * lSpeed
-					end
-					
+					if localMove.Magnitude > 0 then localMove = localMove.Unit * lSpeed end
 					camCFrame = camCFrame + localMove
 				else
-					-- Support clavier classique en secours (ZQSD)
 					local keyboardMove = Vector3.new(0, 0, 0)
-					if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then
-						keyboardMove = keyboardMove + Vector3.new(0, 0, -lSpeed)
-					end
-					if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-						keyboardMove = keyboardMove + Vector3.new(0, 0, lSpeed)
-					end
-					if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-						keyboardMove = keyboardMove + Vector3.new(-lSpeed, 0, 0)
-					end
-					if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-						keyboardMove = keyboardMove + Vector3.new(lSpeed, 0, 0)
-					end
+					if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then keyboardMove = keyboardMove + Vector3.new(0, 0, -lSpeed) end
+					if UserInputService:IsKeyDown(Enum.KeyCode.S) then keyboardMove = keyboardMove + Vector3.new(0, 0, lSpeed) end
+					if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then keyboardMove = keyboardMove + Vector3.new(-lSpeed, 0, 0) end
+					if UserInputService:IsKeyDown(Enum.KeyCode.D) then keyboardMove = keyboardMove + Vector3.new(lSpeed, 0, 0) end
 					camCFrame = camCFrame * CFrame.new(keyboardMove)
 				end
-				
-				-- Bloque la rotation pour éviter que la caméra ne pivote bizarrement sur elle-même
 				camera.CFrame = camCFrame
 			end)
 		else
@@ -499,7 +478,7 @@ local function buildUI()
 	end)
 
 	--------------------------------------------------
-	-- CONFIGURATION DE L'ONGLET VISUALS (ESP)
+	-- 👁️ SYSTEME D'ESP INTELLIGENT (PSEUDO, DISTANCE, ROLES)
 	--------------------------------------------------
 	local vLayout = Instance.new("UIListLayout")
 	vLayout.Padding = UDim.new(0, 10)
@@ -522,24 +501,102 @@ local function buildUI()
 	espCorner.Parent = espBtn
 
 	local espEnabled = false
+	local espConnections = {}
 
-	local function addHighlight(character)
-		if not character or character:FindFirstChild("SF_ESP") then return end
-		local hl = Instance.new("Highlight")
-		hl.Name = "SF_ESP"
-		hl.FillColor = Color3.fromRGB(255, 60, 100) 
-		hl.FillTransparency = 0.5
-		hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-		hl.OutlineTransparency = 0
-		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		hl.Parent = character
+	-- Fonction de détection avancée des rôles (MM2, Flicker, Kat, Équipes...)
+	local function detectRole(targetPlayer)
+		local roleName = "Innocent"
+		local roleColor = Color3.fromRGB(0, 255, 120) -- Vert par défaut
+
+		-- 🔪 Détection specifique pour Murder Mystery 2 (MM2)
+		if targetPlayer.Backpack:FindFirstChild("Knife") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Knife")) then
+			return "MUCK / MURDERER", Color3.fromRGB(255, 30, 60) -- Rouge criminel
+		elseif targetPlayer.Backpack:FindFirstChild("Gun") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Gun")) then
+			return "SHERIFF", Color3.fromRGB(0, 140, 255) -- Bleu justice
+		end
+
+		-- Détection par équipe Roblox standard
+		if targetPlayer.Team then
+			roleName = targetPlayer.Team.Name
+			roleColor = targetPlayer.TeamColor.Color
+		end
+
+		return roleName, roleColor
 	end
 
-	local function removeHighlight(character)
-		if character then
-			local hl = character:FindFirstChild("SF_ESP")
-			if hl then hl:Destroy() end
+	local function cleanESP(character)
+		if not character then return end
+		local oldTag = character:FindFirstChild("SF_ESP_Tag")
+		if oldTag then oldTag:Destroy() end
+		local oldHl = character:FindFirstChild("SF_ESP_Hl")
+		if oldHl then oldHl:Destroy() end
+	end
+
+	local function createESP(targetPlayer)
+		if targetPlayer == Player then return end
+
+		local function setupCharacterESP(character)
+			task.wait(0.5)
+			cleanESP(character)
+			if not espEnabled then return end
+
+			local head = character:WaitForChild("Head", 5)
+			local root = character:WaitForChild("HumanoidRootPart", 5)
+			if not head or not root then return end
+
+			-- 🔴 Création de la Box de surbrillance (Highlight)
+			local hl = Instance.new("Highlight")
+			hl.Name = "SF_ESP_Hl"
+			hl.FillTransparency = 0.6
+			hl.OutlineTransparency = 0.1
+			hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			hl.Parent = character
+
+			-- 📝 Création du tag d'informations au dessus du joueur
+			local bgui = Instance.new("BillboardGui")
+			bgui.Name = "SF_ESP_Tag"
+			bgui.Size = UDim2.new(0, 200, 0, 60)
+			bgui.AlwaysOnTop = true
+			bgui.ExtentsOffset = Vector3.new(0, 3, 0)
+			bgui.Parent = character
+
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, 0, 1, 0)
+			label.BackgroundTransparency = 1
+			label.Font = Enum.Font.GothamBold
+			label.TextSize = 13
+			label.TextStrokeTransparency = 0.2
+			label.TextStrokeColor3 = Color3.new(0,0,0)
+			label.Parent = bgui
+
+			-- 🔄 Boucle d'actualisation de la distance et des rôles
+			local connection
+			connection = RunService.RenderStepped:Connect(function()
+				if not espEnabled or not character.Parent or not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
+					connection:Disconnect()
+					cleanESP(character)
+					return
+				end
+
+				local myRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+				if myRoot and root then
+					local distance = math.floor((myRoot.Position - root.Position).Magnitude)
+					local role, rColor = detectRole(targetPlayer)
+
+					-- Mise à jour visuelle globale
+					hl.FillColor = rColor
+					hl.OutlineColor = rColor
+					label.TextColor3 = rColor
+					
+					-- Format du texte complet
+					label.Text = string.format("👤 %s\n🏷️ Rôle: %s\n📍 [%d m]", targetPlayer.Name, role, distance)
+				end
+			end)
 		end
+
+		if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
+		local charConn = targetPlayer.CharacterAdded:Connect(setupCharacterESP)
+		table.insert(espConnections, charConn)
 	end
 
 	espBtn.MouseButton1Click:Connect(function()
@@ -548,29 +605,21 @@ local function buildUI()
 		espBtn.BackgroundColor3 = espEnabled and Theme.Green or Color3.fromRGB(26, 29, 38)
 
 		if espEnabled then
-			for _, p in pairs(Players:GetPlayers()) do
-				if p ~= Player and p.Character then addHighlight(p.Character) end
-			end
+			for _, p in pairs(Players:GetPlayers()) do createESP(p) end
 		else
-			for _, p in pairs(Players:GetPlayers()) do removeHighlight(p.Character) end
+			-- Désactivation complète et nettoyage immédiat
+			for _, conn in pairs(espConnections) do conn:Disconnect() end
+			espConnections = {}
+			for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
 		end
 	end)
 
-	local function managePlayerESP(p)
-		if p == Player then return end
-		p.CharacterAdded:Connect(function(char)
-			if espEnabled then
-				task.wait(0.5)
-				addHighlight(char)
-			end
-		end)
-	end
-
-	Players.PlayerAdded:Connect(managePlayerESP)
-	for _, p in pairs(Players:GetPlayers()) do managePlayerESP(p) end
+	Players.PlayerAdded:Connect(function(p)
+		if espEnabled then createESP(p) end
+	end)
 
 	--------------------------------------------------
-	-- CONFIGURATION DES SETTINGS
+	-- CONFIGURATION DES SETTINGS / THEMES
 	--------------------------------------------------
 	local toggle = Instance.new("TextButton")
 	toggle.Size = UDim2.new(0,140,0,34)
@@ -591,9 +640,6 @@ local function buildUI()
 		saveConfig() 
 	end)
 
-	--------------------------------------------------
-	-- CONFIGURATION DES THEMES
-	--------------------------------------------------
 	local tLayout = Instance.new("UIListLayout")
 	tLayout.Padding = UDim.new(0, 8)
 	tLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -613,7 +659,6 @@ local function buildUI()
 		local bCorner = Instance.new("UICorner")
 		bCorner.CornerRadius = UDim.new(0, 6)
 		bCorner.Parent = b
-
 		b.MouseButton1Click:Connect(function() applyTheme(color) end)
 	end
 
@@ -624,7 +669,7 @@ local function buildUI()
 	addThemeBtn(Color3.fromRGB(255, 170, 0))   
 
 	--------------------------------------------------
-	-- CRÉATION DES ONGLETS (TABS)
+	-- ONGLETS DE NAVIGATION
 	--------------------------------------------------
 	local function createTab(name, text)
 		local b = Instance.new("TextButton")
@@ -638,7 +683,6 @@ local function buildUI()
 		local bCorner = Instance.new("UICorner")
 		bCorner.CornerRadius = UDim.new(0, 6)
 		bCorner.Parent = b
-
 		b.MouseButton1Click:Connect(function() show(name) end)
 		Buttons[name] = b
 	end
@@ -653,7 +697,7 @@ local function buildUI()
 	show("Home")
 
 	--------------------------------------------------
-	-- LOGIQUE OUVERTURE / FERMETURE
+	-- GESTION INTERFACE (OUVERTURE/FERMETURE)
 	--------------------------------------------------
 	local opened = false
 
@@ -662,40 +706,28 @@ local function buildUI()
 		opened = true
 		frame.Visible = true
 		frame.Size = UDim2.new(0,0,0,0)
-
 		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			Size = UDim2.new(0,500,0,320)
 		}):Play()
-
 		blurToggle(true)
 	end
 
 	local function closeUI()
 		if not opened then return end
 		opened = false
-
-		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			Size = UDim2.new(0,0,0,0)
-		})
+		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
 		t:Play()
-		t.Completed:Connect(function()
-			if not opened then frame.Visible = false end
-		end)
-
+		t.Completed:Connect(function() if not opened then frame.Visible = false end end)
 		blurToggle(false)
 	end
 
-	openBtn.MouseButton1Click:Connect(function()
-		if opened then closeUI() else open() end
-	end)
-
+	openBtn.MouseButton1Click:Connect(function() if opened then closeUI() else open() end end)
 	close.MouseButton1Click:Connect(closeUI)
-	
 	open()
 end
 
 --------------------------------------------------
--- 🔐 SYSTEME DE CLÉ AVEC SAUVEGARDE AUTOMATIQUE
+-- 🔐 VERIFICATION DE SECURITE / LE SYSTEME DE CLE
 --------------------------------------------------
 local function makeKeyUI()
 	local VALID_KEY = "SFAR"
@@ -767,9 +799,7 @@ local function makeKeyUI()
 
 	btn.MouseButton1Click:Connect(function()
 		if box.Text == VALID_KEY then
-			if writefile then
-				writefile(KEY_FILE, VALID_KEY)
-			end
+			if writefile then writefile(KEY_FILE, VALID_KEY) end
 			frame:Destroy()
 			buildUI()
 		else
