@@ -7,30 +7,33 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
--- GUI
+-- GUI ROOT
 --------------------------------------------------
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "SF_HUB"
+gui.Name = "SF_HUB_V2"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- THEME SYSTEM (IMPORTANT)
+-- STATE (MEMORY LOCAL)
+--------------------------------------------------
+
+local state = {
+	currentPage = "Home",
+	accent = Color3.fromRGB(0,170,255)
+}
+
+--------------------------------------------------
+-- THEME SYSTEM
 --------------------------------------------------
 
 local Theme = {
 	Bg = Color3.fromRGB(10,10,18),
 	Dark = Color3.fromRGB(18,18,30),
-	Accent = Color3.fromRGB(0,170,255)
+	Accent = state.accent
 }
-
-local function ApplyTheme(color)
-	Theme.Accent = color
-	if stroke then stroke.Color = color end
-	openBtn.BackgroundColor3 = color
-end
 
 --------------------------------------------------
 -- BLUR
@@ -41,40 +44,25 @@ blur.Name = "SF_Blur"
 blur.Parent = Lighting
 blur.Size = 0
 
-local function Blur(state)
+local function Blur(stateOn)
 	TweenService:Create(blur, TweenInfo.new(0.25), {
-		Size = state and 18 or 0
+		Size = stateOn and 18 or 0
 	}):Play()
 end
 
 --------------------------------------------------
--- OPEN BUTTON
---------------------------------------------------
-
-local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0,50,0,50)
-openBtn.Position = UDim2.new(0,20,0.5,-25)
-openBtn.Text = "SF"
-openBtn.Font = Enum.Font.GothamBlack
-openBtn.TextSize = 20
-openBtn.TextColor3 = Color3.new(1,1,1)
-openBtn.BackgroundColor3 = Theme.Accent
-openBtn.Parent = gui
-Instance.new("UICorner", openBtn)
-
---------------------------------------------------
--- MAIN FRAME
+-- UI MAIN
 --------------------------------------------------
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,600,0,380)
-frame.Position = UDim2.new(0.5,-300,0.5,-190)
+frame.Size = UDim2.new(0,620,0,400)
+frame.Position = UDim2.new(0.5,-310,0.5,-200)
 frame.BackgroundColor3 = Theme.Bg
 frame.Visible = false
 frame.Parent = gui
 Instance.new("UICorner", frame)
 
-stroke = Instance.new("UIStroke")
+local stroke = Instance.new("UIStroke")
 stroke.Color = Theme.Accent
 stroke.Thickness = 2
 stroke.Parent = frame
@@ -91,7 +79,7 @@ topBar.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,1,0)
 title.BackgroundTransparency = 1
-title.Text = "SF HUB"
+title.Text = "SF HUB V2"
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.TextColor3 = Color3.new(1,1,1)
@@ -101,8 +89,8 @@ local close = Instance.new("TextButton")
 close.Size = UDim2.new(0,30,0,30)
 close.Position = UDim2.new(1,-35,0,5)
 close.Text = "X"
-close.TextColor3 = Color3.new(1,1,1)
 close.BackgroundColor3 = Color3.fromRGB(180,50,50)
+close.TextColor3 = Color3.new(1,1,1)
 close.Parent = topBar
 Instance.new("UICorner", close)
 
@@ -123,13 +111,12 @@ content.BackgroundTransparency = 1
 content.Parent = frame
 
 --------------------------------------------------
--- PAGES
+-- PAGES SYSTEM
 --------------------------------------------------
 
 local Pages = {}
-local currentPage = "Home"
 
-local function CreatePage(name,text)
+local function CreatePage(name, text)
 	local page = Instance.new("Frame")
 	page.Size = UDim2.new(1,0,1,0)
 	page.BackgroundTransparency = 1
@@ -154,43 +141,50 @@ end
 -- PAGES CONTENT
 --------------------------------------------------
 
-CreatePage("Home","🏠 Bienvenue sur SF HUB")
-CreatePage("Player","👤 Player\n\n🚧 Arrive bientôt")
-CreatePage("Themes","🎨 Themes\n\n🔵 Bleu\n🌸 Rose\n🟢 Vert")
-CreatePage("Settings","⚙️ Settings\n\n🚧 Arrive bientôt")
-CreatePage("About","ℹ️ About\nV1 SF HUB")
+CreatePage("Home","🏠 Bienvenue sur SF HUB V2")
+CreatePage("Player","👤 Player Tools\n\n🚧 bientôt : speed / jump / fly")
+CreatePage("Themes","🎨 Themes\nClique pour changer la couleur")
+CreatePage("Settings","⚙️ Settings\n🚧 bientôt")
+CreatePage("About","ℹ️ SF HUB V2")
 
-CreatePage("School","🏫 School\n🚧 Arrive bientôt")
-CreatePage("TP","⚡ TP\n🚧 Arrive bientôt")
-CreatePage("StaffBase","🛡️ Staff Base\n🚧 Arrive bientôt")
-CreatePage("Boutique","🛒 Boutique\n🚧 Arrive bientôt")
+CreatePage("School","🏫 School\n🚧 arrive bientôt")
+CreatePage("TP","⚡ TP\n🚧 arrive bientôt")
+CreatePage("Staff","🛡️ Staff Base\n🚧 arrive bientôt")
+CreatePage("Shop","🛒 Boutique\n🚧 arrive bientôt")
 
 --------------------------------------------------
--- SHOW PAGE FIX + MEMORY
+-- PAGE TRANSITION (SMOOTH FIX)
 --------------------------------------------------
 
 local function ShowPage(name)
+	local page = Pages[name]
+	if not page then return end
+
 	for _,v in pairs(Pages) do
 		v.Visible = false
+		v.BackgroundTransparency = 1
 	end
 
-	currentPage = name
+	page.Visible = true
+	page.BackgroundTransparency = 1
 
-	if Pages[name] then
-		Pages[name].Visible = true
-	end
+	TweenService:Create(page, TweenInfo.new(0.25), {
+		BackgroundTransparency = 0
+	}):Play()
+
+	state.currentPage = name
 end
 
 --------------------------------------------------
--- TABS (FIX SIZE + NAMES CLEAN)
+-- TABS (CLEAN + SMALL)
 --------------------------------------------------
 
-local function CreateTab(name,text)
+local function CreateTab(name, text)
 	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(1,-8,0,32) -- ✔ plus petit
+	b.Size = UDim2.new(1,-8,0,30)
 	b.Text = text
 	b.Font = Enum.Font.GothamBold
-	b.TextSize = 14
+	b.TextSize = 13
 	b.TextColor3 = Color3.new(1,1,1)
 	b.BackgroundColor3 = Color3.fromRGB(35,35,35)
 	b.Parent = side
@@ -202,7 +196,7 @@ local function CreateTab(name,text)
 end
 
 --------------------------------------------------
--- TABS CLEAN
+-- TABS
 --------------------------------------------------
 
 CreateTab("Home","🏠 Home")
@@ -213,16 +207,14 @@ CreateTab("About","ℹ️ About")
 
 CreateTab("School","🏫 School")
 CreateTab("TP","⚡ TP")
-CreateTab("StaffBase","🛡️ Staff")
-CreateTab("Boutique","🛒 Shop")
+CreateTab("Staff","🛡️ Staff")
+CreateTab("Shop","🛒 Shop")
 
 --------------------------------------------------
--- THEME BUTTONS (CLICABLE COLORS)
+-- THEME BUTTONS (LIVE CHANGE)
 --------------------------------------------------
 
-task.wait(0.1)
-
-local function MakeThemeButton(name,color)
+local function MakeTheme(name, color)
 	local b = Instance.new("TextButton")
 	b.Size = UDim2.new(1,-10,0,30)
 	b.Text = name
@@ -232,16 +224,34 @@ local function MakeThemeButton(name,color)
 	Instance.new("UICorner", b)
 
 	b.MouseButton1Click:Connect(function()
-		ApplyTheme(color)
+		state.accent = color
+		Theme.Accent = color
+		stroke.Color = color
+		openBtn.BackgroundColor3 = color
 	end)
 end
 
-MakeThemeButton("Bleu", Color3.fromRGB(0,170,255))
-MakeThemeButton("Rose", Color3.fromRGB(255,0,150))
-MakeThemeButton("Vert", Color3.fromRGB(0,255,120))
+--------------------------------------------------
+-- OPEN BUTTON
+--------------------------------------------------
+
+openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(0,50,0,50)
+openBtn.Position = UDim2.new(0,20,0.5,-25)
+openBtn.Text = "SF"
+openBtn.Font = Enum.Font.GothamBlack
+openBtn.TextSize = 20
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.BackgroundColor3 = Theme.Accent
+openBtn.Parent = gui
+Instance.new("UICorner", openBtn)
+
+MakeTheme("Bleu", Color3.fromRGB(0,170,255))
+MakeTheme("Rose", Color3.fromRGB(255,0,150))
+MakeTheme("Vert", Color3.fromRGB(0,255,120))
 
 --------------------------------------------------
--- OPEN / CLOSE + MEMORY FIX
+-- OPEN / CLOSE (MEMORY FIX)
 --------------------------------------------------
 
 local opened = false
@@ -252,13 +262,11 @@ local function OpenUI()
 	frame.Size = UDim2.new(0,0,0,0)
 
 	TweenService:Create(frame,TweenInfo.new(0.3),{
-		Size = UDim2.new(0,600,0,380)
+		Size = UDim2.new(0,620,0,400)
 	}):Play()
 
 	Blur(true)
-
-	-- ✔ revient sur la dernière page
-	ShowPage(currentPage)
+	ShowPage(state.currentPage)
 end
 
 local function CloseUI()
