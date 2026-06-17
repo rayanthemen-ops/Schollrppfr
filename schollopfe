@@ -524,6 +524,7 @@ local function buildUI()
 		hum.Sit = false
 		root.Velocity = Vector3.new(0, 0, 0)
 
+		-- Activation du Noclip
 		local escapeNoclip = RunService.Stepped:Connect(function()
 			if char then
 				for _, part in pairs(char:GetDescendants()) do
@@ -532,6 +533,7 @@ local function buildUI()
 			end
 		end)
 
+		-- Recherche de cible
 		local foundTarget = false
 		local targetCFrame = nil
 		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
@@ -550,6 +552,7 @@ local function buildUI()
 			if foundTarget then break end
 		end
 
+		-- Exécution du déplacement par étapes
 		if foundTarget and targetCFrame then
 			statusLabel.Text = "🔓 Bypass par étapes..."
 			root.Anchored = true
@@ -566,53 +569,12 @@ local function buildUI()
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
+
 		task.wait(2)
 		escapeNoclip:Disconnect()
 		statusLabel.Text = "Statut : En attente d'activation..."
 		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 	end)
-
-		local foundTarget = false
-		local targetCFrame = nil
-		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
-
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if obj:IsA("BasePart") or obj:IsA("Model") then
-				local nameLower = string.lower(obj.Name)
-				for _, keyword in pairs(keywords) do
-					if string.find(nameLower, keyword) then
-						foundTarget = true
-						targetCFrame = obj:IsA("BasePart") and obj.CFrame or (obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame)
-						break
-					end
-				end
-			end
-			if foundTarget then break end
-		end
-		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Tentative de Bypass physique..."
-			
-			-- 1. On détruit temporairement la vélocité
-			root.Velocity = Vector3.new(0, 0, 0)
-			root.RotVelocity = Vector3.new(0, 0, 0)
-			
-			-- 2. On utilise une méthode de changement de CFrame par petits pas (le "Small Stepping")
-			-- Cela évite le déclenchement de l'anti-cheat par saut de distance trop grand
-			local startPos = root.Position
-			local endPos = targetCFrame.Position
-			local steps = 10 -- Nombre de petits sauts
-			
-			for i = 1, steps do
-				root.CFrame = CFrame.new(startPos:Lerp(endPos, i/steps))
-				task.wait(0.05) -- Très court délai
-			end
-			
-			statusLabel.TextColor3 = Theme.Green
-			statusLabel.Text = "✅ Déplacement en petits pas !"
-		else
-			statusLabel.Text = "⚠️ Éjection forcée..."
-			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
-		end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
