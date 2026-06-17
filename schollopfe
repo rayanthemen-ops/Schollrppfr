@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService") -- Requis pour le traitement du JSON
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -25,34 +26,59 @@ gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- 🎨 PALETTE DE COULEURS NÉON / MODERN V6
+-- 🎨 PALETTE DE COULEURS & CONFIG STATE
 --------------------------------------------------
 local Theme = {
-	Bg = Color3.fromRGB(11, 12, 16),      
+	Bg = Color3.fromRGB(11, 12, 16),       
 	Panel = Color3.fromRGB(18, 19, 26),    
 	Stroke = Color3.fromRGB(35, 38, 50),   
 	Text = Color3.fromRGB(240, 243, 250),  
-	Accent = Color3.fromRGB(0, 180, 255),  
-	Green = Color3.fromRGB(0, 220, 140),
-	TabUnselected = Color3.fromRGB(26, 29, 38)
+	Accent = Color3.fromRGB(0, 180, 255), -- Couleur par défaut (Bleu) 
+	Green = Color3.fromRGB(0, 220, 140)    
 }
 
-local UI = {
-	Pages = {},
-	Buttons = {},
-	CurrentTab = nil
-}
+local UI = {}
+local toggleState = false -- État global pour le toggle des paramètres
+local CONFIG_FILE = "sf_config.json"
 
--- Amélioration : Le changement de thème met aussi à jour l'onglet actif instantanément
+-- Sauvegarde globale du Thème et des Paramètres
+local function saveConfig()
+	if writefile then
+		local data = {
+			ThemeColor = {Theme.Accent.R, Theme.Accent.G, Theme.Accent.B},
+			Toggle = toggleState
+		}
+		writefile(CONFIG_FILE, HttpService:JSONEncode(data))
+	end
+end
+
+-- Chargement global du Thème et des Paramètres
+local function loadConfig()
+	if isfile and readfile and isfile(CONFIG_FILE) then
+		local success, decoded = pcall(function()
+			return HttpService:JSONDecode(readfile(CONFIG_FILE))
+		end)
+		if success and decoded then
+			if decoded.ThemeColor then
+				Theme.Accent = Color3.new(decoded.ThemeColor[1], decoded.ThemeColor[2], decoded.ThemeColor[3])
+			end
+			if decoded.Toggle ~= nil then
+				toggleState = decoded.Toggle
+			end
+		end
+	end
+end
+
+-- Charger la configuration avant de construire l'UI
+loadConfig()
+
 local function applyTheme(color)
 	Theme.Accent = color
-	if UI.openBtn then UI.openBtn.BackgroundColor3 = color end
-	if UI.stroke then
+	if UI.openBtn and UI.stroke then
+		UI.openBtn.BackgroundColor3 = color
 		TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play()
 	end
-	if UI.CurrentTab and UI.Buttons[UI.CurrentTab] then
-		UI.Buttons[UI.CurrentTab].BackgroundColor3 = color
-	end
+	saveConfig() -- Sauvegarde dès qu'on change de couleur
 end
 
 --------------------------------------------------
@@ -70,7 +96,7 @@ local function blurToggle(state)
 end
 
 --------------------------------------------------
--- SYSTEME DE DRAG REACTION RAPIDE
+-- SYSTEME DE DRAG (GLISSER-DÉPOSER)
 --------------------------------------------------
 local function makeDraggable(dragFrame, moveFrame)
 	local dragging, dragInput, dragStart, startPos
@@ -98,23 +124,10 @@ local function makeDraggable(dragFrame, moveFrame)
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput and dragging then
 			local delta = input.Position - dragStart
-			-- Easing style OutQuad pour un rendu réactif mais smooth
-			TweenService:Create(moveFrame, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			TweenService:Create(moveFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 			}):Play()
 		end
-	end)
-end
-
--- Fonction utilitaire pour ajouter un effet Hover élégant
-local function addHoverEffect(button, defaultColor, hoverColor)
-	button.MouseEnter:Connect(function()
-		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
-	end)
-	button.MouseLeave:Connect(function()
-		-- Ne pas reset la couleur si c'est l'onglet actuellement sélectionné
-		if UI.Buttons[UI.CurrentTab] == button then return end
-		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = defaultColor}):Play()
 	end)
 end
 
@@ -159,7 +172,6 @@ local function buildUI()
 	btnCorner.Parent = openBtn
 
 	UI.openBtn = openBtn
-	addHoverEffect(openBtn, Theme.Accent, Theme.Accent:Lerp(Color3.new(1,1,1), 0.2))
 
 	--------------------------------------------------
 	-- TOPBAR
@@ -187,7 +199,6 @@ local function buildUI()
 	local closeCorner = Instance.new("UICorner")
 	closeCorner.CornerRadius = UDim.new(0, 6)
 	closeCorner.Parent = close
-	addHoverEffect(close, Color3.fromRGB(240, 70, 80), Color3.fromRGB(255, 100, 110))
 
 	--------------------------------------------------
 	-- SIDEBAR
@@ -212,7 +223,7 @@ local function buildUI()
 	sPadding.Parent = side
 
 	--------------------------------------------------
-	-- CONTENT CONTAINER (ScrollingFrame conseillé si tu ajoutes du contenu)
+	-- CONTENT CONTAINER
 	--------------------------------------------------
 	local content = Instance.new("Frame")
 	content.Size = UDim2.new(1,-130,1,-42)
@@ -220,25 +231,29 @@ local function buildUI()
 	content.BackgroundTransparency = 1
 	content.Parent = frame
 
+	local Pages = {}
+	local Buttons = {}
+	local Current = nil
+
 	local function createPage(name)
 		local p = Instance.new("Frame")
 		p.Size = UDim2.new(1,0,1,0)
 		p.BackgroundTransparency = 1
 		p.Visible = false
 		p.Parent = content
-		UI.Pages[name] = p
+		Pages[name] = p
 		return p
 	end
 
 	local function show(name)
-		if UI.CurrentTab == name then return end
-		UI.CurrentTab = name
+		if Current == name then return end
+		Current = name
 
-		for _,p in pairs(UI.Pages) do p.Visible = false end
-		if UI.Pages[name] then UI.Pages[name].Visible = true end
+		for _,p in pairs(Pages) do p.Visible = false end
+		if Pages[name] then Pages[name].Visible = true end
 
-		for _,b in pairs(UI.Buttons) do b.BackgroundColor3 = Theme.TabUnselected end
-		if UI.Buttons[name] then UI.Buttons[name].BackgroundColor3 = Theme.Accent end
+		for _,b in pairs(Buttons) do b.BackgroundColor3 = Color3.fromRGB(26, 29, 38) end
+		if Buttons[name] then Buttons[name].BackgroundColor3 = Theme.Accent end
 	end
 
 	--------------------------------------------------
@@ -264,8 +279,8 @@ local function buildUI()
 		l.Parent = page
 	end
 
-	addSimpleText(homePage, "🌌 Bienvenue dans SF HUB V6\n\nSélectionne un onglet pour commencer.\n\n⌨️ Raccourci : F4 pour ouvrir/fermer.")
-	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nDesign moderne optimisé.\nSauvegarde de clé active.")
+	addSimpleText(homePage, "🌌 Bienvenue dans SF HUB V6\n\nVos préférences et votre thème favori sont désormais sauvegardés automatiquement.")
+	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nSauvegarde Cloud/Locale active (JSON).\nOptimisé pour l'exécution fluide.")
 
 	--------------------------------------------------
 	-- CONFIGURATION DE L'ONGLET PLAYER
@@ -302,7 +317,7 @@ local function buildUI()
 		local input = Instance.new("TextBox")
 		input.Size = UDim2.new(0.35, 0, 0.8, 0)
 		input.Position = UDim2.new(0.65, 0, 0.1, 0)
-		input.BackgroundColor3 = Theme.TabUnselected
+		input.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 		input.Text = tostring(default)
 		input.TextColor3 = Theme.Text
 		input.Font = Enum.Font.Gotham
@@ -320,3 +335,312 @@ local function buildUI()
 	createPlayerOption("Vitesse (WalkSpeed)", 16, function(val)
 		local hum = getHum()
 		if hum then hum.WalkSpeed = val end
+	end)
+
+	createPlayerOption("Saut (JumpPower)", 50, function(val)
+		local hum = getHum()
+		if hum then 
+			hum.UseJumpPower = true
+			hum.JumpPower = val 
+		end
+	end)
+
+	local resetBtn = Instance.new("TextButton")
+	resetBtn.Size = UDim2.new(0.9, 0, 0, 34)
+	resetBtn.Text = "💀 Réinitialiser le Personnage"
+	resetBtn.BackgroundColor3 = Color3.fromRGB(240, 70, 80)
+	resetBtn.TextColor3 = Color3.new(1,1,1)
+	resetBtn.Font = Enum.Font.GothamBold
+	resetBtn.TextSize = 13
+	resetBtn.Parent = playerPage
+	local resetCorner = Instance.new("UICorner")
+	resetCorner.Parent = resetBtn
+
+	resetBtn.MouseButton1Click:Connect(function()
+		if Player.Character then Player.Character:BreakJoints() end
+	end)
+
+	--------------------------------------------------
+	-- CONFIGURATION DE L'ONGLET VISUALS (ESP)
+	--------------------------------------------------
+	local vLayout = Instance.new("UIListLayout")
+	vLayout.Padding = UDim.new(0, 10)
+	vLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	vLayout.Parent = visualsPage
+
+	local vPadding = Instance.new("UIPadding")
+	vPadding.PaddingTop = UDim.new(0, 12)
+	vPadding.Parent = visualsPage
+
+	local espBtn = Instance.new("TextButton")
+	espBtn.Size = UDim2.new(0.9, 0, 0, 36)
+	espBtn.Text = "Player ESP: OFF"
+	espBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+	espBtn.TextColor3 = Theme.Text
+	espBtn.Font = Enum.Font.GothamBold
+	espBtn.TextSize = 13
+	espBtn.Parent = visualsPage
+	local espCorner = Instance.new("UICorner")
+	espCorner.Parent = espBtn
+
+	local espEnabled = false
+
+	local function addHighlight(character)
+		if not character or character:FindFirstChild("SF_ESP") then return end
+		local hl = Instance.new("Highlight")
+		hl.Name = "SF_ESP"
+		hl.FillColor = Color3.fromRGB(255, 60, 100) 
+		hl.FillTransparency = 0.5
+		hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+		hl.OutlineTransparency = 0
+		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		hl.Parent = character
+	end
+
+	local function removeHighlight(character)
+		if character then
+			local hl = character:FindFirstChild("SF_ESP")
+			if hl then hl:Destroy() end
+		end
+	end
+
+	espBtn.MouseButton1Click:Connect(function()
+		espEnabled = not espEnabled
+		espBtn.Text = espEnabled and "Player ESP: ON" or "Player ESP: OFF"
+		espBtn.BackgroundColor3 = espEnabled and Theme.Green or Color3.fromRGB(26, 29, 38)
+
+		if espEnabled then
+			for _, p in pairs(Players:GetPlayers()) do
+				if p ~= Player and p.Character then addHighlight(p.Character) end
+			end
+		else
+			for _, p in pairs(Players:GetPlayers()) do removeHighlight(p.Character) end
+		end
+	end)
+
+	local function managePlayerESP(p)
+		if p == Player then return end
+		p.CharacterAdded:Connect(function(char)
+			if espEnabled then
+				task.wait(0.5)
+				addHighlight(char)
+			end
+		end)
+	end
+
+	Players.PlayerAdded:Connect(managePlayerESP)
+	for _, p in pairs(Players:GetPlayers()) do managePlayerESP(p) end
+
+	--------------------------------------------------
+	-- CONFIGURATION DES SETTINGS (Avec état chargé)
+	--------------------------------------------------
+	local toggle = Instance.new("TextButton")
+	toggle.Size = UDim2.new(0,140,0,34)
+	toggle.Position = UDim2.new(0.5,-70,0,25)
+	toggle.Text = toggleState and "Toggle: ON" or "Toggle: OFF"
+	toggle.BackgroundColor3 = toggleState and Theme.Green or Color3.fromRGB(26, 29, 38)
+	toggle.TextColor3 = Theme.Text
+	toggle.Font = Enum.Font.GothamMedium
+	toggle.TextSize = 13
+	toggle.Parent = settingsPage
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.Parent = toggle
+
+	toggle.MouseButton1Click:Connect(function()
+		toggleState = not toggleState
+		toggle.Text = toggleState and "Toggle: ON" or "Toggle: OFF"
+		toggle.BackgroundColor3 = toggleState and Theme.Green or Color3.fromRGB(26, 29, 38)
+		saveConfig() -- Sauvegarde immédiate du changement de valeur
+	end)
+
+	--------------------------------------------------
+	-- CONFIGURATION DES THEMES
+	--------------------------------------------------
+	local tLayout = Instance.new("UIListLayout")
+	tLayout.Padding = UDim.new(0, 8)
+	tLayout.FillDirection = Enum.FillDirection.Horizontal
+	tLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	tLayout.Parent = themesPage
+
+	local tPadding = Instance.new("UIPadding")
+	tPadding.PaddingTop = UDim.new(0, 30)
+	tPadding.Parent = themesPage
+
+	local function addThemeBtn(color)
+		local b = Instance.new("TextButton")
+		b.Size = UDim2.new(0,60,0,34)
+		b.BackgroundColor3 = color
+		b.Text = ""
+		b.Parent = themesPage
+		local bCorner = Instance.new("UICorner")
+		bCorner.CornerRadius = UDim.new(0, 6)
+		bCorner.Parent = b
+
+		b.MouseButton1Click:Connect(function() applyTheme(color) end)
+	end
+
+	addThemeBtn(Color3.fromRGB(0, 180, 255))   
+	addThemeBtn(Color3.fromRGB(180, 70, 255))  
+	addThemeBtn(Color3.fromRGB(255, 85, 130))  
+	addThemeBtn(Color3.fromRGB(0, 220, 140))   
+	addThemeBtn(Color3.fromRGB(255, 170, 0))   
+
+	--------------------------------------------------
+	-- CRÉATION DES ONGLETS (TABS)
+	--------------------------------------------------
+	local function createTab(name, text)
+		local b = Instance.new("TextButton")
+		b.Size = UDim2.new(1,-12,0,34)
+		b.Text = text
+		b.Font = Enum.Font.GothamMedium
+		b.TextSize = 13
+		b.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+		b.TextColor3 = Theme.Text
+		b.Parent = side
+		local bCorner = Instance.new("UICorner")
+		bCorner.CornerRadius = UDim.new(0, 6)
+		bCorner.Parent = b
+
+		b.MouseButton1Click:Connect(function() show(name) end)
+		Buttons[name] = b
+	end
+
+	createTab("Home","🏠 Home")
+	createTab("Player","👤 Player")
+	createTab("Visuals", "👁️ Visuals")
+	createTab("Themes","🎨 Themes")
+	createTab("Settings","⚙️ Settings")
+	createTab("About","ℹ️ About")
+
+	show("Home")
+
+	--------------------------------------------------
+	-- LOGIQUE OUVERTURE / FERMETURE
+	--------------------------------------------------
+	local opened = false
+
+	local function open()
+		if opened then return end
+		opened = true
+		frame.Visible = true
+		frame.Size = UDim2.new(0,0,0,0)
+
+		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0,500,0,320)
+		}):Play()
+
+		blurToggle(true)
+	end
+
+	local function closeUI()
+		if not opened then return end
+		opened = false
+
+		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size = UDim2.new(0,0,0,0)
+		})
+		t:Play()
+		t.Completed:Connect(function()
+			if not opened then frame.Visible = false end
+		end)
+
+		blurToggle(false)
+	end
+
+	openBtn.MouseButton1Click:Connect(function()
+		if opened then closeUI() else open() end
+	end)
+
+	close.MouseButton1Click:Connect(closeUI)
+end
+
+--------------------------------------------------
+-- 🔐 SYSTEME DE CLÉ AVEC SAUVEGARDE AUTOMATIQUE
+--------------------------------------------------
+local function makeKeyUI()
+	local VALID_KEY = "SFAR"
+	local KEY_FILE = "sf_key.txt"
+
+	if isfile and readfile and isfile(KEY_FILE) then
+		if readfile(KEY_FILE) == VALID_KEY then
+			buildUI() 
+			return
+		end
+	end
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0,320,0,190)
+	frame.Position = UDim2.new(0.5,-160,0.5,-95)
+	frame.BackgroundColor3 = Theme.Bg
+	frame.Parent = gui
+	local frameCorner = Instance.new("UICorner")
+	frameCorner.Parent = frame
+	
+	local keyStroke = Instance.new("UIStroke")
+	keyStroke.Color = Theme.Accent
+	keyStroke.Thickness = 1.5
+	keyStroke.Parent = frame
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1,0,0,40)
+	title.BackgroundTransparency = 1
+	title.Text = "🔐 ACCÈS REQUIS"
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 16
+	title.TextColor3 = Theme.Text
+	title.Parent = frame
+
+	local box = Instance.new("TextBox")
+	box.Size = UDim2.new(0.9,0,0,40)
+	box.Position = UDim2.new(0.05,0,0.4,0)
+	box.PlaceholderText = "Entrez la clé..."
+	box.Text = ""
+	box.Font = Enum.Font.Gotham
+	box.TextSize = 14
+	box.TextColor3 = Color3.new(1,1,1)
+	box.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+	box.Parent = frame
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.Parent = box
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9,0,0,35)
+	btn.Position = UDim2.new(0.05,0,0.7,0)
+	btn.Text = "DEVERROUILLER"
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.TextColor3 = Theme.Bg
+	btn.BackgroundColor3 = Theme.Accent
+	btn.Parent = frame
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.Parent = btn
+
+	local errorLabel = Instance.new("TextLabel")
+	errorLabel.Size = UDim2.new(1,0,0,20)
+	errorLabel.Position = UDim2.new(0,0,1,-20)
+	errorLabel.BackgroundTransparency = 1
+	errorLabel.Text = ""
+	errorLabel.TextColor3 = Color3.fromRGB(240,70,80)
+	errorLabel.Font = Enum.Font.Gotham
+	errorLabel.TextSize = 13
+	errorLabel.Parent = frame
+
+	btn.MouseButton1Click:Connect(function()
+		if box.Text == VALID_KEY then
+			if writefile then
+				writefile(KEY_FILE, VALID_KEY)
+			end
+			frame:Destroy()
+			buildUI()
+		else
+			errorLabel.Text = "Clé incorrecte"
+			task.wait(1)
+			errorLabel.Text = ""
+		end
+	end)
+end
+
+--------------------------------------------------
+-- LANCEMENT
+--------------------------------------------------
+makeKeyUI()
