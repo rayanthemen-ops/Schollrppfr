@@ -439,10 +439,11 @@ local function buildUI()
 				root.CanCollide = false
 			end
 			if hum then 
-				hum.PlatformStand = true -- Empêche le jeu de forcer ton mouvement
+				hum.PlatformStand = true 
 			end
 			
-			camera.CameraType = Enum.CameraType.
+			-- Correction : Scriptable est bien écrit ici
+			camera.CameraType = Enum.CameraType.Scriptable
 
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
@@ -451,21 +452,29 @@ local function buildUI()
 				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
 				
 				if moveDir.Magnitude > 0 then
-					-- On récupère les axes de la caméra
 					local look = camera.CFrame.LookVector
 					local right = camera.CFrame.RightVector
 					
-					-- CALCUL IMPORTANT : 
-					-- On projette le regard sur le sol (plan horizontal) pour avancer à plat
-					-- Si tu veux pouvoir monter/descendre, on utilise le LookVector complet
+					-- Mouvement 3D : remplace look par Vector3.new(look.X, 0, look.Z).Unit pour voler à plat
 					local move = (right * moveDir.X) + (look * moveDir.Z)
-					
-					-- Si tu veux toujours voler à plat (sans monter/descendre automatiquement), 
-					-- remplace 'look' par 'Vector3.new(look.X, 0, look.Z).Unit'
-					
 					camera.CFrame = camera.CFrame + (move * (camSpeed * 2))
 				end
 			end)
+		else
+			-- ON RÉACTIVE TOUT
+			if freecamConn then freecamConn:Disconnect() end
+			if root then 
+				root.Anchored = false 
+				root.CanCollide = true
+			end
+			if hum then 
+				hum.PlatformStand = false 
+			end
+			camera.CameraType = Enum.CameraType.Custom
+			if hum then camera.CameraSubject = hum end
+		end
+	end)
+
 
 	--------------------------------------------------
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
