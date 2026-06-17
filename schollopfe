@@ -17,13 +17,15 @@ gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- THEME
+-- THEME (UPGRADED)
 --------------------------------------------------
 
 local Theme = {
-	Bg = Color3.fromRGB(15,15,15),
-	Dark = Color3.fromRGB(25,25,25),
-	Accent = Color3.fromRGB(255,140,0)
+	Bg = Color3.fromRGB(10, 10, 18),
+	Dark = Color3.fromRGB(18, 18, 30),
+	Accent = Color3.fromRGB(0, 170, 255),
+	Accent2 = Color3.fromRGB(255, 0, 150),
+	Accent3 = Color3.fromRGB(120, 255, 120)
 }
 
 --------------------------------------------------
@@ -40,11 +42,9 @@ if not blur then
 end
 
 local function Blur(state)
-	TweenService:Create(
-		blur,
-		TweenInfo.new(0.25),
-		{Size = state and 18 or 0}
-	):Play()
+	TweenService:Create(blur, TweenInfo.new(0.25), {
+		Size = state and 18 or 0
+	}):Play()
 end
 
 --------------------------------------------------
@@ -140,7 +140,6 @@ content.Parent = frame
 local Pages = {}
 
 local function CreatePage(name,text)
-
 	local page = Instance.new("Frame")
 	page.Size = UDim2.new(1,0,1,0)
 	page.BackgroundTransparency = 1
@@ -162,60 +161,36 @@ local function CreatePage(name,text)
 end
 
 --------------------------------------------------
--- PAGES
+-- PAGES (UPDATED)
 --------------------------------------------------
 
-CreatePage("Home",[[
-🏠 Bienvenue sur SF
+CreatePage("Home","🏠 Bienvenue sur SF HUB\n\n🚧 Arrive bientôt...")
+CreatePage("Player","👤 Joueur\n\n🚧 Arrive bientôt...")
+CreatePage("Themes","🎨 Themes\n\n🔵 Neon Blue\n🌸 Neon Pink\n🟢 Soft Green\n🌌 Dark Purple")
+CreatePage("Settings","⚙️ Paramètres\n\n🚧 Arrive bientôt...")
+CreatePage("About","ℹ️ SF HUB\nVersion V1")
 
-🚧 Arrive bientôt...
-
-Merci d'utiliser SF HUB.
-]])
-
-CreatePage("Player",[[
-👤 Joueur
-
-🚧 Arrive bientôt...
-]])
-
-CreatePage("Themes",[[
-🎨 Thèmes
-
-🚧 Arrive bientôt...
-]])
-
-CreatePage("Settings",[[
-⚙️ Paramètres
-
-🚧 Arrive bientôt...
-]])
-
-CreatePage("About",[[
-ℹ️ SF HUB
-
-Version V1
-
-🚧 Arrive bientôt...
-]])
+-- NEW PAGES
+CreatePage("School","🏫 School\n\n🚧 Outils école à venir...")
+CreatePage("TP","⚡ TP\n\n🚧 Téléportations à venir...")
+CreatePage("StaffBase","🛡️ Base Staff\n\n🚧 Tools staff à venir...")
 
 local function ShowPage(name)
 	for _,v in pairs(Pages) do
 		v.Visible = false
 	end
-
 	if Pages[name] then
 		Pages[name].Visible = true
 	end
 end
 
 ShowPage("Home")
+
 --------------------------------------------------
 -- TABS
 --------------------------------------------------
 
 local function CreateTab(name,text)
-
 	local b = Instance.new("TextButton")
 	b.Size = UDim2.new(1,-10,0,40)
 	b.Text = text
@@ -228,19 +203,15 @@ local function CreateTab(name,text)
 	Instance.new("UICorner", b)
 
 	b.MouseEnter:Connect(function()
-		TweenService:Create(
-			b,
-			TweenInfo.new(0.15),
-			{BackgroundColor3 = Theme.Accent}
-		):Play()
+		TweenService:Create(b,TweenInfo.new(0.15),{
+			BackgroundColor3 = Theme.Accent
+		}):Play()
 	end)
 
 	b.MouseLeave:Connect(function()
-		TweenService:Create(
-			b,
-			TweenInfo.new(0.15),
-			{BackgroundColor3 = Color3.fromRGB(35,35,35)}
-		):Play()
+		TweenService:Create(b,TweenInfo.new(0.15),{
+			BackgroundColor3 = Color3.fromRGB(35,35,35)
+		}):Play()
 	end)
 
 	b.MouseButton1Click:Connect(function()
@@ -248,11 +219,20 @@ local function CreateTab(name,text)
 	end)
 end
 
+--------------------------------------------------
+-- TABS (ALL)
+--------------------------------------------------
+
 CreateTab("Home","🏠 Home")
 CreateTab("Player","👤 Player")
 CreateTab("Themes","🎨 Themes")
 CreateTab("Settings","⚙️ Settings")
 CreateTab("About","ℹ️ About")
+
+-- NEW TABS
+CreateTab("School","🏫 School")
+CreateTab("TP","⚡ TP")
+CreateTab("StaffBase","🛡️ Staff Base")
 
 --------------------------------------------------
 -- OPEN / CLOSE
@@ -261,42 +241,26 @@ CreateTab("About","ℹ️ About")
 local opened = false
 
 local function OpenUI()
-
 	opened = true
 	frame.Visible = true
-
 	frame.Size = UDim2.new(0,0,0,0)
 
-	TweenService:Create(
-		frame,
-		TweenInfo.new(
-			0.4,
-			Enum.EasingStyle.Quint,
-			Enum.EasingDirection.Out
-		),
-		{
-			Size = UDim2.new(0,650,0,420)
-		}
-	):Play()
+	TweenService:Create(frame,TweenInfo.new(0.4),{
+		Size = UDim2.new(0,650,0,420)
+	}):Play()
 
 	Blur(true)
 end
 
 local function CloseUI()
-
 	opened = false
 
-	local tween = TweenService:Create(
-		frame,
-		TweenInfo.new(0.2),
-		{
-			Size = UDim2.new(0,0,0,0)
-		}
-	)
+	local t = TweenService:Create(frame,TweenInfo.new(0.2),{
+		Size = UDim2.new(0,0,0,0)
+	})
 
-	tween:Play()
-
-	tween.Completed:Connect(function()
+	t:Play()
+	t.Completed:Connect(function()
 		frame.Visible = false
 	end)
 
@@ -304,69 +268,34 @@ local function CloseUI()
 end
 
 openBtn.MouseButton1Click:Connect(function()
-
-	if opened then
-		CloseUI()
-	else
-		OpenUI()
-	end
-
+	if opened then CloseUI() else OpenUI() end
 end)
 
-close.MouseButton1Click:Connect(function()
-	CloseUI()
-end)
+close.MouseButton1Click:Connect(CloseUI)
 
 --------------------------------------------------
--- DRAG PC + MOBILE
+-- DRAG
 --------------------------------------------------
 
-local dragging = false
-local dragInput
-local dragStart
-local startPos
+local dragging, dragStart, startPos
 
 topBar.InputBegan:Connect(function(input)
-
-	if input.UserInputType == Enum.UserInputType.MouseButton1
-	or input.UserInputType == Enum.UserInputType.Touch then
-
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
 		dragStart = input.Position
 		startPos = frame.Position
-
-		input.Changed:Connect(function()
-
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-
-		end)
-	end
-end)
-
-topBar.InputChanged:Connect(function(input)
-
-	if input.UserInputType == Enum.UserInputType.MouseMovement
-	or input.UserInputType == Enum.UserInputType.Touch then
-
-		dragInput = input
 	end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-
-	if input == dragInput and dragging then
-
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 		local delta = input.Position - dragStart
-
 		frame.Position = UDim2.new(
 			startPos.X.Scale,
 			startPos.X.Offset + delta.X,
 			startPos.Y.Scale,
 			startPos.Y.Offset + delta.Y
 		)
-
 	end
 end)
 
@@ -376,16 +305,6 @@ end)
 
 task.wait(0.5)
 
-TweenService:Create(
-	openBtn,
-	TweenInfo.new(
-		1,
-		Enum.EasingStyle.Sine,
-		Enum.EasingDirection.InOut,
-		-1,
-		true
-	),
-	{
-		Rotation = 5
-	}
-):Play()
+TweenService:Create(openBtn,TweenInfo.new(1,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{
+	Rotation = 5
+}):Play()
