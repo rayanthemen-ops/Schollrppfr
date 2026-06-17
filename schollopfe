@@ -1,0 +1,262 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--------------------------------------------------
+-- ❌ DELETE OLD GUI (IMPORTANT FIX BUG)
+--------------------------------------------------
+
+for _,v in pairs(PlayerGui:GetChildren()) do
+	if v:IsA("ScreenGui") and v.Name:find("SF_HUB") then
+		v:Destroy()
+	end
+end
+
+--------------------------------------------------
+-- GUI ROOT
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "SF_HUB_CLEAN"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = PlayerGui
+
+--------------------------------------------------
+-- THEME
+--------------------------------------------------
+
+local Theme = {
+	Bg = Color3.fromRGB(12,12,18),
+	Dark = Color3.fromRGB(20,20,30),
+	Accent = Color3.fromRGB(0,170,255)
+}
+
+--------------------------------------------------
+-- BLUR
+--------------------------------------------------
+
+local blur = Lighting:FindFirstChild("SF_Blur") or Instance.new("BlurEffect")
+blur.Name = "SF_Blur"
+blur.Parent = Lighting
+blur.Size = 0
+
+local function Blur(state)
+	TweenService:Create(blur, TweenInfo.new(0.2), {
+		Size = state and 12 or 0
+	}):Play()
+end
+
+--------------------------------------------------
+-- 📱 PANEL (VRAIMENT PETIT)
+--------------------------------------------------
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,360,0,220) -- ✔ ULTRA PETIT FIX
+frame.Position = UDim2.new(0.5,-180,0.5,-110)
+frame.BackgroundColor3 = Theme.Bg
+frame.Visible = false
+frame.Parent = gui
+Instance.new("UICorner", frame)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Theme.Accent
+stroke.Thickness = 2
+stroke.Parent = frame
+
+--------------------------------------------------
+-- TOPBAR
+--------------------------------------------------
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1,0,0,28)
+topBar.BackgroundColor3 = Theme.Dark
+topBar.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,1,0)
+title.BackgroundTransparency = 1
+title.Text = "SF HUB"
+title.TextSize = 12
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = topBar
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0,20,0,20)
+close.Position = UDim2.new(1,-24,0,4)
+close.Text = "X"
+close.TextSize = 10
+close.BackgroundColor3 = Color3.fromRGB(200,50,50)
+close.TextColor3 = Color3.new(1,1,1)
+close.Parent = topBar
+Instance.new("UICorner", close)
+
+--------------------------------------------------
+-- SIDEBAR (STACK 100% FIX)
+--------------------------------------------------
+
+local side = Instance.new("Frame")
+side.Size = UDim2.new(0,95,1,-28)
+side.Position = UDim2.new(0,0,0,28)
+side.BackgroundColor3 = Theme.Dark
+side.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,2)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = side
+
+--------------------------------------------------
+-- CONTENT
+--------------------------------------------------
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,-95,1,-28)
+content.Position = UDim2.new(0,95,0,28)
+content.BackgroundTransparency = 1
+content.Parent = frame
+
+--------------------------------------------------
+-- PAGES
+--------------------------------------------------
+
+local Pages = {}
+local currentPage = "Home"
+
+local function CreatePage(name,text)
+	local page = Instance.new("Frame")
+	page.Size = UDim2.new(1,0,1,0)
+	page.BackgroundTransparency = 1
+	page.Visible = false
+	page.Parent = content
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,-6,1,-6)
+	label.Position = UDim2.new(0,3,0,3)
+	label.BackgroundTransparency = 1
+	label.TextWrapped = true
+	label.TextSize = 12
+	label.Font = Enum.Font.Gotham
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Text = text
+	label.Parent = page
+
+	Pages[name] = page
+end
+
+--------------------------------------------------
+-- PAGES CONTENT
+--------------------------------------------------
+
+CreatePage("Home","🏠 Accueil")
+CreatePage("Player","👤 Player\n🚧 bientôt")
+CreatePage("Themes","🎨 Themes")
+CreatePage("Shop","🛒 Boutique\n🚧 bientôt")
+CreatePage("TP","⚡ TP\n🚧 bientôt")
+CreatePage("School","🏫 School\n🚧 bientôt")
+CreatePage("Staff","🛡️ Staff\n🚧 bientôt")
+CreatePage("Settings","⚙️ Settings\n🚧 bientôt")
+
+--------------------------------------------------
+-- SHOW PAGE (FIX CLEAN)
+--------------------------------------------------
+
+local function ShowPage(name)
+	for _,v in pairs(Pages) do
+		v.Visible = false
+	end
+
+	currentPage = name
+	if Pages[name] then
+		Pages[name].Visible = true
+	end
+end
+
+--------------------------------------------------
+-- TABS (STACK GUARANTI + ORDER FIX)
+--------------------------------------------------
+
+local function CreateTab(name,text,order)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1,-4,0,22) -- ✔ très petit mobile
+	b.Text = text
+	b.TextSize = 10
+	b.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	b.TextColor3 = Color3.new(1,1,1)
+	b.LayoutOrder = order
+	b.Parent = side
+	Instance.new("UICorner", b)
+
+	b.MouseButton1Click:Connect(function()
+		ShowPage(name)
+	end)
+end
+
+--------------------------------------------------
+-- ORDRE FIXÉ (IMPORTANT)
+--------------------------------------------------
+
+CreateTab("Home","🏠 Home",1)
+CreateTab("Player","👤 Player",2)
+CreateTab("Themes","🎨 Themes",3)
+CreateTab("Shop","🛒 Shop",4)
+CreateTab("TP","⚡ TP",5)
+CreateTab("School","🏫 School",6)
+CreateTab("Staff","🛡️ Staff",7)
+CreateTab("Settings","⚙️ Settings",8)
+
+--------------------------------------------------
+-- OPEN BUTTON
+--------------------------------------------------
+
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(0,40,0,40)
+openBtn.Position = UDim2.new(0,10,0.5,-20)
+openBtn.Text = "SF"
+openBtn.TextSize = 14
+openBtn.BackgroundColor3 = Theme.Accent
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.Parent = gui
+Instance.new("UICorner", openBtn)
+
+--------------------------------------------------
+-- OPEN / CLOSE
+--------------------------------------------------
+
+local opened = false
+
+local function OpenUI()
+	opened = true
+	frame.Visible = true
+	frame.Size = UDim2.new(0,0,0,0)
+
+	TweenService:Create(frame,TweenInfo.new(0.2),{
+		Size = UDim2.new(0,360,0,220)
+	}):Play()
+
+	Blur(true)
+	ShowPage(currentPage)
+end
+
+local function CloseUI()
+	opened = false
+	frame.Visible = false
+	Blur(false)
+end
+
+openBtn.MouseButton1Click:Connect(function()
+	if opened then CloseUI() else OpenUI() end
+end)
+
+close.MouseButton1Click:Connect(CloseUI)
+
+--------------------------------------------------
+-- START
+--------------------------------------------------
+
+ShowPage("Home")
