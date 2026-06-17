@@ -447,6 +447,10 @@ local function buildUI()
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
 				
+				-- 1. On empêche le jeu de déplacer la caméra (Force la position)
+				camera.CameraType = Enum.CameraType.Scriptable
+				camera.CameraSubject = nil
+				
 				local hum = getHum()
 				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
 				
@@ -454,25 +458,16 @@ local function buildUI()
 					local look = camera.CFrame.LookVector
 					local right = camera.CFrame.RightVector
 					
-					-- Mouvement
 					local move = (right * moveDir.X) + (look * -moveDir.Z)
+					-- 2. On met à jour la position
 					camera.CFrame = camera.CFrame + (move * (camSpeed * 3))
 				end
+                
+				-- 3. AJOUT CRUCIAL : On force la caméra à regarder devant elle
+				-- Sans cette ligne, certains jeux forcent la caméra à regarder le personnage
+				local pos = camera.CFrame.Position
+				camera.CFrame = CFrame.new(pos, pos + camera.CFrame.LookVector)
 			end)
-		else
-			-- Désactivation (Le "else" est obligatoire pour tout remettre en ordre)
-			if freecamConn then freecamConn:Disconnect() end
-			if root then 
-				root.Anchored = false 
-				root.CanCollide = true
-			end
-			if hum then 
-				hum.PlatformStand = false 
-			end
-			camera.CameraType = Enum.CameraType.Custom
-			camera.CameraSubject = hum
-		end
-	end)
 
 
 
