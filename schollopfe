@@ -549,28 +549,35 @@ local function buildUI()
 		end
 
 		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Bypass fluide en cours..."
-			root.Anchored = true
-			local tween = TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = targetCFrame * CFrame.new(0, 3, 0)})
-			tween:Play()
-			tween.Completed:Wait()
-			root.Anchored = false
+			statusLabel.Text = "🔓 Déplacement rapide en cours..."
+			
+			-- On augmente temporairement la vitesse de marche
+			local oldSpeed = hum.WalkSpeed
+			hum.WalkSpeed = 100 
+			
+			-- On demande au personnage de marcher vers la cible
+			hum:MoveTo(targetCFrame.Position)
+			
+			-- On attend que le déplacement soit terminé (ou timeout de 2 secondes)
+			local reached = false
+			local conn
+			conn = hum.MoveToFinished:Connect(function(success)
+				reached = true
+				conn:Disconnect()
+			end)
+			
+			task.wait(2) -- Sécurité pour ne pas bloquer si le chemin est obstrué
+			if not reached then conn:Disconnect() end
+			
+			-- On remet la vitesse normale
+			hum.WalkSpeed = oldSpeed
+			
 			statusLabel.TextColor3 = Theme.Green
-			statusLabel.Text = "✅ Libéré !"
+			statusLabel.Text = "✅ Arrivé !"
 		else
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
-
-		task.wait(1)
-		escapeNoclip:Disconnect()
-		task.wait(2)
-		statusLabel.Text = "Statut : En attente d'activation..."
-		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	end)
-
-	-- Logique intelligente de recherche pour casser le système de colle
-	-- Logique intelligente de recherche pour casser le système de colle
 
 
 	--------------------------------------------------
