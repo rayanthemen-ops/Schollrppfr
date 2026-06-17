@@ -559,11 +559,8 @@ local function buildUI()
 			-- On détache la RootPart du moteur physique
 			root.Anchored = true
 			
-			-- On change la position en une seule fois, mais on trompe le serveur
-			-- en changeant la propriété du HumanoidRootPart directement
+			-- On change la position en une seule fois
 			local targetPos = targetCFrame.Position + Vector3.new(0, 3, 0)
-			
-			-- La technique ici est de forcer la position tout en simulant un "respawn" de position
 			root.CFrame = CFrame.new(targetPos)
 			
 			-- On attend un court instant avant de désancrer
@@ -573,14 +570,12 @@ local function buildUI()
 			statusLabel.TextColor3 = Theme.Green
 			statusLabel.Text = "✅ Position forcée !"
 		else
+			-- Ce "else" est le seul qui doit exister ici
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
-		else
-			statusLabel.Text = "⚠️ Éjection forcée..."
-			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
-		end
-	end) -- <--- C'est ici que vous ajoutez cette ligne de fermeture
+	end) -- Cette ligne ferme enfin la fonction du bouton
+
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
