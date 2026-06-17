@@ -260,7 +260,7 @@ function buildUI()
 	--------------------------------------------------
 	-- PAGES RESTORED
 	--------------------------------------------------
-	createPage("Home","🏠 Home\nWelcome to SF HUB V6")
+	createPage("Home","🏠 bienvenu dans SF")
 	createPage("Player","👤 Player options")
 	createPage("Themes","🎨 Theme selector")
 	createPage("Settings","⚙️ Settings panel")
