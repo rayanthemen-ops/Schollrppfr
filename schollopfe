@@ -358,6 +358,7 @@ local function buildUI()
 		end)
 	end
 
+	-- 🏃 OPTIONS STANDARDS
 	createPlayerOption("⚡ Vitesse (WalkSpeed)", 16, function(val)
 		local hum = getHum()
 		if hum then hum.WalkSpeed = val end
@@ -368,6 +369,51 @@ local function buildUI()
 		if hum then 
 			hum.UseJumpPower = true
 			hum.JumpPower = val 
+		end
+	end)
+
+	-- 🚨 BOUTON MAGIQUE : ANTI-COLLE / EVASION D'URGENCE 🚨
+	local escapeBtn = Instance.new("TextButton")
+	escapeBtn.Size = UDim2.new(0.95, 0, 0, 32)
+	escapeBtn.Text = "🏃 ÉVASI0N URGENCE (Anti-Colle)"
+	escapeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+	escapeBtn.TextColor3 = Color3.new(1, 1, 1)
+	escapeBtn.Font = Enum.Font.GothamBold
+	escapeBtn.TextSize = 13
+	escapeBtn.Parent = playerPage
+	local escCorner = Instance.new("UICorner")
+	escCorner.Parent = escapeBtn
+
+	escapeBtn.MouseButton1Click:Connect(function()
+		local char = Player.Character
+		local hum = getHum(char)
+		local root = getRoot(char)
+
+		if hum and root then
+			-- 1. On force le personnage à se lever si la chaise le bloque
+			hum.Sit = false
+			task.wait(0.05)
+			
+			-- 2. On brise les forces physiques du jeu qui essaient de nous clouer au sol
+			root.Velocity = Vector3.new(0, 0, 0)
+			root.RotVelocity = Vector3.new(0, 0, 0)
+
+			-- 3. Mode Fantôme temporaire pour passer à travers le plafond/murs de la classe
+			local noclipLoop = RunService.Stepped:Connect(function()
+				if char then
+					for _, part in pairs(char:GetDescendants()) do
+						if part:IsA("BasePart") then part.CanCollide = false end
+					end
+				end
+			end)
+
+			-- 4. Éjection vers le haut (50 blocs d'altitude pour sortir du bâtiment)
+			root.CFrame = root.CFrame * CFrame.new(0, 50, 0)
+
+			-- 5. On coupe le noclip après 2.5 secondes une fois qu'on est en sécurité sur le toit ou dehors
+			task.delay(2.5, function()
+				if noclipLoop then noclipLoop:Disconnect() end
+			end)
 		end
 	end)
 
@@ -491,7 +537,6 @@ local function buildUI()
 	visualsPage_Padding.PaddingTop = UDim.new(0, 12)
 	visualsPage_Padding.Parent = visualsPage
 
-	-- Bouton 1 : ESP normal pour tout le monde
 	local espBtn = Instance.new("TextButton")
 	espBtn.Size = UDim2.new(0.9, 0, 0, 36)
 	espBtn.Text = "👤 Player ESP: OFF"
@@ -503,7 +548,6 @@ local function buildUI()
 	local espCorner = Instance.new("UICorner")
 	espCorner.Parent = espBtn
 
-	-- Bouton 2 : ESP Exclusif Staff / Service Client
 	local staffEspBtn = Instance.new("TextButton")
 	staffEspBtn.Size = UDim2.new(0.9, 0, 0, 36)
 	staffEspBtn.Text = "🛡️ Staff ESP Only: OFF"
@@ -519,21 +563,15 @@ local function buildUI()
 	local staffEspEnabled = false
 	local espConnections = {}
 
-	-- Fonction de détection globale du staff en jeu (School RP, etc.)
 	local function checkIsStaff(targetPlayer)
-		-- 1. Scan par rapport à l'équipe (Team)
 		if targetPlayer.Team then
 			local tName = string.lower(targetPlayer.Team.Name)
 			if string.find(tName, "staff") or string.find(tName, "admin") or string.find(tName, "mod") or string.find(tName, "gérant") or string.find(tName, "créateur") or string.find(tName, "support") then
 				return true, targetPlayer.Team.Name
 			end
 		end
-
-		-- 2. Scan du groupe de développement du jeu (Service Client / Rangs internes)
 		if game.CreatorId and game.CreatorType == Enum.CreatorType.Group then
-			local success, role = pcall(function()
-				return targetPlayer:GetRoleInGroup(game.CreatorId)
-			end)
+			local success, role = pcall(function() return targetPlayer:GetRoleInGroup(game.CreatorId) end)
 			if success and role then
 				local rName = string.lower(role)
 				if string.find(rName, "staff") or string.find(rName, "admin") or string.find(rName, "mod") or string.find(rName, "gérant") or string.find(rName, "créateur") or string.find(rName, "dev") or string.find(rName, "helper") then
@@ -541,36 +579,28 @@ local function buildUI()
 				end
 			end
 		end
-
-		-- 3. Scan des outils possédés (Outils de modération dans le backpack ou le perso)
 		local items = {}
 		if targetPlayer:FindFirstChild("Backpack") then
 			for _, tool in pairs(targetPlayer.Backpack:GetChildren()) do table.insert(items, string.lower(tool.Name)) end
 		end
 		if targetPlayer.Character then
-			for _, tool in pairs(targetPlayer.Character:GetChildren()) do
-				if tool:IsA("Tool") then table.insert(items, string.lower(tool.Name)) end
-			end
+			for _, tool in pairs(targetPlayer.Character:GetChildren()) do if tool:IsA("Tool") then table.insert(items, string.lower(tool.Name)) end end
 		end
 		for _, itemName in pairs(items) do
 			if string.find(itemName, "mod") or string.find(itemName, "ban") or string.find(itemName, "panel") or string.find(itemName, "staff") then
 				return true, "Staff (via Mod Tools)"
 			end
 		end
-
 		return false, nil
 	end
 
-	-- Fonction de détection des rôles classiques (MM2, etc.)
 	local function detectRole(targetPlayer)
 		if targetPlayer.Backpack:FindFirstChild("Knife") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Knife")) then
 			return "MUCK / MURDERER", Color3.fromRGB(255, 30, 60)
 		elseif targetPlayer.Backpack:FindFirstChild("Gun") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Gun")) then
 			return "SHERIFF", Color3.fromRGB(0, 140, 255)
 		end
-		if targetPlayer.Team then
-			return targetPlayer.Team.Name, targetPlayer.TeamColor.Color
-		end
+		if targetPlayer.Team then return targetPlayer.Team.Name, targetPlayer.TeamColor.Color end
 		return "Innocent", Color3.fromRGB(0, 255, 120)
 	end
 
@@ -583,7 +613,6 @@ local function buildUI()
 	end
 
 	local function updateESP()
-		-- Supprime tout l'ESP actuel avant recalcul
 		for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
 		if not espEnabled and not staffEspEnabled then return end
 
@@ -595,31 +624,26 @@ local function buildUI()
 				cleanESP(character)
 				
 				local isStaff, staffRole = checkIsStaff(targetPlayer)
-				
-				-- Filtre strict : Si Staff ESP est actif seul, on ignore les joueurs normaux
 				if staffEspEnabled and not espEnabled and not isStaff then return end
-				-- Si aucun des deux ESP n'est actif, on arrête
 				if not espEnabled and not staffEspEnabled then return end
 
 				local head = character:WaitForChild("Head", 5)
 				local root = character:WaitForChild("HumanoidRootPart", 5)
 				if not head or not root then return end
 
-				-- Détermination de la couleur et du texte
 				local displayName = targetPlayer.Name
 				local displayRole = "Joueur"
 				local boxColor = Color3.fromRGB(0, 180, 255)
 
 				if isStaff then
 					displayRole = "🛡️ STAFF [" .. (staffRole or "Admin") .. "]"
-					boxColor = Color3.fromRGB(255, 215, 0) -- Couleur dorée alerte pour les Staffs
+					boxColor = Color3.fromRGB(255, 215, 0)
 				else
 					local role, rColor = detectRole(targetPlayer)
 					displayRole = role
 					boxColor = rColor
 				end
 
-				-- Construction visuelle
 				local hl = Instance.new("Highlight")
 				hl.Name = "SF_ESP_Hl"
 				hl.FillColor = boxColor
@@ -665,7 +689,6 @@ local function buildUI()
 		end
 	end
 
-	-- Comportement du bouton Player ESP
 	espBtn.MouseButton1Click:Connect(function()
 		espEnabled = not espEnabled
 		espBtn.Text = espEnabled and "👤 Player ESP: ON" or "👤 Player ESP: OFF"
@@ -673,7 +696,6 @@ local function buildUI()
 		updateESP()
 	end)
 
-	-- Comportement du bouton Staff ESP Exclusif
 	staffEspBtn.MouseButton1Click:Connect(function()
 		staffEspEnabled = not staffEspEnabled
 		staffEspBtn.Text = staffEspEnabled and "🛡️ Staff ESP Only: ON" or "🛡️ Staff ESP Only: OFF"
@@ -681,7 +703,6 @@ local function buildUI()
 		updateESP()
 	end)
 
-	-- Relancer le scan à chaque nouvelle apparition/connexion
 	Players.PlayerAdded:Connect(function(p)
 		p.CharacterAdded:Connect(function() task.wait(0.5); updateESP() end)
 	end)
