@@ -17,15 +17,13 @@ gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- THEME (UPGRADED)
+-- THEME
 --------------------------------------------------
 
 local Theme = {
 	Bg = Color3.fromRGB(10, 10, 18),
 	Dark = Color3.fromRGB(18, 18, 30),
 	Accent = Color3.fromRGB(0, 170, 255),
-	Accent2 = Color3.fromRGB(255, 0, 150),
-	Accent3 = Color3.fromRGB(120, 255, 120)
 }
 
 --------------------------------------------------
@@ -33,7 +31,6 @@ local Theme = {
 --------------------------------------------------
 
 local blur = Lighting:FindFirstChild("SF_Blur")
-
 if not blur then
 	blur = Instance.new("BlurEffect")
 	blur.Name = "SF_Blur"
@@ -76,11 +73,6 @@ frame.Parent = gui
 
 Instance.new("UICorner", frame)
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Theme.Accent
-stroke.Thickness = 3
-stroke.Parent = frame
-
 --------------------------------------------------
 -- TOPBAR
 --------------------------------------------------
@@ -89,8 +81,6 @@ local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(1,0,0,50)
 topBar.BackgroundColor3 = Theme.Dark
 topBar.Parent = frame
-
-Instance.new("UICorner", topBar)
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,1,0)
@@ -112,7 +102,7 @@ close.Parent = topBar
 Instance.new("UICorner", close)
 
 --------------------------------------------------
--- SIDEBAR
+-- SIDEBAR + CONTENT
 --------------------------------------------------
 
 local side = Instance.new("Frame")
@@ -121,25 +111,19 @@ side.Position = UDim2.new(0,0,0,50)
 side.BackgroundColor3 = Theme.Dark
 side.Parent = frame
 
-Instance.new("UICorner", side)
-
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0,8)
-layout.Parent = side
-
---------------------------------------------------
--- CONTENT
---------------------------------------------------
-
 local content = Instance.new("Frame")
 content.Size = UDim2.new(1,-160,1,-50)
 content.Position = UDim2.new(0,160,0,50)
 content.BackgroundTransparency = 1
 content.Parent = frame
 
+--------------------------------------------------
+-- PAGES SYSTEM (FIX IMPORTANT)
+--------------------------------------------------
+
 local Pages = {}
 
-local function CreatePage(name,text)
+local function CreatePage(name, text)
 	local page = Instance.new("Frame")
 	page.Size = UDim2.new(1,0,1,0)
 	page.BackgroundTransparency = 1
@@ -161,36 +145,39 @@ local function CreatePage(name,text)
 end
 
 --------------------------------------------------
--- PAGES (UPDATED)
+-- PAGES
 --------------------------------------------------
 
-CreatePage("Home","🏠 Bienvenue sur SF HUB\n\n🚧 Arrive bientôt...")
-CreatePage("Player","👤 Joueur\n\n🚧 Arrive bientôt...")
-CreatePage("Themes","🎨 Themes\n\n🔵 Neon Blue\n🌸 Neon Pink\n🟢 Soft Green\n🌌 Dark Purple")
-CreatePage("Settings","⚙️ Paramètres\n\n🚧 Arrive bientôt...")
-CreatePage("About","ℹ️ SF HUB\nVersion V1")
+CreatePage("Home","🏠 Bienvenue sur SF HUB")
+CreatePage("Player","👤 Joueur")
+CreatePage("Themes","🎨 Themes")
+CreatePage("Settings","⚙️ Paramètres")
+CreatePage("About","ℹ️ SF HUB V1")
 
--- NEW PAGES
-CreatePage("School","🏫 School\n\n🚧 Outils école à venir...")
-CreatePage("TP","⚡ TP\n\n🚧 Téléportations à venir...")
-CreatePage("StaffBase","🛡️ Base Staff\n\n🚧 Tools staff à venir...")
+CreatePage("School","🏫 School")
+CreatePage("TP","⚡ TP")
+CreatePage("StaffBase","🛡️ Staff Base")
+
+--------------------------------------------------
+-- SHOW PAGE (FIX PRINCIPAL)
+--------------------------------------------------
 
 local function ShowPage(name)
-	for _,v in pairs(Pages) do
-		v.Visible = false
+	for _,page in pairs(Pages) do
+		page.Visible = false
 	end
-	if Pages[name] then
-		Pages[name].Visible = true
+
+	local target = Pages[name]
+	if target then
+		target.Visible = true
 	end
 end
-
-ShowPage("Home")
 
 --------------------------------------------------
 -- TABS
 --------------------------------------------------
 
-local function CreateTab(name,text)
+local function CreateTab(name, text)
 	local b = Instance.new("TextButton")
 	b.Size = UDim2.new(1,-10,0,40)
 	b.Text = text
@@ -202,25 +189,13 @@ local function CreateTab(name,text)
 
 	Instance.new("UICorner", b)
 
-	b.MouseEnter:Connect(function()
-		TweenService:Create(b,TweenInfo.new(0.15),{
-			BackgroundColor3 = Theme.Accent
-		}):Play()
-	end)
-
-	b.MouseLeave:Connect(function()
-		TweenService:Create(b,TweenInfo.new(0.15),{
-			BackgroundColor3 = Color3.fromRGB(35,35,35)
-		}):Play()
-	end)
-
 	b.MouseButton1Click:Connect(function()
 		ShowPage(name)
 	end)
 end
 
 --------------------------------------------------
--- TABS (ALL)
+-- TABS
 --------------------------------------------------
 
 CreateTab("Home","🏠 Home")
@@ -229,7 +204,6 @@ CreateTab("Themes","🎨 Themes")
 CreateTab("Settings","⚙️ Settings")
 CreateTab("About","ℹ️ About")
 
--- NEW TABS
 CreateTab("School","🏫 School")
 CreateTab("TP","⚡ TP")
 CreateTab("StaffBase","🛡️ Staff Base")
@@ -245,11 +219,14 @@ local function OpenUI()
 	frame.Visible = true
 	frame.Size = UDim2.new(0,0,0,0)
 
-	TweenService:Create(frame,TweenInfo.new(0.4),{
+	TweenService:Create(frame,TweenInfo.new(0.3),{
 		Size = UDim2.new(0,650,0,420)
 	}):Play()
 
 	Blur(true)
+
+	-- ✅ IMPORTANT : FORCER HOME AU DÉMARRAGE
+	ShowPage("Home")
 end
 
 local function CloseUI()
@@ -268,22 +245,34 @@ local function CloseUI()
 end
 
 openBtn.MouseButton1Click:Connect(function()
-	if opened then CloseUI() else OpenUI() end
+	if opened then
+		CloseUI()
+	else
+		OpenUI()
+	end
 end)
 
 close.MouseButton1Click:Connect(CloseUI)
 
 --------------------------------------------------
--- DRAG
+-- DRAG FIX
 --------------------------------------------------
 
-local dragging, dragStart, startPos
+local dragging = false
+local dragStart
+local startPos
 
 topBar.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
 		dragStart = input.Position
 		startPos = frame.Position
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
 	end
 end)
 
@@ -298,13 +287,3 @@ UserInputService.InputChanged:Connect(function(input)
 		)
 	end
 end)
-
---------------------------------------------------
--- STARTUP
---------------------------------------------------
-
-task.wait(0.5)
-
-TweenService:Create(openBtn,TweenInfo.new(1,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{
-	Rotation = 5
-}):Play()
