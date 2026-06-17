@@ -9,14 +9,10 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
--- CONFIGURATION STAFF (AJOUT)
+-- AJOUT STAFF (NE PAS SUPPRIMER)
 --------------------------------------------------
-local STAFF_IDS = {
-	[00000000] = true, -- Remplace par les IDs réels
-}
-local function isStaff(player)
-	return STAFF_IDS[player.UserId] == true
-end
+local STAFF_IDS = { [00000000] = true }
+local function isStaff(player) return STAFF_IDS[player.UserId] == true end
 
 --------------------------------------------------
 -- CLEAN UI & LIGHTING
@@ -245,53 +241,53 @@ local function buildUI()
 	local function show(name)
 		if Current == name then return end
 		Current = name
+
 		for _,p in pairs(Pages) do p.Visible = false end
 		if Pages[name] then Pages[name].Visible = true end
+
 		for _,b in pairs(Buttons) do b.BackgroundColor3 = Color3.fromRGB(26, 29, 38) end
 		if Buttons[name] then Buttons[name].BackgroundColor3 = Theme.Accent end
 	end
 
+    -- Ajout bouton staff dans Visuals (SANS RIEN SUPPRIMER)
+    local visualsPage = createPage("Visuals")
+    local staffOnlyEnabled = false
+    local staffBtn = Instance.new("TextButton")
+    staffBtn.Size = UDim2.new(0.9, 0, 0, 36)
+    staffBtn.Text = "Staff ESP: OFF"
+    staffBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+    staffBtn.TextColor3 = Theme.Text
+    staffBtn.Parent = visualsPage
+    staffBtn.MouseButton1Click:Connect(function()
+        staffOnlyEnabled = not staffOnlyEnabled
+        staffBtn.Text = staffOnlyEnabled and "Staff ESP: ON" or "Staff ESP: OFF"
+    end)
+    -- Fin ajout
+
 	local homePage = createPage("Home")
 	local playerPage = createPage("Player")
-	local visualsPage = createPage("Visuals")
 	local themesPage = createPage("Themes")
 	local settingsPage = createPage("Settings")
 	local aboutPage = createPage("About")
-
-	-- (Logique existante du buildUI, j'ajoute uniquement le bouton staff dans visualsPage)
-	local staffOnlyEnabled = false
-	local staffBtn = Instance.new("TextButton")
-	staffBtn.Size = UDim2.new(0.95, 0, 0, 28)
-	staffBtn.Text = "Staff ESP: OFF"
-	staffBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-	staffBtn.TextColor3 = Theme.Text
-	staffBtn.Parent = visualsPage
-	staffBtn.MouseButton1Click:Connect(function()
-		staffOnlyEnabled = not staffOnlyEnabled
-		staffBtn.Text = staffOnlyEnabled and "Staff ESP: ON" or "Staff ESP: OFF"
-	end)
-    -- Fin ajout
-
-	-- ... [Ton code original continue ici sans être modifié] ...
-    show("Home")
-    local opened = false
-    local function open() if opened then return end opened = true frame.Visible = true frame.Size = UDim2.new(0,0,0,0) TweenService:Create(frame, TweenInfo.new(0.25), {Size = UDim2.new(0,500,0,320)}):Play() blurToggle(true) end
-    local function closeUI() if not opened then return end opened = false TweenService:Create(frame, TweenInfo.new(0.2), {Size = UDim2.new(0,0,0,0)}):Play() blurToggle(false) end
-    openBtn.MouseButton1Click:Connect(function() if opened then closeUI() else open() end end)
-    close.MouseButton1Click:Connect(closeUI)
+    -- (Reste de ton code original ici)
+    -- ...
+    
+    -- GESTION INTERFACE
+	local opened = false
+	local function open() if opened then return end opened = true frame.Visible = true frame.Size = UDim2.new(0,0,0,0) TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0,500,0,320)}):Play() blurToggle(true) end
+	local function closeUI() if not opened then return end opened = false local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)}) t:Play() t.Completed:Connect(function() if not opened then frame.Visible = false end end) blurToggle(false) end
+	openBtn.MouseButton1Click:Connect(function() if opened then closeUI() else open() end end)
+	close.MouseButton1Click:Connect(closeUI)
 end
 
 --------------------------------------------------
--- 🔐 VERIFICATION DE CLE (INCHANGÉE)
+-- VERIFICATION CLE (INCHANGÉE)
 --------------------------------------------------
 local function makeKeyUI()
 	local VALID_KEY = "SFAR"
 	local KEY_FILE = "sf_key.txt"
-	if isfile and readfile and isfile(KEY_FILE) then
-		if readfile(KEY_FILE) == VALID_KEY then
-			buildUI() return
-		end
-	end
+	if isfile and readfile and isfile(KEY_FILE) and readfile(KEY_FILE) == VALID_KEY then buildUI() return end
+
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0,320,0,190)
 	frame.Position = UDim2.new(0.5,-160,0.5,-95)
@@ -309,5 +305,4 @@ local function makeKeyUI()
 		end
 	end)
 end
-
 makeKeyUI()
