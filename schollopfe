@@ -413,51 +413,67 @@ local function buildUI()
 		end
 	end)
 
-	-- 🎥 FREECAM DIRECTIONNELLE EN FONCTION DU REGARD (JOYSTICK SEUL)
+	-- 🎥 FREECAM MOBILE TOTALEMENT REFAITE (JOystick seul + Regard vertical + PERSO FIGÉ)
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
 	local camSpeed = 1.5 
 	local camCFrame = camera.CFrame
+	local dragConn
 
 	createPlayerToggle("🎥 Freecam (Caméra Libre)", function(enabled)
 		freecamActive = enabled
+		local root = getRoot()
+		
 		if enabled then
+			-- 1. On fige TOTALEMENT le personnage pour pas qu'il bouge avec le joystick
+			if root then root.Anchored = true end
+			
 			camCFrame = camera.CFrame
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			local dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
+			-- 2. Gestion de l'orientation de la caméra au doigt sur l'écran
+			dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
 				if processed then return end
 				local delta = touch.Delta
-				local rotation = CFrame.Angles(0, -math.rad(delta.X * 0.4), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y * 0.4), 0, 0)
+				-- Sensibilité adaptée pour mobile
+				local rotation = CFrame.Angles(0, -math.rad(delta.X * 0.35), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y * 0.35), 0, 0)
 				camCFrame = CFrame.new(camCFrame.Position) * rotation
 			end)
 
+			-- 3. Gestion du mouvement lié STRICTEMENT au joystick de base de roblox
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
 				local lSpeed = camSpeed * (dt * 60)
-				local moveDirection = Player.Character and getHum() and getHum().MoveDirection
+				
+				local hum = getHum()
+				-- On intercepte la direction que le joueur veut donner via son joystick mobile
+				local moveDirection = hum and hum.MoveDirection
 				
 				if moveDirection and moveDirection.Magnitude > 0 then
+					-- On prend le vecteur de regard exact de la caméra (3D complète : gère la hauteur !)
 					local lookVector = camera.CFrame.LookVector
 					local rightVector = camera.CFrame.RightVector
+					
+					-- Calcul parfait du déplacement : si tu regardes en haut et pousses le joystick, ça monte !
 					local localMove = (lookVector * -moveDirection.Z) + (rightVector * moveDirection.X)
-					if localMove.Magnitude > 0 then localMove = localMove.Unit * lSpeed end
+					if localMove.Magnitude > 0 then 
+						localMove = localMove.Unit * lSpeed 
+					end
+					
 					camCFrame = camCFrame + localMove
-				else
-					local keyboardMove = Vector3.new(0, 0, 0)
-					if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then keyboardMove = keyboardMove + Vector3.new(0, 0, -lSpeed) end
-					if UserInputService:IsKeyDown(Enum.KeyCode.S) then keyboardMove = keyboardMove + Vector3.new(0, 0, lSpeed) end
-					if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then keyboardMove = keyboardMove + Vector3.new(-lSpeed, 0, 0) end
-					if UserInputService:IsKeyDown(Enum.KeyCode.D) then keyboardMove = keyboardMove + Vector3.new(lSpeed, 0, 0) end
-					camCFrame = camCFrame * CFrame.new(keyboardMove)
 				end
+				
 				camera.CFrame = camCFrame
 			end)
 		else
+			-- Désactivation : On nettoie et on DEFIGE le perso
 			if freecamConn then freecamConn:Disconnect() end
+			if dragConn then dragConn:Disconnect() end
+			
+			if root then root.Anchored = false end
+			
 			camera.CameraType = Enum.CameraType.Custom
-			local hum = getHum()
 			if hum then camera.CameraSubject = hum end
 		end
 	end)
@@ -480,14 +496,14 @@ local function buildUI()
 	--------------------------------------------------
 	-- 👁️ SYSTEME D'ESP INTELLIGENT (PSEUDO, DISTANCE, ROLES)
 	--------------------------------------------------
-	local vLayout = Instance.new("UIListLayout")
-	vLayout.Padding = UDim.new(0, 10)
-	vLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	vLayout.Parent = visualsPage
+	local visualsPage_Layout = Instance.new("UIListLayout")
+	visualsPage_Layout.Padding = UDim.new(0, 10)
+	visualsPage_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	visualsPage_Layout.Parent = visualsPage
 
-	local vPadding = Instance.new("UIPadding")
-	vPadding.PaddingTop = UDim.new(0, 12)
-	vPadding.Parent = visualsPage
+	local visualsPage_Padding = Instance.new("UIPadding")
+	visualsPage_Padding.PaddingTop = UDim.new(0, 12)
+	visualsPage_Padding.Parent = visualsPage
 
 	local espBtn = Instance.new("TextButton")
 	espBtn.Size = UDim2.new(0.9, 0, 0, 36)
@@ -503,19 +519,16 @@ local function buildUI()
 	local espEnabled = false
 	local espConnections = {}
 
-	-- Fonction de détection avancée des rôles (MM2, Flicker, Kat, Équipes...)
 	local function detectRole(targetPlayer)
 		local roleName = "Innocent"
-		local roleColor = Color3.fromRGB(0, 255, 120) -- Vert par défaut
+		local roleColor = Color3.fromRGB(0, 255, 120)
 
-		-- 🔪 Détection specifique pour Murder Mystery 2 (MM2)
 		if targetPlayer.Backpack:FindFirstChild("Knife") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Knife")) then
-			return "MUCK / MURDERER", Color3.fromRGB(255, 30, 60) -- Rouge criminel
+			return "MUCK / MURDERER", Color3.fromRGB(255, 30, 60)
 		elseif targetPlayer.Backpack:FindFirstChild("Gun") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Gun")) then
-			return "SHERIFF", Color3.fromRGB(0, 140, 255) -- Bleu justice
+			return "SHERIFF", Color3.fromRGB(0, 140, 255)
 		end
 
-		-- Détection par équipe Roblox standard
 		if targetPlayer.Team then
 			roleName = targetPlayer.Team.Name
 			roleColor = targetPlayer.TeamColor.Color
@@ -544,7 +557,6 @@ local function buildUI()
 			local root = character:WaitForChild("HumanoidRootPart", 5)
 			if not head or not root then return end
 
-			-- 🔴 Création de la Box de surbrillance (Highlight)
 			local hl = Instance.new("Highlight")
 			hl.Name = "SF_ESP_Hl"
 			hl.FillTransparency = 0.6
@@ -552,7 +564,6 @@ local function buildUI()
 			hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 			hl.Parent = character
 
-			-- 📝 Création du tag d'informations au dessus du joueur
 			local bgui = Instance.new("BillboardGui")
 			bgui.Name = "SF_ESP_Tag"
 			bgui.Size = UDim2.new(0, 200, 0, 60)
@@ -569,7 +580,6 @@ local function buildUI()
 			label.TextStrokeColor3 = Color3.new(0,0,0)
 			label.Parent = bgui
 
-			-- 🔄 Boucle d'actualisation de la distance et des rôles
 			local connection
 			connection = RunService.RenderStepped:Connect(function()
 				if not espEnabled or not character.Parent or not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
@@ -583,12 +593,9 @@ local function buildUI()
 					local distance = math.floor((myRoot.Position - root.Position).Magnitude)
 					local role, rColor = detectRole(targetPlayer)
 
-					-- Mise à jour visuelle globale
 					hl.FillColor = rColor
 					hl.OutlineColor = rColor
 					label.TextColor3 = rColor
-					
-					-- Format du texte complet
 					label.Text = string.format("👤 %s\n🏷️ Rôle: %s\n📍 [%d m]", targetPlayer.Name, role, distance)
 				end
 			end)
@@ -607,7 +614,6 @@ local function buildUI()
 		if espEnabled then
 			for _, p in pairs(Players:GetPlayers()) do createESP(p) end
 		else
-			-- Désactivation complète et nettoyage immédiat
 			for _, conn in pairs(espConnections) do conn:Disconnect() end
 			espConnections = {}
 			for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
