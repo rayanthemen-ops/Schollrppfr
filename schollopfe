@@ -265,6 +265,7 @@ function buildUI()
 	createPage("Themes","🎨 Theme selector")
 	createPage("Settings","⚙️ Settings panel")
 	createPage("About","ℹ️ About SF HUB V6")
+	createPage("ESP"," Esp Staff")
 
 	--------------------------------------------------
 	-- SETTINGS (Toggles + Slider demo)
