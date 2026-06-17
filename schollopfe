@@ -31,16 +31,16 @@ gui.Parent = PlayerGui
 -- 🎨 PALETTE DE COULEURS & CONFIG STATE
 --------------------------------------------------
 local Theme = {
-	Bg = Color3.fromRGB(11, 12, 16),       
-	Panel = Color3.fromRGB(18, 19, 26),    
-	Stroke = Color3.fromRGB(35, 38, 50),   
-	Text = Color3.fromRGB(240, 243, 250),  
-	Accent = Color3.fromRGB(0, 180, 255), 
-	Green = Color3.fromRGB(0, 220, 140)    
+	Bg = Color3.fromRGB(11, 12, 16),      
+	Panel = Color3.fromRGB(18, 19, 26),    
+	Stroke = Color3.fromRGB(35, 38, 50),   
+	Text = Color3.fromRGB(240, 243, 250),  
+	Accent = Color3.fromRGB(0, 180, 255), 
+	Green = Color3.fromRGB(0, 220, 140)    
 }
 
 local UI = {}
-local toggleState = false 
+local toggleState = false 
 local CONFIG_FILE = "sf_config.json"
 
 local function saveConfig()
@@ -77,7 +77,7 @@ local function applyTheme(color)
 		UI.openBtn.BackgroundColor3 = color
 		TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play()
 	end
-	saveConfig() 
+	saveConfig() 
 end
 
 --------------------------------------------------
@@ -260,7 +260,6 @@ local function buildUI()
 	--------------------------------------------------
 	local homePage = createPage("Home")
 	local playerPage = createPage("Player")
-	local evasionPage = createPage("Evasion") -- Nouvel onglet dédié !
 	local visualsPage = createPage("Visuals")
 	local themesPage = createPage("Themes")
 	local settingsPage = createPage("Settings")
@@ -294,14 +293,12 @@ local function buildUI()
 	pPadding.PaddingTop = UDim.new(0, 8)
 	pPadding.Parent = playerPage
 
-	local function getHum(target)
-		local char = target or Player.Character
-		return char and char:FindFirstChildOfClass("Humanoid")
+	local function getHum()
+		return Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
 	end
 
-	local function getRoot(target)
-		local char = target or Player.Character
-		return char and char:FindFirstChild("HumanoidRootPart")
+	local function getRoot()
+		return Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
 	end
 
 	local function createPlayerOption(name, default, callback)
@@ -366,9 +363,9 @@ local function buildUI()
 
 	createPlayerOption("🦘 Saut (JumpPower)", 50, function(val)
 		local hum = getHum()
-		if hum then 
+		if hum then 
 			hum.UseJumpPower = true
-			hum.JumpPower = val 
+			hum.JumpPower = val 
 		end
 	end)
 
@@ -416,11 +413,11 @@ local function buildUI()
 		end
 	end)
 
-	-- FREECAM
+	-- 🎥 FREECAM MOBILE TOTALEMENT REFAITE
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
-	local camSpeed = 1.5 
+	local camSpeed = 1.5 
 	local camCFrame = camera.CFrame
 	local dragConn
 
@@ -450,7 +447,9 @@ local function buildUI()
 					local lookVector = camera.CFrame.LookVector
 					local rightVector = camera.CFrame.RightVector
 					local localMove = (lookVector * -moveDirection.Z) + (rightVector * moveDirection.X)
-					if localMove.Magnitude > 0 then localMove = localMove.Unit * lSpeed end
+					if localMove.Magnitude > 0 then 
+						localMove = localMove.Unit * lSpeed 
+					end
 					camCFrame = camCFrame + localMove
 				end
 				camera.CFrame = camCFrame
@@ -459,9 +458,8 @@ local function buildUI()
 			if freecamConn then freecamConn:Disconnect() end
 			if dragConn then dragConn:Disconnect() end
 			if root then root.Anchored = false end
+			
 			camera.CameraType = Enum.CameraType.Custom
-			local hum = getHum()
-			if hum then camera.CameraSubject = hum end
 		end
 	end)
 
@@ -481,108 +479,7 @@ local function buildUI()
 	end)
 
 	--------------------------------------------------
-	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
-	--------------------------------------------------
-	local evLayout = Instance.new("UIListLayout")
-	evLayout.Padding = UDim.new(0, 12)
-	evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	evLayout.Parent = evasionPage
-
-	local evPadding = Instance.new("UIPadding")
-	evPadding.PaddingTop = UDim.new(0, 15)
-	evPadding.Parent = evasionPage
-
-	local statusLabel = Instance.new("TextLabel")
-	statusLabel.Size = UDim2.new(0.9, 0, 0, 30)
-	statusLabel.Text = "Statut : En attente d'activation..."
-	statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	statusLabel.Font = Enum.Font.GothamMedium
-	statusLabel.TextSize = 13
-	statusLabel.BackgroundTransparency = 1
-	statusLabel.Parent = evasionPage
-
-	local autoEscapeBtn = Instance.new("TextButton")
-	autoEscapeBtn.Size = UDim2.new(0.9, 0, 0, 45)
-	autoEscapeBtn.Text = "⚡ RECHERCHE & DÉCOLLE AUTO"
-	autoEscapeBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
-	autoEscapeBtn.TextColor3 = Color3.new(1, 1, 1)
-	autoEscapeBtn.Font = Enum.Font.GothamBold
-	autoEscapeBtn.TextSize = 14
-	autoEscapeBtn.Parent = evasionPage
-	local autoCorner = Instance.new("UICorner")
-	autoCorner.Parent = autoEscapeBtn
-
-	-- Logique intelligente de recherche pour casser le système de colle
-	autoEscapeBtn.MouseButton1Click:Connect(function()
-		local char = Player.Character
-		local root = getRoot(char)
-		local hum = getHum(char)
-		if not root or not hum then return end
-
-		statusLabel.Text = "🔍 Analyse des scripts et de la map..."
-		statusLabel.TextColor3 = Theme.Accent
-
-		-- Étape 1 : Libérer le corps immédiatement de toute contrainte d'assise
-		hum.Sit = false
-		root.Velocity = Vector3.new(0,0,0)
-
-		-- Étape 2 : Activer le noclip temporaire pour éviter d'être bloqué dans la pièce
-		local escapeNoclip = RunService.Stepped:Connect(function()
-			if char then
-				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
-				end
-			end
-		end)
-
-		-- Étape 3 : Scanner la map pour trouver un point d'interaction d'évasion (Toilettes, Sorties, Zones specifiques)
-		local foundTarget = false
-		local targetCFrame = nil
-
-		-- Liste des mots-clés que le script va chercher dans le jeu pour trouver la sortie cachée
-		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
-
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if obj:IsA("BasePart") or obj:IsA("Model") then
-				local nameLower = string.lower(obj.Name)
-				for _, keyword in pairs(keywords) do
-					if string.find(nameLower, keyword) then
-						foundTarget = true
-						if obj:IsA("BasePart") then
-							targetCFrame = obj.CFrame
-						else
-							targetCFrame = obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame
-						end
-						break
-					end
-				end
-			end
-			if foundTarget then break end
-		end
-
-		-- Étape 4 : Exécution de la téléportation stratégique
-		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Point d'évasion trouvé ! Bypass en cours..."
-			statusLabel.TextColor3 = Theme.Green
-			root.CFrame = targetCFrame * CFrame.new(0, 3, 0)
-		else
-			-- Plan B si aucun mot clé n'est trouvé : éjection forcée hors de la zone d'école (Toit ou extérieur profond)
-			statusLabel.Text = "⚠️ Éjection forcée (Plan B actif)..."
-			statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
-			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
-		end
-
-		task.wait(2)
-		escapeNoclip:Disconnect()
-		statusLabel.Text = "✅ Libéré avec succès !"
-		statusLabel.TextColor3 = Theme.Green
-		task.wait(2)
-		statusLabel.Text = "Statut : En attente d'activation..."
-		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	end)
-
-	--------------------------------------------------
-	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
+	-- 👁️ SYSTEME D'ESP INTELLIGENT
 	--------------------------------------------------
 	local visualsPage_Layout = Instance.new("UIListLayout")
 	visualsPage_Layout.Padding = UDim.new(0, 10)
@@ -595,7 +492,7 @@ local function buildUI()
 
 	local espBtn = Instance.new("TextButton")
 	espBtn.Size = UDim2.new(0.9, 0, 0, 36)
-	espBtn.Text = "👤 Player ESP: OFF"
+	espBtn.Text = "Player ESP: OFF"
 	espBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 	espBtn.TextColor3 = Theme.Text
 	espBtn.Font = Enum.Font.GothamBold
@@ -604,59 +501,25 @@ local function buildUI()
 	local espCorner = Instance.new("UICorner")
 	espCorner.Parent = espBtn
 
-	local staffEspBtn = Instance.new("TextButton")
-	staffEspBtn.Size = UDim2.new(0.9, 0, 0, 36)
-	staffEspBtn.Text = "🛡️ Staff ESP Only: OFF"
-	staffEspBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-	staffEspBtn.TextColor3 = Theme.Text
-	staffEspBtn.Font = Enum.Font.GothamBold
-	staffEspBtn.TextSize = 13
-	staffEspBtn.Parent = visualsPage
-	local staffEspCorner = Instance.new("UICorner")
-	staffEspCorner.Parent = staffEspBtn
-
 	local espEnabled = false
-	local staffEspEnabled = false
-
-	local function checkIsStaff(targetPlayer)
-		if targetPlayer.Team then
-			local tName = string.lower(targetPlayer.Team.Name)
-			if string.find(tName, "staff") or string.find(tName, "admin") or string.find(tName, "mod") or string.find(tName, "gérant") or string.find(tName, "créateur") or string.find(tName, "support") then
-				return true, targetPlayer.Team.Name
-			end
-		end
-		if game.CreatorId and game.CreatorType == Enum.CreatorType.Group then
-			local success, role = pcall(function() return targetPlayer:GetRoleInGroup(game.CreatorId) end)
-			if success and role then
-				local rName = string.lower(role)
-				if string.find(rName, "staff") or string.find(rName, "admin") or string.find(rName, "mod") or string.find(rName, "gérant") or string.find(rName, "créateur") or string.find(rName, "dev") or string.find(rName, "helper") then
-					return true, role
-				end
-			end
-		end
-		local items = {}
-		if targetPlayer:FindFirstChild("Backpack") then
-			for _, tool in pairs(targetPlayer.Backpack:GetChildren()) do table.insert(items, string.lower(tool.Name)) end
-		end
-		if targetPlayer.Character then
-			for _, tool in pairs(targetPlayer.Character:GetChildren()) do if tool:IsA("Tool") then table.insert(items, string.lower(tool.Name)) end end
-		end
-		for _, itemName in pairs(items) do
-			if string.find(itemName, "mod") or string.find(itemName, "ban") or string.find(itemName, "panel") or string.find(itemName, "staff") then
-				return true, "Staff (via Mod Tools)"
-			end
-		end
-		return false, nil
-	end
+	local espConnections = {}
 
 	local function detectRole(targetPlayer)
+		local roleName = "Innocent"
+		local roleColor = Color3.fromRGB(0, 255, 120)
+
 		if targetPlayer.Backpack:FindFirstChild("Knife") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Knife")) then
 			return "MUCK / MURDERER", Color3.fromRGB(255, 30, 60)
 		elseif targetPlayer.Backpack:FindFirstChild("Gun") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Gun")) then
 			return "SHERIFF", Color3.fromRGB(0, 140, 255)
 		end
-		if targetPlayer.Team then return targetPlayer.Team.Name, targetPlayer.TeamColor.Color end
-		return "Innocent", Color3.fromRGB(0, 255, 120)
+
+		if targetPlayer.Team then
+			roleName = targetPlayer.Team.Name
+			roleColor = targetPlayer.TeamColor.Color
+		end
+
+		return roleName, roleColor
 	end
 
 	local function cleanESP(character)
@@ -667,103 +530,86 @@ local function buildUI()
 		if oldHl then oldHl:Destroy() end
 	end
 
-	local function updateESP()
-		for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
-		if not espEnabled and not staffEspEnabled then return end
+	local function createESP(targetPlayer)
+		if targetPlayer == Player then return end
 
-		for _, targetPlayer in pairs(Players:GetPlayers()) do
-			if targetPlayer == Player then continue end
+		local function setupCharacterESP(character)
+			task.wait(0.5)
+			cleanESP(character)
+			if not espEnabled then return end
 
-			local function setupCharacterESP(character)
-				task.wait(0.3)
-				cleanESP(character)
-				
-				local isStaff, staffRole = checkIsStaff(targetPlayer)
-				if staffEspEnabled and not espEnabled and not isStaff then return end
-				if not espEnabled and not staffEspEnabled then return end
+			local head = character:WaitForChild("Head", 5)
+			local root = character:WaitForChild("HumanoidRootPart", 5)
+			if not head or not root then return end
 
-				local head = character:WaitForChild("Head", 5)
-				local root = character:WaitForChild("HumanoidRootPart", 5)
-				if not head or not root then return end
+			local hl = Instance.new("Highlight")
+			hl.Name = "SF_ESP_Hl"
+			hl.FillTransparency = 0.6
+			hl.OutlineTransparency = 0.1
+			hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			hl.Parent = character
 
-				local displayName = targetPlayer.Name
-				local displayRole = "Joueur"
-				local boxColor = Color3.fromRGB(0, 180, 255)
+			local bgui = Instance.new("BillboardGui")
+			bgui.Name = "SF_ESP_Tag"
+			bgui.Size = UDim2.new(0, 200, 0, 60)
+			bgui.AlwaysOnTop = true
+			bgui.ExtentsOffset = Vector3.new(0, 3, 0)
+			bgui.Parent = character
 
-				if isStaff then
-					displayRole = "🛡️ STAFF [" .. (staffRole or "Admin") .. "]"
-					boxColor = Color3.fromRGB(255, 215, 0)
-				else
-					local role, rColor = detectRole(targetPlayer)
-					displayRole = role
-					boxColor = rColor
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, 0, 1, 0)
+			label.BackgroundTransparency = 1
+			label.Font = Enum.Font.GothamBold
+			label.TextSize = 13
+			label.TextStrokeTransparency = 0.2
+			label.TextStrokeColor3 = Color3.new(0,0,0)
+			label.Parent = bgui
+
+			local connection
+			connection = RunService.RenderStepped:Connect(function()
+				if not espEnabled or not character.Parent or not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
+					connection:Disconnect()
+					cleanESP(character)
+					return
 				end
 
-				local hl = Instance.new("Highlight")
-				hl.Name = "SF_ESP_Hl"
-				hl.FillColor = boxColor
-				hl.OutlineColor = boxColor
-				hl.FillTransparency = 0.6
-				hl.OutlineTransparency = 0.1
-				hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-				hl.Parent = character
+				local myRoot = Player.Character:FindFirstChild("HumanoidRootPart")
+				if myRoot and root.Parent then
+					local distance = math.floor((myRoot.Position - root.Position).Magnitude)
+					local role, rColor = detectRole(targetPlayer)
 
-				local bgui = Instance.new("BillboardGui")
-				bgui.Name = "SF_ESP_Tag"
-				bgui.Size = UDim2.new(0, 200, 0, 60)
-				bgui.AlwaysOnTop = true
-				bgui.ExtentsOffset = Vector3.new(0, 3, 0)
-				bgui.Parent = character
-
-				local label = Instance.new("TextLabel")
-				label.Size = UDim2.new(1, 0, 1, 0)
-				label.BackgroundTransparency = 1
-				label.Font = Enum.Font.GothamBold
-				label.TextSize = 13
-				label.TextColor3 = boxColor
-				label.TextStrokeTransparency = 0.2
-				label.TextStrokeColor3 = Color3.new(0,0,0)
-				label.Parent = bgui
-
-				local connection
-				connection = RunService.RenderStepped:Connect(function()
-					if not character.Parent or not Player.Character then
-						connection:Disconnect()
-						return
-					end
-					local myRoot = getRoot(Player.Character)
-					local targetRoot = getRoot(character)
-					if myRoot and targetRoot then
-						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-						label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
-					end
-				end)
-			end
-
-			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
+					hl.FillColor = rColor
+					hl.OutlineColor = rColor
+					label.TextColor3 = rColor
+					label.Text = string.format("👤 %s\n🏷️ Rôle: %s\n📍 [%d m]", targetPlayer.Name, role, distance)
+				end
+			end)
 		end
+
+		if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
+		local charConn = targetPlayer.CharacterAdded:Connect(function(char)
+			task.spawn(setupCharacterESP, char)
+		end)
+		table.insert(espConnections, charConn)
 	end
 
 	espBtn.MouseButton1Click:Connect(function()
 		espEnabled = not espEnabled
-		espBtn.Text = espEnabled and "👤 Player ESP: ON" or "👤 Player ESP: OFF"
+		espBtn.Text = espEnabled and "Player ESP: ON" or "Player ESP: OFF"
 		espBtn.BackgroundColor3 = espEnabled and Theme.Green or Color3.fromRGB(26, 29, 38)
-		updateESP()
-	end)
 
-	staffEspBtn.MouseButton1Click:Connect(function()
-		staffEspEnabled = not staffEspEnabled
-		staffEspBtn.Text = staffEspEnabled and "🛡️ Staff ESP Only: ON" or "🛡️ Staff ESP Only: OFF"
-		staffEspBtn.BackgroundColor3 = staffEspEnabled and Color3.fromRGB(240, 173, 78) or Color3.fromRGB(26, 29, 38)
-		updateESP()
+		if espEnabled then
+			for _, p in pairs(Players:GetPlayers()) do createESP(p) end
+		else
+			for _, conn in pairs(espConnections) do conn:Disconnect() end
+			espConnections = {}
+			for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
+		end
 	end)
 
 	Players.PlayerAdded:Connect(function(p)
-		p.CharacterAdded:Connect(function() task.wait(0.5); updateESP() end)
+		if espEnabled then createESP(p) end
 	end)
-	for _, p in pairs(Players:GetPlayers()) do
-		p.CharacterAdded:Connect(function() task.wait(0.5); updateESP() end)
-	end
 
 	--------------------------------------------------
 	-- CONFIGURATION DES SETTINGS / THEMES
@@ -784,7 +630,7 @@ local function buildUI()
 		toggleState = not toggleState
 		toggle.Text = toggleState and "Toggle: ON" or "Toggle: OFF"
 		toggle.BackgroundColor3 = toggleState and Theme.Green or Color3.fromRGB(26, 29, 38)
-		saveConfig() 
+		saveConfig() 
 	end)
 
 	local tLayout = Instance.new("UIListLayout")
@@ -809,11 +655,11 @@ local function buildUI()
 		b.MouseButton1Click:Connect(function() applyTheme(color) end)
 	end
 
-	addThemeBtn(Color3.fromRGB(0, 180, 255))   
-	addThemeBtn(Color3.fromRGB(180, 70, 255))  
-	addThemeBtn(Color3.fromRGB(255, 85, 130))  
-	addThemeBtn(Color3.fromRGB(0, 220, 140))   
-	addThemeBtn(Color3.fromRGB(255, 170, 0))   
+	addThemeBtn(Color3.fromRGB(0, 180, 255))   
+	addThemeBtn(Color3.fromRGB(180, 70, 255))  
+	addThemeBtn(Color3.fromRGB(255, 85, 130))  
+	addThemeBtn(Color3.fromRGB(0, 220, 140))   
+	addThemeBtn(Color3.fromRGB(255, 170, 0))   
 
 	--------------------------------------------------
 	-- ONGLETS DE NAVIGATION
@@ -836,7 +682,6 @@ local function buildUI()
 
 	createTab("Home","🏠 Home")
 	createTab("Player","👤 Player")
-	createTab("Evasion", "🚪 Évasion") -- Onglet inséré proprement !
 	createTab("Visuals", "👁️ Visuals")
 	createTab("Themes","🎨 Themes")
 	createTab("Settings","⚙️ Settings")
@@ -863,7 +708,7 @@ local function buildUI()
 	local function closeUI()
 		if not opened then return end
 		opened = false
-		local t = TweenService:Create(frame, TweenInfo.new(0,2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
 		t:Play()
 		t.Completed:Connect(function() if not opened then frame.Visible = false end end)
 		blurToggle(false)
@@ -875,7 +720,7 @@ local function buildUI()
 end
 
 --------------------------------------------------
--- 🔐 LE SYSTEME DE CLE
+-- 🔐 VERIFICATION DE SECURITE / LE SYSTEME DE CLE
 --------------------------------------------------
 local function makeKeyUI()
 	local VALID_KEY = "SFAR"
@@ -883,7 +728,7 @@ local function makeKeyUI()
 
 	if isfile and readfile and isfile(KEY_FILE) then
 		if readfile(KEY_FILE) == VALID_KEY then
-			buildUI() 
+			buildUI() 
 			return
 		end
 	end
@@ -958,4 +803,4 @@ local function makeKeyUI()
 	end)
 end
 
-makeKeyUI() 
+makeKeyUI()
