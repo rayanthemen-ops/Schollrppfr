@@ -514,6 +514,16 @@ local function buildUI()
 
 	-- Logique intelligente de recherche pour casser le système de colle
 	autoEscapeBtn.MouseButton1Click:Connect(function()
+autoEscapeBtn.MouseButton1Click:Connect(function()	local char = Player.Character	local root = getRoot(char)	local hum = getHum(char)	if not root or not hum then return end
+	statusLabel.Text = "🔍 Analyse des scripts et de la map..."	statusLabel.TextColor3 = Theme.Accent
+	hum.Sit = false	root.Velocity = Vector3.new(0,0,0)
+	local escapeNoclip = RunService.Stepped:Connect(function()		if char then			for _, part in pairs(char:GetDescendants()) do				if part:IsA("BasePart") then part.CanCollide = false end			end		end	end)
+	local foundTarget = false	local targetCFrame = nil	local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
+	for _, obj in pairs(workspace:GetDescendants()) do		if obj:IsA("BasePart") or obj:IsA("Model") then			local nameLower = string.lower(obj.Name)			for _, keyword in pairs(keywords) do				if string.find(nameLower, keyword) then					foundTarget = true					if obj:IsA("BasePart") then						targetCFrame = obj.CFrame					else						targetCFrame = obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame					end					break				end			end		end		if foundTarget then break end	end
+	if foundTarget and targetCFrame then		statusLabel.Text = "🔓 Point d'évasion trouvé ! Bypass en cours..."		statusLabel.TextColor3 = Theme.Green		root.CFrame = targetCFrame * CFrame.new(0, 3, 0)	else		statusLabel.Text = "⚠️ Éjection forcée (Plan B actif)..."		statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)		root.CFrame = root.CFrame * CFrame.new(0, 65, 0)	end
+	-- Ancrer le HumanoidRootPart pour stabiliser la position après téléportation	root.Anchored = true	task.wait(5) -- Durée d’ancrage (modifiable selon besoin)
+	-- Libérer l’ancrage et nettoyer	root.Anchored = false	escapeNoclip:Disconnect()
+	statusLabel.Text = "✅ Libéré avec succès !"	statusLabel.TextColor3 = Theme.Green	task.wait(2)	statusLabel.Text = "Statut : En attente d'activation..."	statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)end)
 		local char = Player.Character
 		local root = getRoot(char)
 		local hum = getHum(char)
