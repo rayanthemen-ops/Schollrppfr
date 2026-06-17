@@ -15,6 +15,59 @@ if old then old:Destroy() end
 --------------------------------------------------
 -- GUI
 --------------------------------------------------
+--------------------------------------------------
+-- 🔐 KEY SYSTEM
+--------------------------------------------------
+local VALID_KEY = "SF-ACCESS-2026"
+
+local keyFrame = Instance.new("Frame")
+keyFrame.Size = UDim2.new(0,300,0,180)
+keyFrame.Position = UDim2.new(0.5,-150,0.5,-90)
+keyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
+keyFrame.Parent = gui
+Instance.new("UICorner", keyFrame)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,40)
+title.BackgroundTransparency = 1
+title.Text = "🔐 ACCESS KEY"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = keyFrame
+
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0.9,0,0,40)
+box.Position = UDim2.new(0.05,0,0.4,0)
+box.PlaceholderText = "Enter key..."
+box.Text = ""
+box.Font = Enum.Font.Gotham
+box.TextSize = 16
+box.TextColor3 = Color3.new(1,1,1)
+box.BackgroundColor3 = Color3.fromRGB(35,35,40)
+box.Parent = keyFrame
+Instance.new("UICorner", box)
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9,0,0,35)
+btn.Position = UDim2.new(0.05,0,0.7,0)
+btn.Text = "ENTER"
+btn.Font = Enum.Font.GothamBold
+btn.TextSize = 16
+btn.TextColor3 = Color3.new(1,1,1)
+btn.BackgroundColor3 = Color3.fromRGB(120,170,255)
+btn.Parent = keyFrame
+Instance.new("UICorner", btn)
+
+local errorLabel = Instance.new("TextLabel")
+errorLabel.Size = UDim2.new(1,0,0,20)
+errorLabel.Position = UDim2.new(0,0,1,-20)
+errorLabel.BackgroundTransparency = 1
+errorLabel.Text = ""
+errorLabel.TextColor3 = Color3.fromRGB(255,80,80)
+errorLabel.Font = Enum.Font.Gotham
+errorLabel.TextSize = 14
+errorLabel.Parent = keyFrame
 local gui = Instance.new("ScreenGui")
 gui.Name = "SF_HUB"
 gui.ResetOnSpawn = false
