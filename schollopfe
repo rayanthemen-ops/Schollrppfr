@@ -412,32 +412,26 @@ local function buildUI()
 		end
 	end)
 
+	-- 🎥 CONFIG FREECAM SANS COLLISIONS (PASSE-PARTOUT)
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
-	local freecamPart
 	local freecamConn
-	local camSpeed = 1 
+	local camSpeed = 1.5 
+	local camCFrame = camera.CFrame
 
 	createPlayerToggle("🎥 Freecam (Caméra Libre)", function(enabled)
 		freecamActive = enabled
 		if enabled then
-			local startCFrame = camera.CFrame
+			camCFrame = camera.CFrame
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			freecamPart = Instance.new("Part")
-			freecamPart.Size = Vector3.new(1,1,1)
-			freecamPart.Transparency = 1
-			freecamPart.CanCollide = false
-			freecamPart.Anchored = true
-			freecamPart.CFrame = startCFrame
-			freecamPart.Parent = workspace
-			
 			freecamConn = game:GetService("RunService").RenderStepped:Connect(function(dt)
-				if not freecamActive or not freecamPart then return end
+				if not freecamActive then return end
 				
 				local lSpeed = camSpeed * (dt * 60)
-				local moveVector = Vector3.new(0,0,0)
+				local moveVector = Vector3.new(0, 0, 0)
 				
+				-- Déplacements (Claviers ZQSD / WASD supportés)
 				if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then
 					moveVector = moveVector + Vector3.new(0, 0, -lSpeed)
 				end
@@ -457,23 +451,22 @@ local function buildUI()
 					moveVector = moveVector + Vector3.new(0, -lSpeed, 0)
 				end
 				
+				-- Rotation (Maintien Clic Droit)
 				if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
 					UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
 					local delta = UserInputService:GetMouseDelta()
 					
-					local camCFrame = camera.CFrame
-					local newRot = CFrame.Angles(0, -math.rad(delta.X/2), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y/2), 0, 0)
-					freecamPart.CFrame = CFrame.new(freecamPart.Position) * newRot
+					local rotation = CFrame.Angles(0, -math.rad(delta.X * 0.3), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y * 0.3), 0, 0)
+					camCFrame = CFrame.new(camCFrame.Position) * rotation
 					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 				end
 				
-				freecamPart.CFrame = freecamPart.CFrame * CFrame.new(moveVector)
-				camera.CFrame = freecamPart.CFrame
+				-- Application directe de la position sans passer par un objet physique (Zéro collision)
+				camCFrame = camCFrame * CFrame.new(moveVector)
+				camera.CFrame = camCFrame
 			end)
 		else
 			if freecamConn then freecamConn:Disconnect() end
-			if freecamPart then freecamPart:Destroy() freecamPart = nil end
-			
 			camera.CameraType = Enum.CameraType.Custom
 			local hum = getHum()
 			if hum then camera.CameraSubject = hum end
