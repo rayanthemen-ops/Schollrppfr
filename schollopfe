@@ -260,6 +260,7 @@ local function buildUI()
 	--------------------------------------------------
 	local homePage = createPage("Home")
 	local playerPage = createPage("Player")
+	local evasionPage = createPage("Evasion") -- Nouvel onglet dédié !
 	local visualsPage = createPage("Visuals")
 	local themesPage = createPage("Themes")
 	local settingsPage = createPage("Settings")
@@ -358,7 +359,6 @@ local function buildUI()
 		end)
 	end
 
-	-- 🏃 OPTIONS STANDARDS
 	createPlayerOption("⚡ Vitesse (WalkSpeed)", 16, function(val)
 		local hum = getHum()
 		if hum then hum.WalkSpeed = val end
@@ -369,51 +369,6 @@ local function buildUI()
 		if hum then 
 			hum.UseJumpPower = true
 			hum.JumpPower = val 
-		end
-	end)
-
-	-- 🚨 BOUTON MAGIQUE : ANTI-COLLE / EVASION D'URGENCE 🚨
-	local escapeBtn = Instance.new("TextButton")
-	escapeBtn.Size = UDim2.new(0.95, 0, 0, 32)
-	escapeBtn.Text = "🏃 ÉVASI0N URGENCE (Anti-Colle)"
-	escapeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-	escapeBtn.TextColor3 = Color3.new(1, 1, 1)
-	escapeBtn.Font = Enum.Font.GothamBold
-	escapeBtn.TextSize = 13
-	escapeBtn.Parent = playerPage
-	local escCorner = Instance.new("UICorner")
-	escCorner.Parent = escapeBtn
-
-	escapeBtn.MouseButton1Click:Connect(function()
-		local char = Player.Character
-		local hum = getHum(char)
-		local root = getRoot(char)
-
-		if hum and root then
-			-- 1. On force le personnage à se lever si la chaise le bloque
-			hum.Sit = false
-			task.wait(0.05)
-			
-			-- 2. On brise les forces physiques du jeu qui essaient de nous clouer au sol
-			root.Velocity = Vector3.new(0, 0, 0)
-			root.RotVelocity = Vector3.new(0, 0, 0)
-
-			-- 3. Mode Fantôme temporaire pour passer à travers le plafond/murs de la classe
-			local noclipLoop = RunService.Stepped:Connect(function()
-				if char then
-					for _, part in pairs(char:GetDescendants()) do
-						if part:IsA("BasePart") then part.CanCollide = false end
-					end
-				end
-			end)
-
-			-- 4. Éjection vers le haut (50 blocs d'altitude pour sortir du bâtiment)
-			root.CFrame = root.CFrame * CFrame.new(0, 50, 0)
-
-			-- 5. On coupe le noclip après 2.5 secondes une fois qu'on est en sécurité sur le toit ou dehors
-			task.delay(2.5, function()
-				if noclipLoop then noclipLoop:Disconnect() end
-			end)
 		end
 	end)
 
@@ -461,7 +416,7 @@ local function buildUI()
 		end
 	end)
 
-	-- 🎥 FREECAM MOBILE TOTALEMENT REFAITE
+	-- FREECAM
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
@@ -526,6 +481,107 @@ local function buildUI()
 	end)
 
 	--------------------------------------------------
+	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
+	--------------------------------------------------
+	local evLayout = Instance.new("UIListLayout")
+	evLayout.Padding = UDim.new(0, 12)
+	evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	evLayout.Parent = evasionPage
+
+	local evPadding = Instance.new("UIPadding")
+	evPadding.PaddingTop = UDim.new(0, 15)
+	evPadding.Parent = evasionPage
+
+	local statusLabel = Instance.new("TextLabel")
+	statusLabel.Size = UDim2.new(0.9, 0, 0, 30)
+	statusLabel.Text = "Statut : En attente d'activation..."
+	statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+	statusLabel.Font = Enum.Font.GothamMedium
+	statusLabel.TextSize = 13
+	statusLabel.BackgroundTransparency = 1
+	statusLabel.Parent = evasionPage
+
+	local autoEscapeBtn = Instance.new("TextButton")
+	autoEscapeBtn.Size = UDim2.new(0.9, 0, 0, 45)
+	autoEscapeBtn.Text = "⚡ RECHERCHE & DÉCOLLE AUTO"
+	autoEscapeBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+	autoEscapeBtn.TextColor3 = Color3.new(1, 1, 1)
+	autoEscapeBtn.Font = Enum.Font.GothamBold
+	autoEscapeBtn.TextSize = 14
+	autoEscapeBtn.Parent = evasionPage
+	local autoCorner = Instance.new("UICorner")
+	autoCorner.Parent = autoEscapeBtn
+
+	-- Logique intelligente de recherche pour casser le système de colle
+	autoEscapeBtn.MouseButton1Click:Connect(function()
+		local char = Player.Character
+		local root = getRoot(char)
+		local hum = getHum(char)
+		if not root or not hum then return end
+
+		statusLabel.Text = "🔍 Analyse des scripts et de la map..."
+		statusLabel.TextColor3 = Theme.Accent
+
+		-- Étape 1 : Libérer le corps immédiatement de toute contrainte d'assise
+		hum.Sit = false
+		root.Velocity = Vector3.new(0,0,0)
+
+		-- Étape 2 : Activer le noclip temporaire pour éviter d'être bloqué dans la pièce
+		local escapeNoclip = RunService.Stepped:Connect(function()
+			if char then
+				for _, part in pairs(char:GetDescendants()) do
+					if part:IsA("BasePart") then part.CanCollide = false end
+				end
+			end
+		end)
+
+		-- Étape 3 : Scanner la map pour trouver un point d'interaction d'évasion (Toilettes, Sorties, Zones specifiques)
+		local foundTarget = false
+		local targetCFrame = nil
+
+		-- Liste des mots-clés que le script va chercher dans le jeu pour trouver la sortie cachée
+		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
+
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("BasePart") or obj:IsA("Model") then
+				local nameLower = string.lower(obj.Name)
+				for _, keyword in pairs(keywords) do
+					if string.find(nameLower, keyword) then
+						foundTarget = true
+						if obj:IsA("BasePart") then
+							targetCFrame = obj.CFrame
+						else
+							targetCFrame = obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame
+						end
+						break
+					end
+				end
+			end
+			if foundTarget then break end
+		end
+
+		-- Étape 4 : Exécution de la téléportation stratégique
+		if foundTarget and targetCFrame then
+			statusLabel.Text = "🔓 Point d'évasion trouvé ! Bypass en cours..."
+			statusLabel.TextColor3 = Theme.Green
+			root.CFrame = targetCFrame * CFrame.new(0, 3, 0)
+		else
+			-- Plan B si aucun mot clé n'est trouvé : éjection forcée hors de la zone d'école (Toit ou extérieur profond)
+			statusLabel.Text = "⚠️ Éjection forcée (Plan B actif)..."
+			statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
+			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
+		end
+
+		task.wait(2)
+		escapeNoclip:Disconnect()
+		statusLabel.Text = "✅ Libéré avec succès !"
+		statusLabel.TextColor3 = Theme.Green
+		task.wait(2)
+		statusLabel.Text = "Statut : En attente d'activation..."
+		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+	end)
+
+	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
 	--------------------------------------------------
 	local visualsPage_Layout = Instance.new("UIListLayout")
@@ -561,7 +617,6 @@ local function buildUI()
 
 	local espEnabled = false
 	local staffEspEnabled = false
-	local espConnections = {}
 
 	local function checkIsStaff(targetPlayer)
 		if targetPlayer.Team then
@@ -781,6 +836,7 @@ local function buildUI()
 
 	createTab("Home","🏠 Home")
 	createTab("Player","👤 Player")
+	createTab("Evasion", "🚪 Évasion") -- Onglet inséré proprement !
 	createTab("Visuals", "👁️ Visuals")
 	createTab("Themes","🎨 Themes")
 	createTab("Settings","⚙️ Settings")
@@ -807,7 +863,7 @@ local function buildUI()
 	local function closeUI()
 		if not opened then return end
 		opened = false
-		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+		local t = TweenService:Create(frame, TweenInfo.new(0,2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
 		t:Play()
 		t.Completed:Connect(function() if not opened then frame.Visible = false end end)
 		blurToggle(false)
@@ -819,7 +875,7 @@ local function buildUI()
 end
 
 --------------------------------------------------
--- 🔐 VERIFICATION DE SECURITE / LE SYSTEME DE CLE
+-- 🔐 LE SYSTEME DE CLE
 --------------------------------------------------
 local function makeKeyUI()
 	local VALID_KEY = "SFAR"
