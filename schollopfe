@@ -293,12 +293,14 @@ local function buildUI()
 	pPadding.PaddingTop = UDim.new(0, 8)
 	pPadding.Parent = playerPage
 
-	local function getHum()
-		return Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+	local function getHum(target)
+		local char = target or Player.Character
+		return char and char:FindFirstChildOfClass("Humanoid")
 	end
 
-	local function getRoot()
-		return Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+	local function getRoot(target)
+		local char = target or Player.Character
+		return char and char:FindFirstChild("HumanoidRootPart")
 	end
 
 	local function createPlayerOption(name, default, callback)
@@ -413,7 +415,7 @@ local function buildUI()
 		end
 	end)
 
-	-- 🎥 FREECAM MOBILE TOTALEMENT REFAITE (JOystick seul + Regard vertical + PERSO FIGÉ)
+	-- 🎥 FREECAM MOBILE TOTALEMENT REFAITE
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
@@ -426,54 +428,38 @@ local function buildUI()
 		local root = getRoot()
 		
 		if enabled then
-			-- 1. On fige TOTALEMENT le personnage pour pas qu'il bouge avec le joystick
 			if root then root.Anchored = true end
-			
 			camCFrame = camera.CFrame
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			-- 2. Gestion de l'orientation de la caméra au doigt sur l'écran
 			dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
 				if processed then return end
 				local delta = touch.Delta
-				-- Sensibilité adaptée pour mobile
 				local rotation = CFrame.Angles(0, -math.rad(delta.X * 0.35), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y * 0.35), 0, 0)
 				camCFrame = CFrame.new(camCFrame.Position) * rotation
 			end)
 
-			-- 3. Gestion du mouvement lié STRICTEMENT au joystick de base de roblox
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
 				local lSpeed = camSpeed * (dt * 60)
-				
 				local hum = getHum()
-				-- On intercepte la direction que le joueur veut donner via son joystick mobile
 				local moveDirection = hum and hum.MoveDirection
 				
 				if moveDirection and moveDirection.Magnitude > 0 then
-					-- On prend le vecteur de regard exact de la caméra (3D complète : gère la hauteur !)
 					local lookVector = camera.CFrame.LookVector
 					local rightVector = camera.CFrame.RightVector
-					
-					-- Calcul parfait du déplacement : si tu regardes en haut et pousses le joystick, ça monte !
 					local localMove = (lookVector * -moveDirection.Z) + (rightVector * moveDirection.X)
-					if localMove.Magnitude > 0 then 
-						localMove = localMove.Unit * lSpeed 
-					end
-					
+					if localMove.Magnitude > 0 then localMove = localMove.Unit * lSpeed end
 					camCFrame = camCFrame + localMove
 				end
-				
 				camera.CFrame = camCFrame
 			end)
 		else
-			-- Désactivation : On nettoie et on DEFIGE le perso
 			if freecamConn then freecamConn:Disconnect() end
 			if dragConn then dragConn:Disconnect() end
-			
 			if root then root.Anchored = false end
-			
 			camera.CameraType = Enum.CameraType.Custom
+			local hum = getHum()
 			if hum then camera.CameraSubject = hum end
 		end
 	end)
@@ -494,7 +480,7 @@ local function buildUI()
 	end)
 
 	--------------------------------------------------
-	-- 👁️ SYSTEME D'ESP INTELLIGENT (PSEUDO, DISTANCE, ROLES)
+	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
 	--------------------------------------------------
 	local visualsPage_Layout = Instance.new("UIListLayout")
 	visualsPage_Layout.Padding = UDim.new(0, 10)
@@ -505,9 +491,10 @@ local function buildUI()
 	visualsPage_Padding.PaddingTop = UDim.new(0, 12)
 	visualsPage_Padding.Parent = visualsPage
 
+	-- Bouton 1 : ESP normal pour tout le monde
 	local espBtn = Instance.new("TextButton")
 	espBtn.Size = UDim2.new(0.9, 0, 0, 36)
-	espBtn.Text = "Player ESP: OFF"
+	espBtn.Text = "👤 Player ESP: OFF"
 	espBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 	espBtn.TextColor3 = Theme.Text
 	espBtn.Font = Enum.Font.GothamBold
@@ -516,25 +503,75 @@ local function buildUI()
 	local espCorner = Instance.new("UICorner")
 	espCorner.Parent = espBtn
 
+	-- Bouton 2 : ESP Exclusif Staff / Service Client
+	local staffEspBtn = Instance.new("TextButton")
+	staffEspBtn.Size = UDim2.new(0.9, 0, 0, 36)
+	staffEspBtn.Text = "🛡️ Staff ESP Only: OFF"
+	staffEspBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+	staffEspBtn.TextColor3 = Theme.Text
+	staffEspBtn.Font = Enum.Font.GothamBold
+	staffEspBtn.TextSize = 13
+	staffEspBtn.Parent = visualsPage
+	local staffEspCorner = Instance.new("UICorner")
+	staffEspCorner.Parent = staffEspBtn
+
 	local espEnabled = false
+	local staffEspEnabled = false
 	local espConnections = {}
 
-	local function detectRole(targetPlayer)
-		local roleName = "Innocent"
-		local roleColor = Color3.fromRGB(0, 255, 120)
+	-- Fonction de détection globale du staff en jeu (School RP, etc.)
+	local function checkIsStaff(targetPlayer)
+		-- 1. Scan par rapport à l'équipe (Team)
+		if targetPlayer.Team then
+			local tName = string.lower(targetPlayer.Team.Name)
+			if string.find(tName, "staff") or string.find(tName, "admin") or string.find(tName, "mod") or string.find(tName, "gérant") or string.find(tName, "créateur") or string.find(tName, "support") then
+				return true, targetPlayer.Team.Name
+			end
+		end
 
+		-- 2. Scan du groupe de développement du jeu (Service Client / Rangs internes)
+		if game.CreatorId and game.CreatorType == Enum.CreatorType.Group then
+			local success, role = pcall(function()
+				return targetPlayer:GetRoleInGroup(game.CreatorId)
+			end)
+			if success and role then
+				local rName = string.lower(role)
+				if string.find(rName, "staff") or string.find(rName, "admin") or string.find(rName, "mod") or string.find(rName, "gérant") or string.find(rName, "créateur") or string.find(rName, "dev") or string.find(rName, "helper") then
+					return true, role
+				end
+			end
+		end
+
+		-- 3. Scan des outils possédés (Outils de modération dans le backpack ou le perso)
+		local items = {}
+		if targetPlayer:FindFirstChild("Backpack") then
+			for _, tool in pairs(targetPlayer.Backpack:GetChildren()) do table.insert(items, string.lower(tool.Name)) end
+		end
+		if targetPlayer.Character then
+			for _, tool in pairs(targetPlayer.Character:GetChildren()) do
+				if tool:IsA("Tool") then table.insert(items, string.lower(tool.Name)) end
+			end
+		end
+		for _, itemName in pairs(items) do
+			if string.find(itemName, "mod") or string.find(itemName, "ban") or string.find(itemName, "panel") or string.find(itemName, "staff") then
+				return true, "Staff (via Mod Tools)"
+			end
+		end
+
+		return false, nil
+	end
+
+	-- Fonction de détection des rôles classiques (MM2, etc.)
+	local function detectRole(targetPlayer)
 		if targetPlayer.Backpack:FindFirstChild("Knife") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Knife")) then
 			return "MUCK / MURDERER", Color3.fromRGB(255, 30, 60)
 		elseif targetPlayer.Backpack:FindFirstChild("Gun") or (targetPlayer.Character and targetPlayer.Character:FindFirstChild("Gun")) then
 			return "SHERIFF", Color3.fromRGB(0, 140, 255)
 		end
-
 		if targetPlayer.Team then
-			roleName = targetPlayer.Team.Name
-			roleColor = targetPlayer.TeamColor.Color
+			return targetPlayer.Team.Name, targetPlayer.TeamColor.Color
 		end
-
-		return roleName, roleColor
+		return "Innocent", Color3.fromRGB(0, 255, 120)
 	end
 
 	local function cleanESP(character)
@@ -545,84 +582,112 @@ local function buildUI()
 		if oldHl then oldHl:Destroy() end
 	end
 
-	local function createESP(targetPlayer)
-		if targetPlayer == Player then return end
+	local function updateESP()
+		-- Supprime tout l'ESP actuel avant recalcul
+		for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
+		if not espEnabled and not staffEspEnabled then return end
 
-		local function setupCharacterESP(character)
-			task.wait(0.5)
-			cleanESP(character)
-			if not espEnabled then return end
+		for _, targetPlayer in pairs(Players:GetPlayers()) do
+			if targetPlayer == Player then continue end
 
-			local head = character:WaitForChild("Head", 5)
-			local root = character:WaitForChild("HumanoidRootPart", 5)
-			if not head or not root then return end
+			local function setupCharacterESP(character)
+				task.wait(0.3)
+				cleanESP(character)
+				
+				local isStaff, staffRole = checkIsStaff(targetPlayer)
+				
+				-- Filtre strict : Si Staff ESP est actif seul, on ignore les joueurs normaux
+				if staffEspEnabled and not espEnabled and not isStaff then return end
+				-- Si aucun des deux ESP n'est actif, on arrête
+				if not espEnabled and not staffEspEnabled then return end
 
-			local hl = Instance.new("Highlight")
-			hl.Name = "SF_ESP_Hl"
-			hl.FillTransparency = 0.6
-			hl.OutlineTransparency = 0.1
-			hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-			hl.Parent = character
+				local head = character:WaitForChild("Head", 5)
+				local root = character:WaitForChild("HumanoidRootPart", 5)
+				if not head or not root then return end
 
-			local bgui = Instance.new("BillboardGui")
-			bgui.Name = "SF_ESP_Tag"
-			bgui.Size = UDim2.new(0, 200, 0, 60)
-			bgui.AlwaysOnTop = true
-			bgui.ExtentsOffset = Vector3.new(0, 3, 0)
-			bgui.Parent = character
+				-- Détermination de la couleur et du texte
+				local displayName = targetPlayer.Name
+				local displayRole = "Joueur"
+				local boxColor = Color3.fromRGB(0, 180, 255)
 
-			local label = Instance.new("TextLabel")
-			label.Size = UDim2.new(1, 0, 1, 0)
-			label.BackgroundTransparency = 1
-			label.Font = Enum.Font.GothamBold
-			label.TextSize = 13
-			label.TextStrokeTransparency = 0.2
-			label.TextStrokeColor3 = Color3.new(0,0,0)
-			label.Parent = bgui
-
-			local connection
-			connection = RunService.RenderStepped:Connect(function()
-				if not espEnabled or not character.Parent or not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
-					connection:Disconnect()
-					cleanESP(character)
-					return
-				end
-
-				local myRoot = Player.Character:FindFirstChild("HumanoidRootPart")
-				if myRoot and root then
-					local distance = math.floor((myRoot.Position - root.Position).Magnitude)
+				if isStaff then
+					displayRole = "🛡️ STAFF [" .. (staffRole or "Admin") .. "]"
+					boxColor = Color3.fromRGB(255, 215, 0) -- Couleur dorée alerte pour les Staffs
+				else
 					local role, rColor = detectRole(targetPlayer)
-
-					hl.FillColor = rColor
-					hl.OutlineColor = rColor
-					label.TextColor3 = rColor
-					label.Text = string.format("👤 %s\n🏷️ Rôle: %s\n📍 [%d m]", targetPlayer.Name, role, distance)
+					displayRole = role
+					boxColor = rColor
 				end
-			end)
-		end
 
-		if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
-		local charConn = targetPlayer.CharacterAdded:Connect(setupCharacterESP)
-		table.insert(espConnections, charConn)
+				-- Construction visuelle
+				local hl = Instance.new("Highlight")
+				hl.Name = "SF_ESP_Hl"
+				hl.FillColor = boxColor
+				hl.OutlineColor = boxColor
+				hl.FillTransparency = 0.6
+				hl.OutlineTransparency = 0.1
+				hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+				hl.Parent = character
+
+				local bgui = Instance.new("BillboardGui")
+				bgui.Name = "SF_ESP_Tag"
+				bgui.Size = UDim2.new(0, 200, 0, 60)
+				bgui.AlwaysOnTop = true
+				bgui.ExtentsOffset = Vector3.new(0, 3, 0)
+				bgui.Parent = character
+
+				local label = Instance.new("TextLabel")
+				label.Size = UDim2.new(1, 0, 1, 0)
+				label.BackgroundTransparency = 1
+				label.Font = Enum.Font.GothamBold
+				label.TextSize = 13
+				label.TextColor3 = boxColor
+				label.TextStrokeTransparency = 0.2
+				label.TextStrokeColor3 = Color3.new(0,0,0)
+				label.Parent = bgui
+
+				local connection
+				connection = RunService.RenderStepped:Connect(function()
+					if not character.Parent or not Player.Character then
+						connection:Disconnect()
+						return
+					end
+					local myRoot = getRoot(Player.Character)
+					local targetRoot = getRoot(character)
+					if myRoot and targetRoot then
+						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
+						label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
+					end
+				end)
+			end
+
+			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
+		end
 	end
 
+	-- Comportement du bouton Player ESP
 	espBtn.MouseButton1Click:Connect(function()
 		espEnabled = not espEnabled
-		espBtn.Text = espEnabled and "Player ESP: ON" or "Player ESP: OFF"
+		espBtn.Text = espEnabled and "👤 Player ESP: ON" or "👤 Player ESP: OFF"
 		espBtn.BackgroundColor3 = espEnabled and Theme.Green or Color3.fromRGB(26, 29, 38)
-
-		if espEnabled then
-			for _, p in pairs(Players:GetPlayers()) do createESP(p) end
-		else
-			for _, conn in pairs(espConnections) do conn:Disconnect() end
-			espConnections = {}
-			for _, p in pairs(Players:GetPlayers()) do cleanESP(p.Character) end
-		end
+		updateESP()
 	end)
 
+	-- Comportement du bouton Staff ESP Exclusif
+	staffEspBtn.MouseButton1Click:Connect(function()
+		staffEspEnabled = not staffEspEnabled
+		staffEspBtn.Text = staffEspEnabled and "🛡️ Staff ESP Only: ON" or "🛡️ Staff ESP Only: OFF"
+		staffEspBtn.BackgroundColor3 = staffEspEnabled and Color3.fromRGB(240, 173, 78) or Color3.fromRGB(26, 29, 38)
+		updateESP()
+	end)
+
+	-- Relancer le scan à chaque nouvelle apparition/connexion
 	Players.PlayerAdded:Connect(function(p)
-		if espEnabled then createESP(p) end
+		p.CharacterAdded:Connect(function() task.wait(0.5); updateESP() end)
 	end)
+	for _, p in pairs(Players:GetPlayers()) do
+		p.CharacterAdded:Connect(function() task.wait(0.5); updateESP() end)
+	end
 
 	--------------------------------------------------
 	-- CONFIGURATION DES SETTINGS / THEMES
