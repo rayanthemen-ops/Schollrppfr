@@ -13,12 +13,19 @@ local old = PlayerGui:FindFirstChild("SF_HUB")
 if old then old:Destroy() end
 
 --------------------------------------------------
--- GUI
+-- GUI (DOIT ÊTRE AVANT TOUT)
 --------------------------------------------------
+local gui = Instance.new("ScreenGui")
+gui.Name = "SF_HUB"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = PlayerGui
+
 --------------------------------------------------
 -- 🔐 KEY SYSTEM
 --------------------------------------------------
 local VALID_KEY = "SF-ACCESS-2026"
+local unlocked = false
 
 local keyFrame = Instance.new("Frame")
 keyFrame.Size = UDim2.new(0,300,0,180)
@@ -27,14 +34,14 @@ keyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 keyFrame.Parent = gui
 Instance.new("UICorner", keyFrame)
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,40)
-title.BackgroundTransparency = 1
-title.Text = "🔐 ACCESS KEY"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 18
-title.TextColor3 = Color3.new(1,1,1)
-title.Parent = keyFrame
+local keyTitle = Instance.new("TextLabel")
+keyTitle.Size = UDim2.new(1,0,0,40)
+keyTitle.BackgroundTransparency = 1
+keyTitle.Text = "🔐 ACCESS KEY"
+keyTitle.Font = Enum.Font.GothamBold
+keyTitle.TextSize = 18
+keyTitle.TextColor3 = Color3.new(1,1,1)
+keyTitle.Parent = keyFrame
 
 local box = Instance.new("TextBox")
 box.Size = UDim2.new(0.9,0,0,40)
@@ -68,22 +75,32 @@ errorLabel.TextColor3 = Color3.fromRGB(255,80,80)
 errorLabel.Font = Enum.Font.Gotham
 errorLabel.TextSize = 14
 errorLabel.Parent = keyFrame
-local gui = Instance.new("ScreenGui")
-gui.Name = "SF_HUB"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.Parent = PlayerGui
+
+local function unlock()
+	unlocked = true
+	keyFrame:Destroy()
+end
+
+btn.MouseButton1Click:Connect(function()
+	if box.Text == VALID_KEY then
+		unlock()
+	else
+		errorLabel.Text = "Clé invalide"
+		task.wait(1)
+		errorLabel.Text = ""
+	end
+end)
 
 --------------------------------------------------
--- 🎨 PALETTE MODERNE (pro, pas flashy cheap)
+-- THEME (version clean)
 --------------------------------------------------
 local Theme = {
 	Bg = Color3.fromRGB(18, 18, 22),
 	Panel = Color3.fromRGB(28, 28, 35),
 	Stroke = Color3.fromRGB(90, 100, 120),
 	Text = Color3.fromRGB(235, 235, 235),
-	Accent = Color3.fromRGB(120, 170, 255), -- bleu doux moderne
-	Accent2 = Color3.fromRGB(170, 120, 255) -- violet soft
+	Accent = Color3.fromRGB(120, 170, 255),
+	Accent2 = Color3.fromRGB(170, 120, 255)
 }
 
 --------------------------------------------------
@@ -118,10 +135,10 @@ openBtn.Parent = gui
 Instance.new("UICorner", openBtn)
 
 --------------------------------------------------
--- MAIN FRAME (⬇ PLUS PETIT)
+-- MAIN FRAME (plus petit)
 --------------------------------------------------
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,520,0,320) -- réduit (avant 650x420)
+frame.Size = UDim2.new(0,520,0,320)
 frame.Position = UDim2.new(0.5,-260,0.5,-160)
 frame.BackgroundColor3 = Theme.Bg
 frame.Visible = false
@@ -163,159 +180,13 @@ close.Parent = topBar
 Instance.new("UICorner", close)
 
 --------------------------------------------------
--- SIDEBAR (plus compacte)
---------------------------------------------------
-local side = Instance.new("Frame")
-side.Size = UDim2.new(0,130,1,-42)
-side.Position = UDim2.new(0,0,0,42)
-side.BackgroundColor3 = Theme.Panel
-side.Parent = frame
-Instance.new("UICorner", side)
-
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0,6)
-layout.Parent = side
-
---------------------------------------------------
--- CONTENT
---------------------------------------------------
-local content = Instance.new("Frame")
-content.Size = UDim2.new(1,-130,1,-42)
-content.Position = UDim2.new(0,130,0,42)
-content.BackgroundTransparency = 1
-content.Parent = frame
-
-local Pages = {}
-local Buttons = {}
-local Current = nil
-
---------------------------------------------------
--- PAGES
---------------------------------------------------
-local function CreatePage(name, text)
-	local p = Instance.new("Frame")
-	p.Size = UDim2.new(1,0,1,0)
-	p.BackgroundTransparency = 1
-	p.Visible = false
-	p.Parent = content
-
-	local l = Instance.new("TextLabel")
-	l.Size = UDim2.new(1,-14,1,-14)
-	l.Position = UDim2.new(0,7,0,7)
-	l.BackgroundTransparency = 1
-	l.TextWrapped = true
-	l.TextColor3 = Theme.Text
-	l.Font = Enum.Font.Gotham
-	l.TextSize = 18
-	l.Text = text
-	l.Parent = p
-
-	Pages[name] = p
-end
-
-local function ShowPage(name)
-	if Current == name then return end
-	Current = name
-
-	for _,p in pairs(Pages) do
-		p.Visible = false
-	end
-
-	local t = Pages[name]
-	if not t then return end
-
-	t.Visible = true
-	t.BackgroundTransparency = 1
-
-	TweenService:Create(t, TweenInfo.new(0.2), {
-		BackgroundTransparency = 0
-	}):Play()
-
-	for _,b in pairs(Buttons) do
-		b.BackgroundColor3 = Color3.fromRGB(40,40,50)
-	end
-
-	if Buttons[name] then
-		Buttons[name].BackgroundColor3 = Theme.Accent
-	end
-end
-
---------------------------------------------------
--- PAGES
---------------------------------------------------
-CreatePage("Home","🏠 Accueil\n\nSF HUB V3.1")
-CreatePage("Player","👤 Player")
-CreatePage("Themes","🎨 Themes")
-CreatePage("Settings","⚙️ Settings")
-CreatePage("About","ℹ️ About")
-
---------------------------------------------------
--- THEMES (SANS NOTIF, juste changement direct)
---------------------------------------------------
-local function ApplyTheme(color)
-	Theme.Accent = color
-	openBtn.BackgroundColor3 = color
-	stroke.Color = color
-
-	if Buttons[Current] then
-		Buttons[Current].BackgroundColor3 = color
-	end
-end
-
-local function CreateThemeButton(color, x)
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(0,100,0,30)
-	b.Position = UDim2.new(0,x,0,60)
-	b.Text = ""
-	b.BackgroundColor3 = color
-	b.Parent = Pages["Themes"]
-	Instance.new("UICorner", b)
-
-	b.MouseButton1Click:Connect(function()
-		ApplyTheme(color)
-	end)
-end
-
-CreateThemeButton(Theme.Accent, 10)
-CreateThemeButton(Theme.Accent2, 120)
-CreateThemeButton(Color3.fromRGB(90, 200, 160), 230)
-
---------------------------------------------------
--- TABS
---------------------------------------------------
-local function CreateTab(name, text)
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(1,-8,0,32)
-	b.Text = text
-	b.Font = Enum.Font.Gotham
-	b.TextSize = 14
-	b.TextColor3 = Theme.Text
-	b.BackgroundColor3 = Color3.fromRGB(40,40,50)
-	b.Parent = side
-
-	Instance.new("UICorner", b)
-
-	b.MouseButton1Click:Connect(function()
-		ShowPage(name)
-	end)
-
-	Buttons[name] = b
-end
-
-CreateTab("Home","🏠 Home")
-CreateTab("Player","👤 Player")
-CreateTab("Themes","🎨 Themes")
-CreateTab("Settings","⚙️ Settings")
-CreateTab("About","ℹ️ About")
-
-ShowPage("Home")
-
---------------------------------------------------
--- OPEN / CLOSE
+-- BLOQUAGE ACCÈS
 --------------------------------------------------
 local opened = false
 
 local function Open()
+	if not unlocked then return end
+
 	opened = true
 	frame.Visible = true
 	frame.Size = UDim2.new(0,0,0,0)
@@ -347,36 +218,3 @@ openBtn.MouseButton1Click:Connect(function()
 end)
 
 close.MouseButton1Click:Connect(Close)
-
---------------------------------------------------
--- DRAG SIMPLE
---------------------------------------------------
-local dragging = false
-local start, startPos
-
-topBar.InputBegan:Connect(function(i)
-	if i.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		start = i.Position
-		startPos = frame.Position
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(i)
-	if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-		local d = i.Position - start
-
-		frame.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + d.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + d.Y
-		)
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(i)
-	if i.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
