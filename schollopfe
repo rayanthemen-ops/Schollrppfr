@@ -28,12 +28,12 @@ gui.Parent = PlayerGui
 -- 🎨 PALETTE DE COULEURS NÉON / MODERN V6
 --------------------------------------------------
 local Theme = {
-	Bg = Color3.fromRGB(11, 12, 16),       -- Fond ultra sombre premium
-	Panel = Color3.fromRGB(18, 19, 26),    -- Cartes et barres sobres
-	Stroke = Color3.fromRGB(35, 38, 50),   -- Bordures subtiles
-	Text = Color3.fromRGB(240, 243, 250),  -- Blanc éclatant lisible
-	Accent = Color3.fromRGB(0, 180, 255),  -- Couleur active (Bleu Électrique par défaut)
-	Green = Color3.fromRGB(0, 220, 140)    -- Vert menthe pour les Toggles ON
+	Bg = Color3.fromRGB(11, 12, 16),       
+	Panel = Color3.fromRGB(18, 19, 26),    
+	Stroke = Color3.fromRGB(35, 38, 50),   
+	Text = Color3.fromRGB(240, 243, 250),  
+	Accent = Color3.fromRGB(0, 180, 255),  
+	Green = Color3.fromRGB(0, 220, 140)    
 }
 
 local UI = {}
@@ -42,7 +42,6 @@ local function applyTheme(color)
 	Theme.Accent = color
 	if UI.openBtn and UI.stroke then
 		UI.openBtn.BackgroundColor3 = color
-		-- Animation fluide sur le changement de couleur de la bordure
 		TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play()
 	end
 end
@@ -98,7 +97,7 @@ local function makeDraggable(dragFrame, moveFrame)
 end
 
 --------------------------------------------------
--- BUILD MAIN UI (500x320)
+-- BUILD MAIN UI
 --------------------------------------------------
 local function buildUI()
 	local frame = Instance.new("Frame")
@@ -246,7 +245,7 @@ local function buildUI()
 	end
 
 	addSimpleText(homePage, "🌌 Bienvenue dans SF HUB V6\n\nSélectionne un onglet pour commencer.")
-	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nDesign moderne optimisé.\nDéveloppé en 2026.")
+	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nDesign moderne optimisé.\nSauvegarde de clé active.")
 
 	--------------------------------------------------
 	-- CONFIGURATION DE L'ONGLET PLAYER
@@ -355,7 +354,7 @@ local function buildUI()
 		if not character or character:FindFirstChild("SF_ESP") then return end
 		local hl = Instance.new("Highlight")
 		hl.Name = "SF_ESP"
-		hl.FillColor = Color3.fromRGB(255, 60, 100) -- Rouge néon rosé magnifique
+		hl.FillColor = Color3.fromRGB(255, 60, 100) 
 		hl.FillTransparency = 0.5
 		hl.OutlineColor = Color3.fromRGB(255, 255, 255)
 		hl.OutlineTransparency = 0
@@ -420,7 +419,7 @@ local function buildUI()
 	end)
 
 	--------------------------------------------------
-	-- CONFIGURATION DES THEMES (5 BOUTONS COMPACTS)
+	-- CONFIGURATION DES THEMES
 	--------------------------------------------------
 	local tLayout = Instance.new("UIListLayout")
 	tLayout.Padding = UDim.new(0, 8)
@@ -445,11 +444,11 @@ local function buildUI()
 		b.MouseButton1Click:Connect(function() applyTheme(color) end)
 	end
 
-	addThemeBtn(Color3.fromRGB(0, 180, 255))   -- Electric Blue
-	addThemeBtn(Color3.fromRGB(180, 70, 255))  -- Cyber Violet
-	addThemeBtn(Color3.fromRGB(255, 85, 130))  -- Sakura Pink
-	addThemeBtn(Color3.fromRGB(0, 220, 140))   -- Mint Green
-	addThemeBtn(Color3.fromRGB(255, 170, 0))   -- Gold Amber
+	addThemeBtn(Color3.fromRGB(0, 180, 255))   
+	addThemeBtn(Color3.fromRGB(180, 70, 255))  
+	addThemeBtn(Color3.fromRGB(255, 85, 130))  
+	addThemeBtn(Color3.fromRGB(0, 220, 140))   
+	addThemeBtn(Color3.fromRGB(255, 170, 0))   
 
 	--------------------------------------------------
 	-- CRÉATION DES ONGLETS (TABS)
@@ -521,10 +520,19 @@ local function buildUI()
 end
 
 --------------------------------------------------
--- 🔐 SYSTEME DE CLÉ (LOOK ASSORTI)
+-- 🔐 SYSTEME DE CLÉ AVEC SAUVEGARDE AUTOMATIQUE
 --------------------------------------------------
 local function makeKeyUI()
 	local VALID_KEY = "SFAR"
+	local FILE_NAME = "sf_key.txt"
+
+	-- ANALYSE : Vérifie si la clé a déjà été sauvegardée par l'exécuteur
+	if isfile and readfile and isfile(FILE_NAME) then
+		if readfile(FILE_NAME) == VALID_KEY then
+			buildUI() -- On passe directement à l'UI principale sans afficher la clé
+			return
+		end
+	end
 
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0,320,0,190)
@@ -585,6 +593,10 @@ local function makeKeyUI()
 
 	btn.MouseButton1Click:Connect(function()
 		if box.Text == VALID_KEY then
+			-- Sauvegarde locale de la clé valide
+			if writefile then
+				writefile(FILE_NAME, VALID_KEY)
+			end
 			frame:Destroy()
 			buildUI()
 		else
