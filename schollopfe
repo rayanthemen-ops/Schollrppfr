@@ -514,70 +514,25 @@ local function buildUI()
 
 	-- Logique intelligente de recherche pour casser le système de colle
 	-- Logique intelligente de recherche pour casser le système de colle
-	autoEscapeBtn.MouseButton1Click:Connect(function()
-		local char = Player.Character
-		local root = getRoot(char)
-		local hum = getHum(char)
-		if not root or not hum then return end
-
-		statusLabel.Text = "🔍 Analyse des scripts et de la map..."
-		statusLabel.TextColor3 = Theme.Accent
-		hum.Sit = false
-		root.Velocity = Vector3.new(0, 0, 0)
-
-		-- Activation du Noclip
-		local escapeNoclip = RunService.Stepped:Connect(function()
-			if char then
-				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
-				end
-			end
-		end)
-
-		-- Recherche de cible
-		local foundTarget = false
-		local targetCFrame = nil
-		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
-
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if obj:IsA("BasePart") or obj:IsA("Model") then
-				local nameLower = string.lower(obj.Name)
-				for _, keyword in pairs(keywords) do
-					if string.find(nameLower, keyword) then
-						foundTarget = true
-						if obj:IsA("BasePart") then
-							targetCFrame = obj.CFrame
-						else
-							targetCFrame = obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame
-						end
-						break
-					end
-				end
-			end
-			if foundTarget then break end
-		end
-
-		-- Exécution sécurisée (Blink pour éviter le rollback)
+			-- Nouvelle méthode : Déplacement fluide (Tween) pour éviter le rollback
 		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Bypass en cours..."
+			statusLabel.Text = "🔓 Bypass fluide en cours..."
+			
+			-- On désactive la physique pour le déplacement
 			root.Anchored = true
-			task.wait(0.2)
-			root.CFrame = targetCFrame * CFrame.new(0, 3, 0)
-			task.wait(0.2)
+			
+			-- Création d'une animation de déplacement très rapide mais fluide
+			local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear) -- 0.5 secondes pour le trajet
+			local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame * CFrame.new(0, 3, 0)})
+			tween:Play()
+			tween.Completed:Wait() -- On attend que le déplacement soit fini
+			
 			root.Anchored = false
 			statusLabel.TextColor3 = Theme.Green
+			statusLabel.Text = "✅ Libéré !"
 		else
-			statusLabel.Text = "⚠️ Éjection forcée..."
-			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
+			-- ... (ton bloc existant pour le Plan B)
 		end
-
-		task.wait(1)
-		escapeNoclip:Disconnect()
-		statusLabel.Text = "✅ Libéré avec succès !"
-		task.wait(2)
-		statusLabel.Text = "Statut : En attente d'activation..."
-		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	end)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
