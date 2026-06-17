@@ -576,6 +576,11 @@ local function buildUI()
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
+		else
+			statusLabel.Text = "⚠️ Éjection forcée..."
+			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
+		end
+	end) -- <--- C'est ici que vous ajoutez cette ligne de fermeture
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
