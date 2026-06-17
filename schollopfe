@@ -17,26 +17,29 @@ gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- THEME
+-- THEME SYSTEM (IMPORTANT)
 --------------------------------------------------
 
 local Theme = {
-	Bg = Color3.fromRGB(10, 10, 18),
-	Dark = Color3.fromRGB(18, 18, 30),
-	Accent = Color3.fromRGB(0, 170, 255),
+	Bg = Color3.fromRGB(10,10,18),
+	Dark = Color3.fromRGB(18,18,30),
+	Accent = Color3.fromRGB(0,170,255)
 }
+
+local function ApplyTheme(color)
+	Theme.Accent = color
+	if stroke then stroke.Color = color end
+	openBtn.BackgroundColor3 = color
+end
 
 --------------------------------------------------
 -- BLUR
 --------------------------------------------------
 
-local blur = Lighting:FindFirstChild("SF_Blur")
-if not blur then
-	blur = Instance.new("BlurEffect")
-	blur.Name = "SF_Blur"
-	blur.Size = 0
-	blur.Parent = Lighting
-end
+local blur = Lighting:FindFirstChild("SF_Blur") or Instance.new("BlurEffect")
+blur.Name = "SF_Blur"
+blur.Parent = Lighting
+blur.Size = 0
 
 local function Blur(state)
 	TweenService:Create(blur, TweenInfo.new(0.25), {
@@ -49,15 +52,14 @@ end
 --------------------------------------------------
 
 local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0,60,0,60)
-openBtn.Position = UDim2.new(0,20,0.5,-30)
+openBtn.Size = UDim2.new(0,50,0,50)
+openBtn.Position = UDim2.new(0,20,0.5,-25)
 openBtn.Text = "SF"
 openBtn.Font = Enum.Font.GothamBlack
-openBtn.TextSize = 24
+openBtn.TextSize = 20
 openBtn.TextColor3 = Color3.new(1,1,1)
 openBtn.BackgroundColor3 = Theme.Accent
 openBtn.Parent = gui
-
 Instance.new("UICorner", openBtn)
 
 --------------------------------------------------
@@ -65,20 +67,24 @@ Instance.new("UICorner", openBtn)
 --------------------------------------------------
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,650,0,420)
-frame.Position = UDim2.new(0.5,-325,0.5,-210)
+frame.Size = UDim2.new(0,600,0,380)
+frame.Position = UDim2.new(0.5,-300,0.5,-190)
 frame.BackgroundColor3 = Theme.Bg
 frame.Visible = false
 frame.Parent = gui
-
 Instance.new("UICorner", frame)
+
+stroke = Instance.new("UIStroke")
+stroke.Color = Theme.Accent
+stroke.Thickness = 2
+stroke.Parent = frame
 
 --------------------------------------------------
 -- TOPBAR
 --------------------------------------------------
 
 local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(1,0,0,50)
+topBar.Size = UDim2.new(1,0,0,40)
 topBar.BackgroundColor3 = Theme.Dark
 topBar.Parent = frame
 
@@ -92,13 +98,12 @@ title.TextColor3 = Color3.new(1,1,1)
 title.Parent = topBar
 
 local close = Instance.new("TextButton")
-close.Size = UDim2.new(0,40,0,40)
-close.Position = UDim2.new(1,-45,0,5)
+close.Size = UDim2.new(0,30,0,30)
+close.Position = UDim2.new(1,-35,0,5)
 close.Text = "X"
 close.TextColor3 = Color3.new(1,1,1)
 close.BackgroundColor3 = Color3.fromRGB(180,50,50)
 close.Parent = topBar
-
 Instance.new("UICorner", close)
 
 --------------------------------------------------
@@ -106,24 +111,25 @@ Instance.new("UICorner", close)
 --------------------------------------------------
 
 local side = Instance.new("Frame")
-side.Size = UDim2.new(0,160,1,-50)
-side.Position = UDim2.new(0,0,0,50)
+side.Size = UDim2.new(0,130,1,-40)
+side.Position = UDim2.new(0,0,0,40)
 side.BackgroundColor3 = Theme.Dark
 side.Parent = frame
 
 local content = Instance.new("Frame")
-content.Size = UDim2.new(1,-160,1,-50)
-content.Position = UDim2.new(0,160,0,50)
+content.Size = UDim2.new(1,-130,1,-40)
+content.Position = UDim2.new(0,130,0,40)
 content.BackgroundTransparency = 1
 content.Parent = frame
 
 --------------------------------------------------
--- PAGES SYSTEM (FIX IMPORTANT)
+-- PAGES
 --------------------------------------------------
 
 local Pages = {}
+local currentPage = "Home"
 
-local function CreatePage(name, text)
+local function CreatePage(name,text)
 	local page = Instance.new("Frame")
 	page.Size = UDim2.new(1,0,1,0)
 	page.BackgroundTransparency = 1
@@ -137,7 +143,7 @@ local function CreatePage(name, text)
 	label.TextWrapped = true
 	label.TextColor3 = Color3.new(1,1,1)
 	label.Font = Enum.Font.Gotham
-	label.TextSize = 24
+	label.TextSize = 20
 	label.Text = text
 	label.Parent = page
 
@@ -145,48 +151,49 @@ local function CreatePage(name, text)
 end
 
 --------------------------------------------------
--- PAGES
+-- PAGES CONTENT
 --------------------------------------------------
 
 CreatePage("Home","🏠 Bienvenue sur SF HUB")
-CreatePage("Player","👤 Joueur")
-CreatePage("Themes","🎨 Themes")
-CreatePage("Settings","⚙️ Paramètres")
-CreatePage("About","ℹ️ SF HUB V1")
+CreatePage("Player","👤 Player\n\n🚧 Arrive bientôt")
+CreatePage("Themes","🎨 Themes\n\n🔵 Bleu\n🌸 Rose\n🟢 Vert")
+CreatePage("Settings","⚙️ Settings\n\n🚧 Arrive bientôt")
+CreatePage("About","ℹ️ About\nV1 SF HUB")
 
-CreatePage("School","🏫 School")
-CreatePage("TP","⚡ TP")
-CreatePage("StaffBase","🛡️ Staff Base")
+CreatePage("School","🏫 School\n🚧 Arrive bientôt")
+CreatePage("TP","⚡ TP\n🚧 Arrive bientôt")
+CreatePage("StaffBase","🛡️ Staff Base\n🚧 Arrive bientôt")
+CreatePage("Boutique","🛒 Boutique\n🚧 Arrive bientôt")
 
 --------------------------------------------------
--- SHOW PAGE (FIX PRINCIPAL)
+-- SHOW PAGE FIX + MEMORY
 --------------------------------------------------
 
 local function ShowPage(name)
-	for _,page in pairs(Pages) do
-		page.Visible = false
+	for _,v in pairs(Pages) do
+		v.Visible = false
 	end
 
-	local target = Pages[name]
-	if target then
-		target.Visible = true
+	currentPage = name
+
+	if Pages[name] then
+		Pages[name].Visible = true
 	end
 end
 
 --------------------------------------------------
--- TABS
+-- TABS (FIX SIZE + NAMES CLEAN)
 --------------------------------------------------
 
-local function CreateTab(name, text)
+local function CreateTab(name,text)
 	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(1,-10,0,40)
+	b.Size = UDim2.new(1,-8,0,32) -- ✔ plus petit
 	b.Text = text
 	b.Font = Enum.Font.GothamBold
-	b.TextSize = 16
+	b.TextSize = 14
 	b.TextColor3 = Color3.new(1,1,1)
 	b.BackgroundColor3 = Color3.fromRGB(35,35,35)
 	b.Parent = side
-
 	Instance.new("UICorner", b)
 
 	b.MouseButton1Click:Connect(function()
@@ -195,7 +202,7 @@ local function CreateTab(name, text)
 end
 
 --------------------------------------------------
--- TABS
+-- TABS CLEAN
 --------------------------------------------------
 
 CreateTab("Home","🏠 Home")
@@ -206,10 +213,35 @@ CreateTab("About","ℹ️ About")
 
 CreateTab("School","🏫 School")
 CreateTab("TP","⚡ TP")
-CreateTab("StaffBase","🛡️ Staff Base")
+CreateTab("StaffBase","🛡️ Staff")
+CreateTab("Boutique","🛒 Shop")
 
 --------------------------------------------------
--- OPEN / CLOSE
+-- THEME BUTTONS (CLICABLE COLORS)
+--------------------------------------------------
+
+task.wait(0.1)
+
+local function MakeThemeButton(name,color)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1,-10,0,30)
+	b.Text = name
+	b.BackgroundColor3 = color
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Parent = Pages["Themes"]
+	Instance.new("UICorner", b)
+
+	b.MouseButton1Click:Connect(function()
+		ApplyTheme(color)
+	end)
+end
+
+MakeThemeButton("Bleu", Color3.fromRGB(0,170,255))
+MakeThemeButton("Rose", Color3.fromRGB(255,0,150))
+MakeThemeButton("Vert", Color3.fromRGB(0,255,120))
+
+--------------------------------------------------
+-- OPEN / CLOSE + MEMORY FIX
 --------------------------------------------------
 
 local opened = false
@@ -220,13 +252,13 @@ local function OpenUI()
 	frame.Size = UDim2.new(0,0,0,0)
 
 	TweenService:Create(frame,TweenInfo.new(0.3),{
-		Size = UDim2.new(0,650,0,420)
+		Size = UDim2.new(0,600,0,380)
 	}):Play()
 
 	Blur(true)
 
-	-- ✅ IMPORTANT : FORCER HOME AU DÉMARRAGE
-	ShowPage("Home")
+	-- ✔ revient sur la dernière page
+	ShowPage(currentPage)
 end
 
 local function CloseUI()
@@ -245,45 +277,13 @@ local function CloseUI()
 end
 
 openBtn.MouseButton1Click:Connect(function()
-	if opened then
-		CloseUI()
-	else
-		OpenUI()
-	end
+	if opened then CloseUI() else OpenUI() end
 end)
 
 close.MouseButton1Click:Connect(CloseUI)
 
 --------------------------------------------------
--- DRAG FIX
+-- START
 --------------------------------------------------
 
-local dragging = false
-local dragStart
-local startPos
-
-topBar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		frame.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-	end
-end)
+ShowPage("Home")
