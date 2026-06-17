@@ -509,8 +509,10 @@ local function buildUI()
 	autoEscapeBtn.Font = Enum.Font.GothamBold
 	autoEscapeBtn.TextSize = 14
 	autoEscapeBtn.Parent = evasionPage
+	
 	local autoCorner = Instance.new("UICorner")
 	autoCorner.Parent = autoEscapeBtn
+
 	autoEscapeBtn.MouseButton1Click:Connect(function()
 		local char = Player.Character
 		local root = getRoot(char)
@@ -529,6 +531,47 @@ local function buildUI()
 				end
 			end
 		end)
+
+		local foundTarget = false
+		local targetCFrame = nil
+		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
+
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("BasePart") or obj:IsA("Model") then
+				local nameLower = string.lower(obj.Name)
+				for _, keyword in pairs(keywords) do
+					if string.find(nameLower, keyword) then
+						foundTarget = true
+						targetCFrame = obj:IsA("BasePart") and obj.CFrame or (obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame)
+						break
+					end
+				end
+			end
+			if foundTarget then break end
+		end
+
+		if foundTarget and targetCFrame then
+			statusLabel.Text = "🔓 Bypass par étapes..."
+			root.Anchored = true
+			local startCF = root.CFrame
+			local endCF = targetCFrame * CFrame.new(0, 3, 0)
+			for i = 1, 15 do
+				root.CFrame = startCF:Lerp(endCF, i / 15)
+				task.wait(0.03)
+			end
+			root.Anchored = false
+			statusLabel.TextColor3 = Theme.Green
+			statusLabel.Text = "✅ Déplacement réussi !"
+		else
+			statusLabel.Text = "⚠️ Éjection forcée..."
+			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
+		end
+
+		task.wait(2)
+		escapeNoclip:Disconnect()
+		statusLabel.Text = "Statut : En attente d'activation..."
+		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+	end)
 
 		local foundTarget = false
 		local targetCFrame = nil
