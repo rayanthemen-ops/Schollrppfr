@@ -417,16 +417,7 @@ local function buildUI()
 	end)
 
 	-- FREECAM CONFIG
-	local camera = workspace.CurrentCamera
-	local freecamActive = false
-	local freecamConn = nil
-	local camSpeed = 1.5
-
-	createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
-		camSpeed = val
-	end)
-
-	-- VARIABLES GLOBALES (À mettre en haut du script)
+	-- VARIABLES GLOBALES
 local camera = workspace.CurrentCamera
 local freecamActive = false
 local freecamConn = nil
@@ -437,7 +428,7 @@ createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
     camSpeed = val
 end)
 
--- FONCTION DE DÉPLACEMENT (Extérieure pour éviter les conflits)
+-- FONCTION DE DÉPLACEMENT
 local function updateFreecam(dt)
     if not freecamActive then return end
     
@@ -475,7 +466,7 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
         if hum then hum.PlatformStand = false end
         
         camera.CameraType = Enum.CameraType.Custom
-        camera.CameraSubject = hum
+        if hum then camera.CameraSubject = hum end
     end
 end)
 
