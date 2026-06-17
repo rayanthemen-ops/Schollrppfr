@@ -1,65 +1,67 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
--- MODE SELECT UI
+-- MODE
 --------------------------------------------------
 
-local Mode = "PC"
+local Mode = nil
+
+--------------------------------------------------
+-- START UI
+--------------------------------------------------
 
 local startGui = Instance.new("ScreenGui")
-startGui.Name = "SF_START"
-startGui.ResetOnSpawn = false
+startGui.Name = "START_UI"
 startGui.Parent = PlayerGui
 
-local selectFrame = Instance.new("Frame")
-selectFrame.Size = UDim2.new(0,360,0,220)
-selectFrame.Position = UDim2.new(0.5,-180,0.5,-110)
-selectFrame.BackgroundColor3 = Color3.fromRGB(15,15,25)
-selectFrame.Parent = startGui
-Instance.new("UICorner", selectFrame)
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(0,170,255)
-stroke.Thickness = 2
-stroke.Parent = selectFrame
-
-local grad = Instance.new("UIGradient")
-grad.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(0,170,255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,150))
-}
-grad.Parent = selectFrame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,360,0,220)
+frame.Position = UDim2.new(0.5,-180,0.5,-110)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,30)
+frame.Parent = startGui
+Instance.new("UICorner", frame)
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,60)
+title.Size = UDim2.new(1,0,0,50)
 title.BackgroundTransparency = 1
-title.Text = "SF HUB"
+title.Text = "SF HUB - Choisis ton mode"
 title.TextColor3 = Color3.new(1,1,1)
-title.Font = Enum.Font.GothamBlack
-title.TextSize = 28
-title.Parent = selectFrame
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.Parent = frame
 
-local function MakeButton(text,pos,color,callback)
+local function Button(txt,pos,color,callback)
 	local b = Instance.new("TextButton")
 	b.Size = UDim2.new(0,140,0,50)
 	b.Position = pos
-	b.Text = text
+	b.Text = txt
 	b.BackgroundColor3 = color
 	b.TextColor3 = Color3.new(1,1,1)
 	b.Font = Enum.Font.GothamBold
-	b.Parent = selectFrame
+	b.Parent = frame
 	Instance.new("UICorner", b)
 
 	b.MouseButton1Click:Connect(callback)
 end
 
 --------------------------------------------------
--- THEME SYSTEM
+-- UI VARIABLES
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "SF_HUB"
+gui.Parent = PlayerGui
+
+local mainFrame
+local Pages = {}
+local openBtn
+
+--------------------------------------------------
+-- THEME
 --------------------------------------------------
 
 local Theme = {
@@ -68,75 +70,61 @@ local Theme = {
 	Accent = Color3.fromRGB(0,170,255)
 }
 
-local function SetTheme(color)
-	Theme.Accent = color
+local function SetTheme(c)
+	Theme.Accent = c
 	if mainFrame and mainFrame:FindFirstChild("UIStroke") then
-		mainFrame.UIStroke.Color = color
+		mainFrame.UIStroke.Color = c
 	end
 	if openBtn then
-		openBtn.BackgroundColor3 = color
+		openBtn.BackgroundColor3 = c
 	end
 end
 
 --------------------------------------------------
--- MAIN UI
---------------------------------------------------
-
-local gui = Instance.new("ScreenGui")
-gui.Name = "SF_HUB"
-gui.ResetOnSpawn = false
-gui.Parent = PlayerGui
-
-local mainFrame
-local openBtn
-local Pages = {}
-
---------------------------------------------------
--- PAGE SYSTEM
+-- PAGES
 --------------------------------------------------
 
 local function CreatePage(name,text)
-	local page = Instance.new("Frame")
-	page.Size = UDim2.new(1,0,1,0)
-	page.BackgroundTransparency = 1
-	page.Visible = false
-	page.Parent = mainFrame.Content
+	local p = Instance.new("Frame")
+	p.Size = UDim2.new(1,0,1,0)
+	p.BackgroundTransparency = 1
+	p.Visible = false
+	p.Parent = mainFrame.Content
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1,-20,1,-20)
-	label.Position = UDim2.new(0,10,0,10)
-	label.BackgroundTransparency = 1
-	label.TextWrapped = true
-	label.TextColor3 = Color3.new(1,1,1)
-	label.Font = Enum.Font.Gotham
-	label.TextSize = 20
-	label.Text = text
-	label.Parent = page
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.new(1,-20,1,-20)
+	t.Position = UDim2.new(0,10,0,10)
+	t.BackgroundTransparency = 1
+	t.TextColor3 = Color3.new(1,1,1)
+	t.Font = Enum.Font.Gotham
+	t.TextSize = 20
+	t.Text = text
+	t.Parent = p
 
-	Pages[name] = page
+	Pages[name] = p
 end
 
-local function ShowPage(name)
+local function ShowPage(n)
 	for _,v in pairs(Pages) do
 		v.Visible = false
 	end
-	if Pages[name] then
-		Pages[name].Visible = true
+	if Pages[n] then
+		Pages[n].Visible = true
 	end
 end
 
 --------------------------------------------------
--- BUILD UI
+-- BUILD UI (IMPORTANT FIX)
 --------------------------------------------------
 
 local function BuildUI()
 
 	mainFrame = Instance.new("Frame")
-	mainFrame.Size = UDim2.new(0,650,0,420)
-	mainFrame.Position = UDim2.new(0.5,-325,0.5,-210)
+	mainFrame.Size = UDim2.new(0,600,0,380)
+	mainFrame.Position = UDim2.new(0.5,-300,0.5,-190)
 	mainFrame.BackgroundColor3 = Theme.Bg
-	mainFrame.Visible = false
 	mainFrame.Parent = gui
+	mainFrame.Visible = true
 	Instance.new("UICorner", mainFrame)
 
 	local stroke = Instance.new("UIStroke")
@@ -146,14 +134,13 @@ local function BuildUI()
 	mainFrame.UIStroke = stroke
 
 	--------------------------------------------------
-	-- TOPBAR
+	-- TOP
 	--------------------------------------------------
 
-	local topBar = Instance.new("Frame")
-	topBar.Size = UDim2.new(1,0,0,50)
-	topBar.BackgroundColor3 = Theme.Dark
-	topBar.Parent = mainFrame
-	Instance.new("UICorner", topBar)
+	local top = Instance.new("Frame")
+	top.Size = UDim2.new(1,0,0,50)
+	top.BackgroundColor3 = Theme.Dark
+	top.Parent = mainFrame
 
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1,0,1,0)
@@ -161,40 +148,30 @@ local function BuildUI()
 	title.Text = "SF HUB"
 	title.TextColor3 = Color3.new(1,1,1)
 	title.Font = Enum.Font.GothamBold
-	title.TextSize = 24
-	title.Parent = topBar
-
-	local close = Instance.new("TextButton")
-	close.Size = UDim2.new(0,40,0,40)
-	close.Position = UDim2.new(1,-45,0,5)
-	close.Text = "X"
-	close.BackgroundColor3 = Color3.fromRGB(200,50,50)
-	close.TextColor3 = Color3.new(1,1,1)
-	close.Parent = topBar
-	Instance.new("UICorner", close)
+	title.TextSize = 22
+	title.Parent = top
 
 	--------------------------------------------------
-	-- SIDEBAR
+	-- SIDE
 	--------------------------------------------------
 
 	local side = Instance.new("Frame")
-	side.Size = UDim2.new(0,160,1,-50)
+	side.Size = UDim2.new(0,150,1,-50)
 	side.Position = UDim2.new(0,0,0,50)
 	side.BackgroundColor3 = Theme.Dark
 	side.Parent = mainFrame
-	Instance.new("UICorner", side)
 
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0,6)
 	layout.Parent = side
+	layout.Padding = UDim.new(0,6)
 
 	--------------------------------------------------
 	-- CONTENT
 	--------------------------------------------------
 
 	local content = Instance.new("Frame")
-	content.Size = UDim2.new(1,-160,1,-50)
-	content.Position = UDim2.new(0,160,0,50)
+	content.Size = UDim2.new(1,-150,1,-50)
+	content.Position = UDim2.new(0,150,0,50)
 	content.BackgroundTransparency = 1
 	content.Parent = mainFrame
 
@@ -207,12 +184,9 @@ local function BuildUI()
 	CreatePage("Home","🏠 Home")
 	CreatePage("Player","👤 Player")
 	CreatePage("Themes","🎨 Themes")
-	CreatePage("Settings","⚙️ Settings")
-	CreatePage("About","ℹ️ About")
-
-	CreatePage("School","🏫 School")
 	CreatePage("TP","⚡ TP")
-	CreatePage("Staff","🛡️ Base Staff")
+	CreatePage("School","🏫 School")
+	CreatePage("Staff","🛡️ Staff Base")
 
 	ShowPage("Home")
 
@@ -220,53 +194,26 @@ local function BuildUI()
 	-- TABS
 	--------------------------------------------------
 
-	local function Tab(name,text)
+	local function Tab(n,t)
 		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(1,-10,0,38)
-		b.Text = text
+		b.Size = UDim2.new(1,-10,0,35)
+		b.Text = t
 		b.BackgroundColor3 = Color3.fromRGB(30,30,30)
 		b.TextColor3 = Color3.new(1,1,1)
-		b.Font = Enum.Font.GothamBold
 		b.Parent = side
 		Instance.new("UICorner", b)
 
 		b.MouseButton1Click:Connect(function()
-			ShowPage(name)
+			ShowPage(n)
 		end)
 	end
 
-	Tab("Home","🏠 Home")
-	Tab("Player","👤 Player")
-	Tab("Themes","🎨 Themes")
-	Tab("Settings","⚙️ Settings")
-	Tab("About","ℹ️ About")
-	Tab("School","🏫 School")
-	Tab("TP","⚡ TP")
-	Tab("Staff","🛡️ Staff")
-
-	--------------------------------------------------
-	-- THEMES BUTTONS
-	--------------------------------------------------
-
-	task.wait(0.2)
-
-	local function ThemeBtn(txt,color,y)
-		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(0,120,0,35)
-		b.Position = UDim2.new(0,20,0,y)
-		b.Text = txt
-		b.BackgroundColor3 = color
-		b.TextColor3 = Color3.new(1,1,1)
-		b.Parent = Pages["Themes"]
-
-		b.MouseButton1Click:Connect(function()
-			SetTheme(color)
-		end)
-	end
-
-	ThemeBtn("Bleu",Color3.fromRGB(0,170,255),60)
-	ThemeBtn("Rose",Color3.fromRGB(255,0,150),110)
-	ThemeBtn("Vert",Color3.fromRGB(120,255,120),160)
+	Tab("Home","Home")
+	Tab("Player","Player")
+	Tab("Themes","Themes")
+	Tab("TP","TP")
+	Tab("School","School")
+	Tab("Staff","Staff")
 
 	--------------------------------------------------
 	-- OPEN BUTTON
@@ -285,33 +232,28 @@ local function BuildUI()
 		mainFrame.Visible = not mainFrame.Visible
 	end)
 
-	close.MouseButton1Click:Connect(function()
-		mainFrame.Visible = false
-	end)
-
 	--------------------------------------------------
-	-- MODE FIX
+	-- FIX MOBILE BUG (IMPORTANT)
 	--------------------------------------------------
 
 	if Mode == "Mobile" then
 		mainFrame.Size = UDim2.new(0,420,0,300)
-		side.Size = UDim2.new(0,130,1,-50)
-	else
-		mainFrame.Size = UDim2.new(0,650,0,420)
 	end
+
+	ShowPage("Home")
 end
 
 --------------------------------------------------
--- MODE SELECT
+-- MODE SELECT FIXED
 --------------------------------------------------
 
-MakeButton("💻 PC",UDim2.new(0.08,0,0.55,0),Color3.fromRGB(0,170,255),function()
+Button("PC",UDim2.new(0.08,0,0.55,0),Color3.fromRGB(0,170,255),function()
 	Mode = "PC"
 	startGui:Destroy()
 	BuildUI()
 end)
 
-MakeButton("📱 Mobile",UDim2.new(0.52,0,0.55,0),Color3.fromRGB(255,0,150),function()
+Button("Mobile",UDim2.new(0.52,0,0.55,0),Color3.fromRGB(255,0,150),function()
 	Mode = "Mobile"
 	startGui:Destroy()
 	BuildUI()
