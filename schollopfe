@@ -2,16 +2,18 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
--- CLEAN UI
+-- CLEAN UI & LIGHTING
 --------------------------------------------------
-local old = PlayerGui:FindFirstChild("SF_HUB")
-if old then old:Destroy() end
+local oldGui = PlayerGui:FindFirstChild("SF_HUB")
+if oldGui then oldGui:Destroy() end
+
+local oldBlur = Lighting:FindFirstChild("SF_Blur")
+if oldBlur then oldBlur:Destroy() end
 
 --------------------------------------------------
 -- ROOT GUI
@@ -21,75 +23,6 @@ gui.Name = "SF_HUB"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
-
---------------------------------------------------
--- 🔐 KEY SYSTEM (PROPRE SÉPARÉ)
---------------------------------------------------
-local VALID_KEY = "SFAR"
-local unlocked = false
-
-local function makeKeyUI()
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0,320,0,190)
-	frame.Position = UDim2.new(0.5,-160,0.5,-95)
-	frame.BackgroundColor3 = Color3.fromRGB(18,18,22)
-	frame.Parent = gui
-	Instance.new("UICorner", frame)
-
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1,0,0,40)
-	title.BackgroundTransparency = 1
-	title.Text = "🔐 ACCESS REQUIRED"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 18
-	title.TextColor3 = Color3.fromRGB(235,235,235)
-	title.Parent = frame
-
-	local box = Instance.new("TextBox")
-	box.Size = UDim2.new(0.9,0,0,40)
-	box.Position = UDim2.new(0.05,0,0.4,0)
-	box.PlaceholderText = "Enter key..."
-	box.Text = ""
-	box.Font = Enum.Font.Gotham
-	box.TextSize = 16
-	box.TextColor3 = Color3.new(1,1,1)
-	box.BackgroundColor3 = Color3.fromRGB(30,30,40)
-	box.Parent = frame
-	Instance.new("UICorner", box)
-
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0.9,0,0,35)
-	btn.Position = UDim2.new(0.05,0,0.7,0)
-	btn.Text = "UNLOCK"
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 16
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.BackgroundColor3 = Color3.fromRGB(120,170,255)
-	btn.Parent = frame
-	Instance.new("UICorner", btn)
-
-	local errorLabel = Instance.new("TextLabel")
-	errorLabel.Size = UDim2.new(1,0,0,20)
-	errorLabel.Position = UDim2.new(0,0,1,-20)
-	errorLabel.BackgroundTransparency = 1
-	errorLabel.Text = ""
-	errorLabel.TextColor3 = Color3.fromRGB(255,80,80)
-	errorLabel.Font = Enum.Font.Gotham
-	errorLabel.TextSize = 14
-	errorLabel.Parent = frame
-
-	btn.MouseButton1Click:Connect(function()
-		if box.Text == VALID_KEY then
-			unlocked = true
-			frame:Destroy()
-			buildUI()
-		else
-			errorLabel.Text = "Wrong key"
-			task.wait(1)
-			errorLabel.Text = ""
-		end
-	end)
-end
 
 --------------------------------------------------
 -- 🎨 THEME SYSTEM V6
@@ -104,18 +37,20 @@ local Theme = {
 	Green = Color3.fromRGB(90,200,160)
 }
 
+local UI = {}
+
 local function applyTheme(color)
 	Theme.Accent = color
-	if UI then
+	if UI.openBtn and UI.stroke then
 		UI.openBtn.BackgroundColor3 = color
 		UI.stroke.Color = color
 	end
 end
 
 --------------------------------------------------
--- BLUR
+-- BLUR SYSTEM
 --------------------------------------------------
-local blur = Lighting:FindFirstChild("SF_Blur") or Instance.new("BlurEffect")
+local blur = Instance.new("BlurEffect")
 blur.Name = "SF_Blur"
 blur.Size = 0
 blur.Parent = Lighting
@@ -127,22 +62,54 @@ local function blurToggle(state)
 end
 
 --------------------------------------------------
--- UI CONTAINER (rempli après unlock)
+-- SYSTEME DE DRAG (GLISSER-DÉPOSER)
 --------------------------------------------------
-UI = {}
+local function makeDraggable(dragFrame, moveFrame)
+	local dragging, dragInput, dragStart, startPos
+
+	dragFrame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = moveFrame.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	dragFrame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			TweenService:Create(moveFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			}):Play()
+		end
+	end)
+end
 
 --------------------------------------------------
--- BUILD UI (après key)
+-- BUILD MAIN UI
 --------------------------------------------------
-function buildUI()
-
+local function buildUI()
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0,650,0,420)
 	frame.Position = UDim2.new(0.5,-325,0.5,-210)
 	frame.BackgroundColor3 = Theme.Bg
 	frame.Visible = false
 	frame.Parent = gui
-	Instance.new("UICorner", frame)
+	
+	local frameCorner = Instance.new("UICorner")
+	frameCorner.Parent = frame
 
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = Theme.Stroke
@@ -164,18 +131,24 @@ function buildUI()
 	openBtn.TextColor3 = Theme.Text
 	openBtn.BackgroundColor3 = Theme.Accent
 	openBtn.Parent = gui
-	Instance.new("UICorner", openBtn)
+	
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.Parent = openBtn
 
 	UI.openBtn = openBtn
 
 	--------------------------------------------------
-	-- TOPBAR
+	-- TOPBAR (ZONE DE DRAG)
 	--------------------------------------------------
 	local topBar = Instance.new("Frame")
 	topBar.Size = UDim2.new(1,0,0,42)
 	topBar.BackgroundColor3 = Theme.Panel
 	topBar.Parent = frame
-	Instance.new("UICorner", topBar)
+	
+	local topCorner = Instance.new("UICorner")
+	topCorner.Parent = topBar
+	
+	makeDraggable(topBar, frame)
 
 	local close = Instance.new("TextButton")
 	close.Size = UDim2.new(0,34,0,34)
@@ -185,7 +158,9 @@ function buildUI()
 	close.TextColor3 = Theme.Text
 	close.BackgroundColor3 = Color3.fromRGB(200,80,80)
 	close.Parent = topBar
-	Instance.new("UICorner", close)
+	
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.Parent = close
 
 	--------------------------------------------------
 	-- SIDEBAR
@@ -195,14 +170,16 @@ function buildUI()
 	side.Position = UDim2.new(0,0,0,42)
 	side.BackgroundColor3 = Theme.Panel
 	side.Parent = frame
-	Instance.new("UICorner", side)
+	
+	local sideCorner = Instance.new("UICorner")
+	sideCorner.Parent = side
 
 	local layout = Instance.new("UIListLayout")
 	layout.Padding = UDim.new(0,6)
 	layout.Parent = side
 
 	--------------------------------------------------
-	-- CONTENT
+	-- CONTENT CONTAINER
 	--------------------------------------------------
 	local content = Instance.new("Frame")
 	content.Size = UDim2.new(1,-160,1,-42)
@@ -214,139 +191,212 @@ function buildUI()
 	local Buttons = {}
 	local Current = nil
 
-	local function createPage(name, text)
+	local function createPage(name)
 		local p = Instance.new("Frame")
 		p.Size = UDim2.new(1,0,1,0)
 		p.BackgroundTransparency = 1
 		p.Visible = false
 		p.Parent = content
-
-		local l = Instance.new("TextLabel")
-		l.Size = UDim2.new(1,-10,1,-10)
-		l.Position = UDim2.new(0,5,0,5)
-		l.BackgroundTransparency = 1
-		l.TextWrapped = true
-		l.TextColor3 = Theme.Text
-		l.Font = Enum.Font.Gotham
-		l.TextSize = 18
-		l.Text = text
-		l.Parent = p
-
 		Pages[name] = p
+		return p
 	end
 
 	local function show(name)
 		if Current == name then return end
 		Current = name
 
-		for _,p in pairs(Pages) do
-			p.Visible = false
-		end
+		for _,p in pairs(Pages) do p.Visible = false end
+		if Pages[name] then Pages[name].Visible = true end
 
-		local t = Pages[name]
-		if t then
-			t.Visible = true
-		end
-
-		for _,b in pairs(Buttons) do
-			b.BackgroundColor3 = Color3.fromRGB(40,40,50)
-		end
-
-		if Buttons[name] then
-			Buttons[name].BackgroundColor3 = Theme.Accent
-		end
+		for _,b in pairs(Buttons) do b.BackgroundColor3 = Color3.fromRGB(40,40,50) end
+		if Buttons[name] then Buttons[name].BackgroundColor3 = Theme.Accent end
 	end
 
 	--------------------------------------------------
-	-- PAGES RESTORED
+	-- GENERATION DES PAGES
 	--------------------------------------------------
-	createPage("Home","🏠 bienvenu dans SF")
-	createPage("Player","👤 Player options")
-	createPage("Themes","🎨 Theme selector")
-	createPage("Settings","⚙️ Settings panel")
-	createPage("About","ℹ️ About SF HUB V6")
+	local homePage = createPage("Home")
+	local playerPage = createPage("Player")
+	local themesPage = createPage("Themes")
+	local settingsPage = createPage("Settings")
+	local aboutPage = createPage("About")
+
+	-- Label par défaut pour les pages simples
+	local function addSimpleText(page, text)
+		local l = Instance.new("TextLabel")
+		l.Size = UDim2.new(1,-20,1,-20)
+		l.Position = UDim2.new(0,10,0,10)
+		l.BackgroundTransparency = 1
+		l.TextWrapped = true
+		l.TextColor3 = Theme.Text
+		l.Font = Enum.Font.Gotham
+		l.TextSize = 18
+		l.Text = text
+		l.Parent = page
+	end
+
+	addSimpleText(homePage, "🏠 Bienvenue dans SF HUB")
+	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nDéveloppé avec soin.")
 
 	--------------------------------------------------
-	-- SETTINGS (Toggles + Slider demo)
+	-- CONFIGURATION DE L'ONGLET PLAYER
 	--------------------------------------------------
-	local settings = Pages["Settings"]
+	local pLayout = Instance.new("UIListLayout")
+	pLayout.Padding = UDim.new(0, 12)
+	pLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	pLayout.Parent = playerPage
 
+	local pPadding = Instance.new("UIPadding")
+	pPadding.PaddingTop = UDim.new(0, 15)
+	pPadding.Parent = playerPage
+
+	local function getHum()
+		return Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+	end
+
+	local function createPlayerOption(name, default, callback)
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(0.9, 0, 0, 40)
+		row.BackgroundTransparency = 1
+		row.Parent = playerPage
+
+		local lab = Instance.new("TextLabel")
+		lab.Size = UDim2.new(0.6, 0, 1, 0)
+		lab.Text = name
+		lab.TextColor3 = Theme.Text
+		lab.Font = Enum.Font.GothamMedium
+		lab.TextSize = 15
+		lab.TextXAlignment = Enum.TextXAlignment.Left
+		lab.BackgroundTransparency = 1
+		lab.Parent = row
+
+		local input = Instance.new("TextBox")
+		input.Size = UDim2.new(0.35, 0, 0.8, 0)
+		input.Position = UDim2.new(0.65, 0, 0.1, 0)
+		input.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+		input.Text = tostring(default)
+		input.TextColor3 = Theme.Text
+		input.Font = Enum.Font.Gotham
+		input.TextSize = 14
+		input.Parent = row
+		local inputCorner = Instance.new("UICorner")
+		inputCorner.Parent = input
+
+		input.FocusLost:Connect(function()
+			local num = tonumber(input.Text)
+			if num then callback(num) end
+		end)
+	end
+
+	createPlayerOption("Vitesse (WalkSpeed)", 16, function(val)
+		local hum = getHum()
+		if hum then hum.WalkSpeed = val end
+	end)
+
+	createPlayerOption("Saut (JumpPower)", 50, function(val)
+		local hum = getHum()
+		if hum then 
+			hum.UseJumpPower = true
+			hum.JumpPower = val 
+		end
+	end)
+
+	local resetBtn = Instance.new("TextButton")
+	resetBtn.Size = UDim2.new(0.9, 0, 0, 38)
+	resetBtn.Text = "💀 Réinitialiser le Personnage"
+	resetBtn.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
+	resetBtn.TextColor3 = Color3.new(1,1,1)
+	resetBtn.Font = Enum.Font.GothamBold
+	resetBtn.TextSize = 14
+	resetBtn.Parent = playerPage
+	local resetCorner = Instance.new("UICorner")
+	resetCorner.Parent = resetBtn
+
+	resetBtn.MouseButton1Click:Connect(function()
+		if Player.Character then Player.Character:BreakJoints() end
+	end)
+
+	--------------------------------------------------
+	-- CONFIGURATION DES SETTINGS
+	--------------------------------------------------
 	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.new(0,140,0,30)
-	toggle.Position = UDim2.new(0,10,0,60)
+	toggle.Size = UDim2.new(0,160,0,35)
+	toggle.Position = UDim2.new(0.5,-80,0,30)
 	toggle.Text = "Toggle: OFF"
 	toggle.BackgroundColor3 = Color3.fromRGB(40,40,50)
 	toggle.TextColor3 = Theme.Text
-	toggle.Parent = settings
-	Instance.new("UICorner", toggle)
+	toggle.Font = Enum.Font.GothamMedium
+	toggle.TextSize = 14
+	toggle.Parent = settingsPage
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.Parent = toggle
 
 	local state = false
 	toggle.MouseButton1Click:Connect(function()
 		state = not state
 		toggle.Text = state and "Toggle: ON" or "Toggle: OFF"
+		toggle.BackgroundColor3 = state and Theme.Green or Color3.fromRGB(40,40,50)
 	end)
 
 	--------------------------------------------------
-	-- THEMES
+	-- CONFIGURATION DES THEMES
 	--------------------------------------------------
-	local function addTheme(color, x)
+	local function addThemeBtn(color, x)
 		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(0,100,0,30)
-		b.Position = UDim2.new(0,x,0,60)
+		b.Size = UDim2.new(0,80,0,35)
+		b.Position = UDim2.new(0,x,0,30)
 		b.BackgroundColor3 = color
 		b.Text = ""
-		b.Parent = Pages["Themes"]
-		Instance.new("UICorner", b)
+		b.Parent = themesPage
+		local bCorner = Instance.new("UICorner")
+		bCorner.Parent = b
 
-		b.MouseButton1Click:Connect(function()
-			applyTheme(color)
-		end)
+		b.MouseButton1Click:Connect(function() applyTheme(color) end)
 	end
 
-	addTheme(Theme.Accent, 10)
-	addTheme(Theme.Accent2, 120)
-	addTheme(Theme.Green, 230)
+	addThemeBtn(Color3.fromRGB(120,170,255), 30)
+	addThemeBtn(Theme.Accent2, 130)
+	addThemeBtn(Theme.Green, 230)
 
 	--------------------------------------------------
-	-- TABS
+	-- CRÉATION DES ONGLETS (TABS)
 	--------------------------------------------------
-	local function tab(name, text)
+	local function createTab(name, text)
 		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(1,-8,0,32)
+		b.Size = UDim2.new(1,-8,0,35)
 		b.Text = text
+		b.Font = Enum.Font.GothamMedium
+		b.TextSize = 14
 		b.BackgroundColor3 = Color3.fromRGB(40,40,50)
 		b.TextColor3 = Theme.Text
 		b.Parent = side
-		Instance.new("UICorner", b)
+		local bCorner = Instance.new("UICorner")
+		bCorner.Parent = b
 
-		b.MouseButton1Click:Connect(function()
-			show(name)
-		end)
-
+		b.MouseButton1Click:Connect(function() show(name) end)
 		Buttons[name] = b
 	end
 
-	tab("Home","🏠 Home")
-	tab("Player","👤 Player")
-	tab("Themes","🎨 Themes")
-	tab("Settings","⚙️ Settings")
-	tab("About","ℹ️ About")
+	createTab("Home","🏠 Home")
+	createTab("Player","👤 Player")
+	createTab("Themes","🎨 Themes")
+	createTab("Settings","⚙️ Settings")
+	createTab("About","ℹ️ About")
 
 	show("Home")
 
 	--------------------------------------------------
-	-- OPEN / CLOSE
+	-- LOGIQUE OUVERTURE / FERMETURE
 	--------------------------------------------------
 	local opened = false
 
 	local function open()
 		if opened then return end
 		opened = true
-
 		frame.Visible = true
 		frame.Size = UDim2.new(0,0,0,0)
 
-		TweenService:Create(frame, TweenInfo.new(0.25), {
+		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			Size = UDim2.new(0,650,0,420)
 		}):Play()
 
@@ -354,15 +404,15 @@ function buildUI()
 	end
 
 	local function closeUI()
+		if not opened then return end
 		opened = false
 
-		local t = TweenService:Create(frame, TweenInfo.new(0.2), {
+		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 			Size = UDim2.new(0,0,0,0)
 		})
-
 		t:Play()
 		t.Completed:Connect(function()
-			frame.Visible = false
+			if not opened then frame.Visible = false end
 		end)
 
 		blurToggle(false)
@@ -376,6 +426,76 @@ function buildUI()
 end
 
 --------------------------------------------------
--- START
+-- 🔐 SYSTEME DE CLÉ
+--------------------------------------------------
+local function makeKeyUI()
+	local VALID_KEY = "SFAR"
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0,320,0,190)
+	frame.Position = UDim2.new(0.5,-160,0.5,-95)
+	frame.BackgroundColor3 = Theme.Bg
+	frame.Parent = gui
+	local frameCorner = Instance.new("UICorner")
+	frameCorner.Parent = frame
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1,0,0,40)
+	title.BackgroundTransparency = 1
+	title.Text = "🔐 ACCÈS REQUIS"
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 18
+	title.TextColor3 = Theme.Text
+	title.Parent = frame
+
+	local box = Instance.new("TextBox")
+	box.Size = UDim2.new(0.9,0,0,40)
+	box.Position = UDim2.new(0.05,0,0.4,0)
+	box.PlaceholderText = "Entrez la clé..."
+	box.Text = ""
+	box.Font = Enum.Font.Gotham
+	box.TextSize = 16
+	box.TextColor3 = Color3.new(1,1,1)
+	box.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	box.Parent = frame
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.Parent = box
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9,0,0,35)
+	btn.Position = UDim2.new(0.05,0,0.7,0)
+	btn.Text = "DEVERROUILLER"
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 16
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.BackgroundColor3 = Theme.Accent
+	btn.Parent = frame
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.Parent = btn
+
+	local errorLabel = Instance.new("TextLabel")
+	errorLabel.Size = UDim2.new(1,0,0,20)
+	errorLabel.Position = UDim2.new(0,0,1,-20)
+	errorLabel.BackgroundTransparency = 1
+	errorLabel.Text = ""
+	errorLabel.TextColor3 = Color3.fromRGB(255,80,80)
+	errorLabel.Font = Enum.Font.Gotham
+	errorLabel.TextSize = 14
+	errorLabel.Parent = frame
+
+	btn.MouseButton1Click:Connect(function()
+		if box.Text == VALID_KEY then
+			frame:Destroy()
+			buildUI()
+		else
+			errorLabel.Text = "Clé incorrecte"
+			task.wait(1)
+			errorLabel.Text = ""
+		end
+	end)
+end
+
+--------------------------------------------------
+-- LANCEMENT
 --------------------------------------------------
 makeKeyUI()
