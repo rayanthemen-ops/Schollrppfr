@@ -554,27 +554,28 @@ local function buildUI()
 
 		-- Exécution du déplacement par étapes
 		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Bypass par étapes..."
+			statusLabel.Text = "🔓 Bypass Anti-Cheat..."
+			
+			-- On détache la RootPart du moteur physique
 			root.Anchored = true
-			local startCF = root.CFrame
-			local endCF = targetCFrame * CFrame.new(0, 3, 0)
-			for i = 1, 15 do
-				root.CFrame = startCF:Lerp(endCF, i / 15)
-				task.wait(0.03)
-			end
+			
+			-- On change la position en une seule fois, mais on trompe le serveur
+			-- en changeant la propriété du HumanoidRootPart directement
+			local targetPos = targetCFrame.Position + Vector3.new(0, 3, 0)
+			
+			-- La technique ici est de forcer la position tout en simulant un "respawn" de position
+			root.CFrame = CFrame.new(targetPos)
+			
+			-- On attend un court instant avant de désancrer
+			task.wait(0.1)
 			root.Anchored = false
+			
 			statusLabel.TextColor3 = Theme.Green
-			statusLabel.Text = "✅ Déplacement réussi !"
+			statusLabel.Text = "✅ Position forcée !"
 		else
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
-
-		task.wait(2)
-		escapeNoclip:Disconnect()
-		statusLabel.Text = "Statut : En attente d'activation..."
-		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	end)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
