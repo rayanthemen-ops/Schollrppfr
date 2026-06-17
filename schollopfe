@@ -863,7 +863,7 @@ local function buildUI()
 	local function closeUI()
 		if not opened then return end
 		opened = false
-		local t = TweenService:Create(frame, TweenInfo.new(0,2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
 		t:Play()
 		t.Completed:Connect(function() if not opened then frame.Visible = false end end)
 		blurToggle(false)
