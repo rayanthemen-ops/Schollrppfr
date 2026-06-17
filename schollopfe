@@ -513,49 +513,19 @@ local function buildUI()
 	autoCorner.Parent = autoEscapeBtn
 
 	-- Logique intelligente de recherche pour casser le système de colle
+	-- Logique intelligente de recherche pour casser le système de colle
 	autoEscapeBtn.MouseButton1Click:Connect(function()
-    local char = Player.Character
-    local root = getRoot(char)
-    local hum = getHum(char)
-    if not root or not hum then return end
-    
-    statusLabel.Text = "🔍 Analyse..."
-    hum.Sit = false
-    
-    -- Technique : On met le personnage dans un état spécifique pour éviter le rollback
-    -- On désactive la détection de vitesse et on réduit la gravité locale si possible
-    local function blinkTeleport(targetPos)
-        -- Au lieu d'un seul TP, on déplace le personnage en plusieurs étapes très rapides
-        -- ou on change la CFrame en étant "inactif" pour le serveur
-        root.Anchored = true
-        task.wait(0.1) -- Petit délai pour laisser le serveur "oublier" l'ancienne position
-        root.CFrame = targetCFrame * CFrame.new(0, 3, 0)
-        task.wait(0.1)
-        root.Anchored = false
-    end
-
-    -- [Ton code existant pour trouver foundTarget...]
-    -- ... (garde ton bloc de recherche ici) ...
-
-    if foundTarget and targetCFrame then
-        statusLabel.Text = "🔓 Déplacement sécurisé..."
-        blinkTeleport(targetCFrame) -- Utilise la fonction blink
-        statusLabel.Text = "✅ Libéré !"
-    else
-        statusLabel.Text = "⚠️ Éjection forcée..."
-        root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
-    end
-end)
-
+		local char = Player.Character
+		local root = getRoot(char)
+		local hum = getHum(char)
+		if not root or not hum then return end
 
 		statusLabel.Text = "🔍 Analyse des scripts et de la map..."
 		statusLabel.TextColor3 = Theme.Accent
-
-		-- Étape 1 : Libérer le corps immédiatement de toute contrainte d'assise
 		hum.Sit = false
-		root.Velocity = Vector3.new(0,0,0)
+		root.Velocity = Vector3.new(0, 0, 0)
 
-		-- Étape 2 : Activer le noclip temporaire pour éviter d'être bloqué dans la pièce
+		-- Activation du Noclip
 		local escapeNoclip = RunService.Stepped:Connect(function()
 			if char then
 				for _, part in pairs(char:GetDescendants()) do
@@ -564,11 +534,9 @@ end)
 			end
 		end)
 
-		-- Étape 3 : Scanner la map pour trouver un point d'interaction d'évasion (Toilettes, Sorties, Zones specifiques)
+		-- Recherche de cible
 		local foundTarget = false
 		local targetCFrame = nil
-
-		-- Liste des mots-clés que le script va chercher dans le jeu pour trouver la sortie cachée
 		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
 
 		for _, obj in pairs(workspace:GetDescendants()) do
@@ -589,22 +557,23 @@ end)
 			if foundTarget then break end
 		end
 
-		-- Étape 4 : Exécution de la téléportation stratégique
+		-- Exécution sécurisée (Blink pour éviter le rollback)
 		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Point d'évasion trouvé ! Bypass en cours..."
-			statusLabel.TextColor3 = Theme.Green
+			statusLabel.Text = "🔓 Bypass en cours..."
+			root.Anchored = true
+			task.wait(0.2)
 			root.CFrame = targetCFrame * CFrame.new(0, 3, 0)
+			task.wait(0.2)
+			root.Anchored = false
+			statusLabel.TextColor3 = Theme.Green
 		else
-			-- Plan B si aucun mot clé n'est trouvé : éjection forcée hors de la zone d'école (Toit ou extérieur profond)
-			statusLabel.Text = "⚠️ Éjection forcée (Plan B actif)..."
-			statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
+			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
 
-		task.wait(2)
+		task.wait(1)
 		escapeNoclip:Disconnect()
 		statusLabel.Text = "✅ Libéré avec succès !"
-		statusLabel.TextColor3 = Theme.Green
 		task.wait(2)
 		statusLabel.Text = "Statut : En attente d'activation..."
 		statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
