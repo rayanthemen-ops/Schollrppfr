@@ -399,7 +399,6 @@ local function buildUI()
 	createPlayerToggle("📍 Clic Téléport (Maintien Écran)", function(enabled)
 		if enabled then
 			telemetryConn = UserInputService.InputBegan:Connect(function(input, processed)
-				-- Sur Mobile : Un appui long ou clic tactile simple téléporte au point touché
 				if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
 					local mouse = Player:GetMouse()
 					local root = getRoot()
@@ -413,17 +412,12 @@ local function buildUI()
 		end
 	end)
 
-	-- 🎥 FREECAM MOBILE (PASSE-PARTOUT AVEC CONTROLES ULTRA-ADAPTÉS)
+	-- 🎥 FREECAM DIRECTIONNELLE EN FONCTION DU REGARD (JOYYSTICK SEUL)
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
 	local camSpeed = 1.5 
 	local camCFrame = camera.CFrame
-	
-	-- Variables de mouvements tactiles mobiles
-	local mobileControlsFrame
-	local upPressed = false
-	local downPressed = false
 
 	createPlayerToggle("🎥 Freecam (Caméra Libre)", function(enabled)
 		freecamActive = enabled
@@ -431,102 +425,58 @@ local function buildUI()
 			camCFrame = camera.CFrame
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			-- 📱 Création de l'interface de contrôle pour Mobile
-			mobileControlsFrame = Instance.new("Frame")
-			mobileControlsFrame.Size = UDim2.new(0, 100, 0, 180)
-			mobileControlsFrame.Position = UDim2.new(1, -120, 0.5, -90)
-			mobileControlsFrame.BackgroundTransparency = 1
-			mobileControlsFrame.Parent = gui
-
-			local function createMobileBtn(text, yPos, pressCallback)
-				local b = Instance.new("TextButton")
-				b.Size = UDim2.new(1, 0, 0, 50)
-				b.Position = UDim2.new(0, 0, 0, yPos)
-				b.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-				b.Text = text
-				b.TextColor3 = Theme.Text
-				b.Font = Enum.Font.GothamBold
-				b.TextSize = 16
-				b.Parent = mobileControlsFrame
-				local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, 8) c.Parent = b
-				local s = Instance.new("UIStroke") s.Color = Theme.Accent s.Thickness = 1 s.Parent = b
-
-				b.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						pressCallback(true)
-						b.BackgroundColor3 = Theme.Accent
-					end
-				end)
-				b.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						pressCallback(false)
-						b.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-					end
-				end)
-			end
-
-			createMobileBtn("⬆️ Monter", 10, function(val) upPressed = val end)
-			createMobileBtn("⬇️ Descendre", 70, function(val) downPressed = val end)
-			
-			-- Gestion du déplacement au Touch / Drag (Faire glisser son doigt sur l'écran)
-			local touchStartPos = nil
+			-- Rotation fluide au glissement de doigt standard
 			local dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
 				if processed then return end
 				local delta = touch.Delta
-				-- Rotation fluide de la caméra sur mobile
 				local rotation = CFrame.Angles(0, -math.rad(delta.X * 0.4), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y * 0.4), 0, 0)
 				camCFrame = CFrame.new(camCFrame.Position) * rotation
 			end)
 
-			-- Boucle RenderStepped pour appliquer le mouvement à chaque image
 			freecamConn = game:GetService("RunService").RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
 				
 				local lSpeed = camSpeed * (dt * 60)
-				local moveVector = Vector3.new(0, 0, 0)
 				
-				-- Utilise le joystick de base de Roblox sur l'écran pour avancer/reculer
+				-- Récupère la direction exacte demandée via le Joystick de Roblox
 				local moveDirection = Player.Character and getHum() and getHum().MoveDirection
+				
 				if moveDirection and moveDirection.Magnitude > 0 then
-					moveVector = moveVector + (camera.CFrame:VectorToWorldSpace(Vector3.new(moveDirection.X, 0, moveDirection.Z)) * lSpeed)
+					-- Convertit l'inclinaison de ton regard (3D complète) dans l'espace de la caméra
+					local lookVector = camera.CFrame.LookVector
+					local rightVector = camera.CFrame.RightVector
+					
+					-- Calcule le déplacement basé sur l'inclinaison de la caméra (regarder en haut = monter)
+					-- Le Joystick gère le déplacement relatif à l'écran
+					local localMove = (lookVector * -moveDirection.Z) + (rightVector * moveDirection.X)
+					if localMove.Magnitude > 0 then
+						localMove = localMove.Unit * lSpeed
+					end
+					
+					camCFrame = camCFrame + localMove
 				else
-					-- Support clavier au cas où
+					-- Support clavier classique en secours (ZQSD)
+					local keyboardMove = Vector3.new(0, 0, 0)
 					if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then
-						moveVector = moveVector + Vector3.new(0, 0, -lSpeed)
+						keyboardMove = keyboardMove + Vector3.new(0, 0, -lSpeed)
 					end
 					if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-						moveVector = moveVector + Vector3.new(0, 0, lSpeed)
+						keyboardMove = keyboardMove + Vector3.new(0, 0, lSpeed)
 					end
 					if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-						moveVector = moveVector + Vector3.new(-lSpeed, 0, 0)
+						keyboardMove = keyboardMove + Vector3.new(-lSpeed, 0, 0)
 					end
 					if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-						moveVector = moveVector + Vector3.new(lSpeed, 0, 0)
+						keyboardMove = keyboardMove + Vector3.new(lSpeed, 0, 0)
 					end
-				end
-
-				-- Hauteur via les boutons tactiles
-				if upPressed then moveVector = moveVector + Vector3.new(0, lSpeed, 0) end
-				if downPressed then moveVector = moveVector + Vector3.new(0, -lSpeed, 0) end
-				
-				-- Déplacement pur (sans collisions physique)
-				if moveDirection and moveDirection.Magnitude > 0 then
-					camCFrame = camCFrame + moveVector
-				else
-					camCFrame = camCFrame * CFrame.new(moveVector)
+					camCFrame = camCFrame * CFrame.new(keyboardMove)
 				end
 				
+				-- Bloque la rotation pour éviter que la caméra ne pivote bizarrement sur elle-même
 				camera.CFrame = camCFrame
-			end)
-			
-			-- Nettoyage si on désactive
-			mobileControlsFrame.Destroying:Connect(function()
-				if dragConn then dragConn:Disconnect() end
 			end)
 		else
 			if freecamConn then freecamConn:Disconnect() end
-			if mobileControlsFrame then mobileControlsFrame:Destroy() mobileControlsFrame = nil end
-			
 			camera.CameraType = Enum.CameraType.Custom
 			local hum = getHum()
 			if hum then camera.CameraSubject = hum end
