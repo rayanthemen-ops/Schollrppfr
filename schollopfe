@@ -417,12 +417,12 @@ local function buildUI()
 	end)
 
 	-- FREECAM
+	-- Variables nécessaires (à mettre en haut de votre script ou avant la fonction)
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
-	local camSpeed = 1.5 
-	local camCFrame = camera.CFrame
-	local dragConn
+	local camSpeed = 1.5
+	local camAngles = Vector2.new(0, 0) -- On utilise des angles fixes pour éviter les erreurs de CFrame
 
 	createPlayerToggle("🎥 Freecam (Caméra Libre)", function(enabled)
 		freecamActive = enabled
@@ -430,30 +430,36 @@ local function buildUI()
 		
 		if enabled then
 			if root then root.Anchored = true end
-			camCFrame = camera.CFrame
+			-- Initialiser les angles à partir de la caméra actuelle
+			local look = camera.CFrame.LookVector
+			camAngles = Vector2.new(math.asin(look.Y), math.atan2(-look.X, -look.Z))
+			
 			camera.CameraType = Enum.CameraType.Scriptable
 			
+			-- Gestion de la rotation via le mouvement tactile
 			dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
-				if processed then return end
-				local delta = touch.Delta
-				local rotation = CFrame.Angles(0, -math.rad(delta.X * 0.35), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y * 0.35), 0, 0)
-				camCFrame = CFrame.new(camCFrame.Position) * rotation
+				if processed or not freecamActive then return end
+				-- Ajustement de la sensibilité (0.01 est plus stable)
+				camAngles = camAngles + Vector2.new(-touch.Delta.Y * 0.01, -touch.Delta.X * 0.01)
+				-- Bloquer la caméra verticale pour éviter qu'elle ne se retourne
+				camAngles = Vector2.new(math.clamp(camAngles.X, -math.rad(89), math.rad(89)), camAngles.Y)
 			end)
 
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
-				local lSpeed = camSpeed * (dt * 60)
-				local hum = getHum()
-				local moveDirection = hum and hum.MoveDirection
 				
-				if moveDirection and moveDirection.Magnitude > 0 then
-					local lookVector = camera.CFrame.LookVector
-					local rightVector = camera.CFrame.RightVector
-					local localMove = (lookVector * -moveDirection.Z) + (rightVector * moveDirection.X)
-					if localMove.Magnitude > 0 then localMove = localMove.Unit * lSpeed end
-					camCFrame = camCFrame + localMove
+				-- Appliquer la rotation
+				camera.CFrame = CFrame.new(camera.CFrame.Position) * CFrame.fromEulerAnglesYXZ(camAngles.X, camAngles.Y, 0)
+				
+				-- Gestion du mouvement avec le joystick (MoveDirection)
+				local hum = getHum()
+				local moveDir = hum and hum.MoveDirection or Vector3.new(0,0,0)
+				
+				if moveDir.Magnitude > 0 then
+					-- On déplace la caméra selon sa propre direction, pas celle du joueur
+					local move = (camera.CFrame.RightVector * moveDir.X) + (camera.CFrame.LookVector * -moveDir.Z)
+					camera.CFrame = camera.CFrame + (move * camSpeed)
 				end
-				camera.CFrame = camCFrame
 			end)
 		else
 			if freecamConn then freecamConn:Disconnect() end
