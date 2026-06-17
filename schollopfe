@@ -332,7 +332,7 @@ function buildUI()
 	tab("Themes","🎨 Themes")
 	tab("Settings","⚙️ Settings")
 	tab("About","ℹ️ About")
-	tab("ESP"," Esp staff
+	tab("ESP"," Esp staff")
 
 	show("Home")
 
