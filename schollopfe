@@ -7,304 +7,161 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
--- GUI
+-- MODE SELECT (PC / MOBILE)
 --------------------------------------------------
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "SF_HUB"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.Parent = PlayerGui
+local Mode = "PC"
+
+local startGui = Instance.new("ScreenGui")
+startGui.Name = "StartUI"
+startGui.Parent = PlayerGui
+
+local selectFrame = Instance.new("Frame")
+selectFrame.Size = UDim2.new(0,300,0,200)
+selectFrame.Position = UDim2.new(0.5,-150,0.5,-100)
+selectFrame.BackgroundColor3 = Color3.fromRGB(25,25,35)
+selectFrame.Parent = startGui
+Instance.new("UICorner", selectFrame)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,50)
+title.BackgroundTransparency = 1
+title.Text = "Choisis ton mode"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.Parent = selectFrame
+
+local pc = Instance.new("TextButton")
+pc.Size = UDim2.new(0,120,0,50)
+pc.Position = UDim2.new(0.1,0,0.5,0)
+pc.Text = "PC"
+pc.Parent = selectFrame
+Instance.new("UICorner", pc)
+
+local mobile = Instance.new("TextButton")
+mobile.Size = UDim2.new(0,120,0,50)
+mobile.Position = UDim2.new(0.55,0,0.5,0)
+mobile.Text = "Mobile"
+mobile.Parent = selectFrame
+Instance.new("UICorner", mobile)
 
 --------------------------------------------------
--- THEME (UPGRADED)
+-- THEME SYSTEM
 --------------------------------------------------
 
 local Theme = {
-	Bg = Color3.fromRGB(10, 10, 18),
-	Dark = Color3.fromRGB(18, 18, 30),
-	Accent = Color3.fromRGB(0, 170, 255),
-	Accent2 = Color3.fromRGB(255, 0, 150),
-	Accent3 = Color3.fromRGB(120, 255, 120)
+	Bg = Color3.fromRGB(10,10,18),
+	Dark = Color3.fromRGB(18,18,30),
+	Accent = Color3.fromRGB(0,170,255)
 }
 
---------------------------------------------------
--- BLUR
---------------------------------------------------
-
-local blur = Lighting:FindFirstChild("SF_Blur")
-
-if not blur then
-	blur = Instance.new("BlurEffect")
-	blur.Name = "SF_Blur"
-	blur.Size = 0
-	blur.Parent = Lighting
-end
-
-local function Blur(state)
-	TweenService:Create(blur, TweenInfo.new(0.25), {
-		Size = state and 18 or 0
-	}):Play()
+local function SetTheme(color)
+	Theme.Accent = color
+	if mainFrame then mainFrame.UIStroke.Color = color end
+	if openBtn then openBtn.BackgroundColor3 = color end
 end
 
 --------------------------------------------------
--- OPEN BUTTON
+-- UI CREATION
 --------------------------------------------------
 
-local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0,60,0,60)
-openBtn.Position = UDim2.new(0,20,0.5,-30)
-openBtn.Text = "SF"
-openBtn.Font = Enum.Font.GothamBlack
-openBtn.TextSize = 24
-openBtn.TextColor3 = Color3.new(1,1,1)
-openBtn.BackgroundColor3 = Theme.Accent
-openBtn.Parent = gui
+local gui = Instance.new("ScreenGui")
+gui.Name = "MAIN_UI"
+gui.Parent = PlayerGui
 
-Instance.new("UICorner", openBtn)
+local mainFrame
+local openBtn
 
---------------------------------------------------
--- MAIN FRAME
---------------------------------------------------
+local function BuildUI()
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,650,0,420)
-frame.Position = UDim2.new(0.5,-325,0.5,-210)
-frame.BackgroundColor3 = Theme.Bg
-frame.Visible = false
-frame.Parent = gui
+	mainFrame = Instance.new("Frame")
+	mainFrame.Size = UDim2.new(0,600,0,380)
+	mainFrame.Position = UDim2.new(0.5,-300,0.5,-190)
+	mainFrame.BackgroundColor3 = Theme.Bg
+	mainFrame.Visible = false
+	mainFrame.Parent = gui
+	Instance.new("UICorner", mainFrame)
 
-Instance.new("UICorner", frame)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Theme.Accent
+	stroke.Thickness = 3
+	stroke.Parent = mainFrame
+	mainFrame.UIStroke = stroke
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Theme.Accent
-stroke.Thickness = 3
-stroke.Parent = frame
+	openBtn = Instance.new("TextButton")
+	openBtn.Size = UDim2.new(0,60,0,60)
+	openBtn.Position = UDim2.new(0,20,0.5,-30)
+	openBtn.Text = "UI"
+	openBtn.BackgroundColor3 = Theme.Accent
+	openBtn.TextColor3 = Color3.new(1,1,1)
+	openBtn.Parent = gui
+	Instance.new("UICorner", openBtn)
 
---------------------------------------------------
--- TOPBAR
---------------------------------------------------
+	openBtn.MouseButton1Click:Connect(function()
+		mainFrame.Visible = not mainFrame.Visible
+	end)
 
-local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(1,0,0,50)
-topBar.BackgroundColor3 = Theme.Dark
-topBar.Parent = frame
+	--------------------------------------------------
+	-- THEMES BUTTONS
+	--------------------------------------------------
 
-Instance.new("UICorner", topBar)
+	local blue = Instance.new("TextButton")
+	blue.Size = UDim2.new(0,100,0,40)
+	blue.Position = UDim2.new(0,20,0,60)
+	blue.Text = "Bleu"
+	blue.BackgroundColor3 = Color3.fromRGB(0,170,255)
+	blue.Parent = mainFrame
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,1,0)
-title.BackgroundTransparency = 1
-title.Text = "SF HUB"
-title.Font = Enum.Font.GothamBold
-title.TextScaled = true
-title.TextColor3 = Color3.new(1,1,1)
-title.Parent = topBar
+	local pink = Instance.new("TextButton")
+	pink.Size = UDim2.new(0,100,0,40)
+	pink.Position = UDim2.new(0,140,0,60)
+	pink.Text = "Rose"
+	pink.BackgroundColor3 = Color3.fromRGB(255,0,150)
+	pink.Parent = mainFrame
 
-local close = Instance.new("TextButton")
-close.Size = UDim2.new(0,40,0,40)
-close.Position = UDim2.new(1,-45,0,5)
-close.Text = "X"
-close.TextColor3 = Color3.new(1,1,1)
-close.BackgroundColor3 = Color3.fromRGB(180,50,50)
-close.Parent = topBar
+	local green = Instance.new("TextButton")
+	green.Size = UDim2.new(0,100,0,40)
+	green.Position = UDim2.new(0,260,0,60)
+	green.Text = "Vert"
+	green.BackgroundColor3 = Color3.fromRGB(120,255,120)
+	green.Parent = mainFrame
 
-Instance.new("UICorner", close)
+	blue.MouseButton1Click:Connect(function()
+		SetTheme(Color3.fromRGB(0,170,255))
+	end)
 
---------------------------------------------------
--- SIDEBAR
---------------------------------------------------
+	pink.MouseButton1Click:Connect(function()
+		SetTheme(Color3.fromRGB(255,0,150))
+	end)
 
-local side = Instance.new("Frame")
-side.Size = UDim2.new(0,160,1,-50)
-side.Position = UDim2.new(0,0,0,50)
-side.BackgroundColor3 = Theme.Dark
-side.Parent = frame
+	green.MouseButton1Click:Connect(function()
+		SetTheme(Color3.fromRGB(120,255,120))
+	end)
 
-Instance.new("UICorner", side)
+	--------------------------------------------------
+	-- MODE ADAPTATION
+	--------------------------------------------------
 
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0,8)
-layout.Parent = side
-
---------------------------------------------------
--- CONTENT
---------------------------------------------------
-
-local content = Instance.new("Frame")
-content.Size = UDim2.new(1,-160,1,-50)
-content.Position = UDim2.new(0,160,0,50)
-content.BackgroundTransparency = 1
-content.Parent = frame
-
-local Pages = {}
-
-local function CreatePage(name,text)
-	local page = Instance.new("Frame")
-	page.Size = UDim2.new(1,0,1,0)
-	page.BackgroundTransparency = 1
-	page.Visible = false
-	page.Parent = content
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1,-20,1,-20)
-	label.Position = UDim2.new(0,10,0,10)
-	label.BackgroundTransparency = 1
-	label.TextWrapped = true
-	label.TextColor3 = Color3.new(1,1,1)
-	label.Font = Enum.Font.Gotham
-	label.TextSize = 24
-	label.Text = text
-	label.Parent = page
-
-	Pages[name] = page
-end
-
---------------------------------------------------
--- PAGES (UPDATED)
---------------------------------------------------
-
-CreatePage("Home","🏠 Bienvenue sur SF HUB\n\n🚧 Arrive bientôt...")
-CreatePage("Player","👤 Joueur\n\n🚧 Arrive bientôt...")
-CreatePage("Themes","🎨 Themes\n\n🔵 Neon Blue\n🌸 Neon Pink\n🟢 Soft Green\n🌌 Dark Purple")
-CreatePage("Settings","⚙️ Paramètres\n\n🚧 Arrive bientôt...")
-CreatePage("About","ℹ️ SF HUB\nVersion V1")
-
--- NEW PAGES
-CreatePage("School","🏫 School\n\n🚧 Outils école à venir...")
-CreatePage("TP","⚡ TP\n\n🚧 Téléportations à venir...")
-CreatePage("StaffBase","🛡️ Base Staff\n\n🚧 Tools staff à venir...")
-
-local function ShowPage(name)
-	for _,v in pairs(Pages) do
-		v.Visible = false
-	end
-	if Pages[name] then
-		Pages[name].Visible = true
+	if Mode == "Mobile" then
+		mainFrame.Size = UDim2.new(0,450,0,300)
+	else
+		mainFrame.Size = UDim2.new(0,600,0,380)
 	end
 end
 
-ShowPage("Home")
-
 --------------------------------------------------
--- TABS
+-- MODE SELECT LOGIC
 --------------------------------------------------
 
-local function CreateTab(name,text)
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(1,-10,0,40)
-	b.Text = text
-	b.Font = Enum.Font.GothamBold
-	b.TextSize = 16
-	b.TextColor3 = Color3.new(1,1,1)
-	b.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	b.Parent = side
-
-	Instance.new("UICorner", b)
-
-	b.MouseEnter:Connect(function()
-		TweenService:Create(b,TweenInfo.new(0.15),{
-			BackgroundColor3 = Theme.Accent
-		}):Play()
-	end)
-
-	b.MouseLeave:Connect(function()
-		TweenService:Create(b,TweenInfo.new(0.15),{
-			BackgroundColor3 = Color3.fromRGB(35,35,35)
-		}):Play()
-	end)
-
-	b.MouseButton1Click:Connect(function()
-		ShowPage(name)
-	end)
-end
-
---------------------------------------------------
--- TABS (ALL)
---------------------------------------------------
-
-CreateTab("Home","🏠 Home")
-CreateTab("Player","👤 Player")
-CreateTab("Themes","🎨 Themes")
-CreateTab("Settings","⚙️ Settings")
-CreateTab("About","ℹ️ About")
-
--- NEW TABS
-CreateTab("School","🏫 School")
-CreateTab("TP","⚡ TP")
-CreateTab("StaffBase","🛡️ Staff Base")
-
---------------------------------------------------
--- OPEN / CLOSE
---------------------------------------------------
-
-local opened = false
-
-local function OpenUI()
-	opened = true
-	frame.Visible = true
-	frame.Size = UDim2.new(0,0,0,0)
-
-	TweenService:Create(frame,TweenInfo.new(0.4),{
-		Size = UDim2.new(0,650,0,420)
-	}):Play()
-
-	Blur(true)
-end
-
-local function CloseUI()
-	opened = false
-
-	local t = TweenService:Create(frame,TweenInfo.new(0.2),{
-		Size = UDim2.new(0,0,0,0)
-	})
-
-	t:Play()
-	t.Completed:Connect(function()
-		frame.Visible = false
-	end)
-
-	Blur(false)
-end
-
-openBtn.MouseButton1Click:Connect(function()
-	if opened then CloseUI() else OpenUI() end
+pc.MouseButton1Click:Connect(function()
+	Mode = "PC"
+	startGui:Destroy()
+	BuildUI()
 end)
 
-close.MouseButton1Click:Connect(CloseUI)
-
---------------------------------------------------
--- DRAG
---------------------------------------------------
-
-local dragging, dragStart, startPos
-
-topBar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
-	end
+mobile.MouseButton1Click:Connect(function()
+	Mode = "Mobile"
+	startGui:Destroy()
+	BuildUI()
 end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		frame.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-	end
-end)
-
---------------------------------------------------
--- STARTUP
---------------------------------------------------
-
-task.wait(0.5)
-
-TweenService:Create(openBtn,TweenInfo.new(1,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{
-	Rotation = 5
-}):Play()
