@@ -547,38 +547,30 @@ local function buildUI()
 			end
 			if foundTarget then break end
 		end
-
 		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Déplacement rapide en cours..."
+			statusLabel.Text = "🔓 Tentative de Bypass physique..."
 			
-			-- On augmente temporairement la vitesse de marche
-			local oldSpeed = hum.WalkSpeed
-			hum.WalkSpeed = 100 
+			-- 1. On détruit temporairement la vélocité
+			root.Velocity = Vector3.new(0, 0, 0)
+			root.RotVelocity = Vector3.new(0, 0, 0)
 			
-			-- On demande au personnage de marcher vers la cible
-			hum:MoveTo(targetCFrame.Position)
+			-- 2. On utilise une méthode de changement de CFrame par petits pas (le "Small Stepping")
+			-- Cela évite le déclenchement de l'anti-cheat par saut de distance trop grand
+			local startPos = root.Position
+			local endPos = targetCFrame.Position
+			local steps = 10 -- Nombre de petits sauts
 			
-			-- On attend que le déplacement soit terminé (ou timeout de 2 secondes)
-			local reached = false
-			local conn
-			conn = hum.MoveToFinished:Connect(function(success)
-				reached = true
-				conn:Disconnect()
-			end)
-			
-			task.wait(2) -- Sécurité pour ne pas bloquer si le chemin est obstrué
-			if not reached then conn:Disconnect() end
-			
-			-- On remet la vitesse normale
-			hum.WalkSpeed = oldSpeed
+			for i = 1, steps do
+				root.CFrame = CFrame.new(startPos:Lerp(endPos, i/steps))
+				task.wait(0.05) -- Très court délai
+			end
 			
 			statusLabel.TextColor3 = Theme.Green
-			statusLabel.Text = "✅ Arrivé !"
+			statusLabel.Text = "✅ Déplacement en petits pas !"
 		else
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
-
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
