@@ -437,46 +437,36 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     local root = getRoot()
     local hum = getHum()
     
-    if enabled then
-        if root then 
-            root.Anchored = true 
-            root.CanCollide = false
-        end
-        if hum then 
-            hum.PlatformStand = true 
-        end
-        
-        camera.CameraType = Enum.CameraType.Scriptable
-
-        freecamConn = RunService.RenderStepped:Connect(function(dt)
-            if not freecamActive then return end
-            
-            local hum = getHum()
-            local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
-            
-            if moveDir.Magnitude > 0 then
-                local look = camera.CFrame.LookVector
-                local right = camera.CFrame.RightVector
-                
-                -- Calcul du mouvement relatif à la caméra
-                local move = (right * moveDir.X) + (look * moveDir.Z)
-                camera.CFrame = camera.CFrame + (move * (camSpeed * 2))
-            end
-        end)
-    else
-        -- Désactivation propre
-        if freecamConn then freecamConn:Disconnect() end
-        if root then 
-            root.Anchored = false 
-            root.CanCollide = true
-        end
-        if hum then 
-            hum.PlatformStand = false 
-        end
-        camera.CameraType = Enum.CameraType.Custom
-        if hum then camera.CameraSubject = hum end
-    end
-end)
+		if enabled then
+			if root then 
+				root.Anchored = true 
+				root.CanCollide = false
+			end
+			if hum then 
+				hum.PlatformStand = true 
+			end
+			
+			camera.CameraType = Enum.CameraType.Scriptable
+			camera.CameraSubject = nil -- C'EST LA LIGNE MAGIQUE POUR DÉBLOQUER LA CAMÉRA
+			
+			freecamConn = RunService.RenderStepped:Connect(function(dt)
+				if not freecamActive then return end
+				
+				local hum = getHum()
+				-- On récupère la direction du joystick
+				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
+				
+				if moveDir.Magnitude > 0 then
+					local look = camera.CFrame.LookVector
+					local right = camera.CFrame.RightVector
+					
+					-- On calcule le mouvement. Le -moveDir.Z permet d'avancer quand le joystick est poussé en haut
+					local move = (right * moveDir.X) + (look * -moveDir.Z)
+					
+					-- On applique le mouvement
+					camera.CFrame = camera.CFrame + (move * (camSpeed * 3))
+				end
+			end)
 
 
 	--------------------------------------------------
