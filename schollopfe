@@ -430,44 +430,40 @@ local function buildUI()
 		
 		if enabled then
 			if root then root.Anchored = true end
-			-- Initialiser les angles à partir de la caméra actuelle
 			local look = camera.CFrame.LookVector
 			camAngles = Vector2.new(math.asin(look.Y), math.atan2(-look.X, -look.Z))
-			
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			-- Gestion de la rotation via le mouvement tactile
 			dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
 				if processed or not freecamActive then return end
-				-- Ajustement de la sensibilité (0.01 est plus stable)
 				camAngles = camAngles + Vector2.new(-touch.Delta.Y * 0.01, -touch.Delta.X * 0.01)
-				-- Bloquer la caméra verticale pour éviter qu'elle ne se retourne
 				camAngles = Vector2.new(math.clamp(camAngles.X, -math.rad(89), math.rad(89)), camAngles.Y)
 			end)
 
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
-				
-				-- 1. Appliquer la rotation
 				camera.CFrame = CFrame.new(camera.CFrame.Position) * CFrame.fromEulerAnglesYXZ(camAngles.X, camAngles.Y, 0)
 				
-				-- 2. Calculer le mouvement basé sur les entrées (plus fiable que MoveDirection)
-				local moveVector = Vector3.new(0, 0, 0)
+				-- Mouvement avec le joystick mobile ou les touches PC
+				local hum = getHum()
+				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
 				
-				-- Détection des touches (WASD / ZQSD)
-				if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Up) then moveVector = moveVector + Vector3.new(0, 0, -1) end
-				if UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.Down) then moveVector = moveVector + Vector3.new(0, 0, 1) end
-				if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Left) then moveVector = moveVector + Vector3.new(-1, 0, 0) end
-				if UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.Right) then moveVector = moveVector + Vector3.new(1, 0, 0) end
-				
-				-- Détection du Joystick (si disponible)
-				local thumbstick = UserInputService:GetMouseDelta() -- Note : Pour une vraie Freecam, le joystick est complexe, on se base sur les touches ici.
-				
-				if moveVector.Magnitude > 0 then
-					local move = (camera.CFrame.RightVector * moveVector.X) + (camera.CFrame.LookVector * moveVector.Z)
-					camera.CFrame = camera.CFrame + (move.Unit * camSpeed)
+				-- Si on est sur mobile, le MoveDirection marche si on n'ancre pas trop violemment le HumRootPart
+				if moveDir.Magnitude > 0 then
+					local move = (camera.CFrame.RightVector * moveDir.X) + (camera.CFrame.LookVector * -moveDir.Z)
+					camera.CFrame = camera.CFrame + (move * (camSpeed * 2))
 				end
 			end)
+		else
+			if freecamConn then freecamConn:Disconnect() end
+			if dragConn then dragConn:Disconnect() end
+			if root then root.Anchored = false end
+			camera.CameraType = Enum.CameraType.Custom
+			local hum = getHum()
+			if hum then camera.CameraSubject = hum end
+		end
+	end)
+
 
 	--------------------------------------------------
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
