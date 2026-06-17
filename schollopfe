@@ -416,47 +416,46 @@ local function buildUI()
 		end
 	end)
 
-	-- FREECAM
-	-- Variables nécessaires (à mettre en haut de votre script ou avant la fonction)
+	-- FREECAM CONFIG
 	local camera = workspace.CurrentCamera
 	local freecamActive = false
 	local freecamConn
-	local camSpeed = 1.5
-	local camAngles = Vector2.new(0, 0) -- On utilise des angles fixes pour éviter les erreurs de CFrame
+	local camSpeed = 1.5 -- Tu peux changer cette valeur par défaut
 
-	createPlayerToggle("🎥 Freecam (Caméra Libre)", function(enabled)
+	-- Ajout de l'option de vitesse dans le menu (Place ceci avec tes autres createPlayerOption)
+	createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
+		camSpeed = val
+	end)
+
+	createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 		freecamActive = enabled
 		local root = getRoot()
 		
 		if enabled then
 			if root then root.Anchored = true end
-			local look = camera.CFrame.LookVector
-			camAngles = Vector2.new(math.asin(look.Y), math.atan2(-look.X, -look.Z))
 			camera.CameraType = Enum.CameraType.Scriptable
 			
-			dragConn = UserInputService.TouchMoved:Connect(function(touch, processed)
-				if processed or not freecamActive then return end
-				camAngles = camAngles + Vector2.new(-touch.Delta.Y * 0.01, -touch.Delta.X * 0.01)
-				camAngles = Vector2.new(math.clamp(camAngles.X, -math.rad(89), math.rad(89)), camAngles.Y)
-			end)
-
 			freecamConn = RunService.RenderStepped:Connect(function(dt)
 				if not freecamActive then return end
-				camera.CFrame = CFrame.new(camera.CFrame.Position) * CFrame.fromEulerAnglesYXZ(camAngles.X, camAngles.Y, 0)
 				
-				-- Mouvement avec le joystick mobile ou les touches PC
+				-- On récupère le joystick gauche
 				local hum = getHum()
 				local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
 				
-				-- Si on est sur mobile, le MoveDirection marche si on n'ancre pas trop violemment le HumRootPart
+				-- Calcul du mouvement :
+				-- Si tu pousses le joystick en haut, ça avance dans la direction de la caméra
+				-- Si tu regardes en bas, ça descend
 				if moveDir.Magnitude > 0 then
-					local move = (camera.CFrame.RightVector * moveDir.X) + (camera.CFrame.LookVector * -moveDir.Z)
+					local look = camera.CFrame.LookVector
+					local right = camera.CFrame.RightVector
+					
+					-- Mouvement 3D basé sur la direction de la caméra
+					local move = (right * moveDir.X) + (look * -moveDir.Z)
 					camera.CFrame = camera.CFrame + (move * (camSpeed * 2))
 				end
 			end)
 		else
 			if freecamConn then freecamConn:Disconnect() end
-			if dragConn then dragConn:Disconnect() end
 			if root then root.Anchored = false end
 			camera.CameraType = Enum.CameraType.Custom
 			local hum = getHum()
