@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
-local HttpService = game:GetService("HttpService") -- Requis pour le traitement du JSON
+local HttpService = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -23,6 +23,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "SF_HUB"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
+gui.DisplayOrder = 999
 gui.Parent = PlayerGui
 
 --------------------------------------------------
@@ -33,15 +34,14 @@ local Theme = {
 	Panel = Color3.fromRGB(18, 19, 26),    
 	Stroke = Color3.fromRGB(35, 38, 50),   
 	Text = Color3.fromRGB(240, 243, 250),  
-	Accent = Color3.fromRGB(0, 180, 255), -- Couleur par défaut (Bleu) 
+	Accent = Color3.fromRGB(0, 180, 255), 
 	Green = Color3.fromRGB(0, 220, 140)    
 }
 
 local UI = {}
-local toggleState = false -- État global pour le toggle des paramètres
+local toggleState = false 
 local CONFIG_FILE = "sf_config.json"
 
--- Sauvegarde globale du Thème et des Paramètres
 local function saveConfig()
 	if writefile then
 		local data = {
@@ -52,7 +52,6 @@ local function saveConfig()
 	end
 end
 
--- Chargement global du Thème et des Paramètres
 local function loadConfig()
 	if isfile and readfile and isfile(CONFIG_FILE) then
 		local success, decoded = pcall(function()
@@ -69,7 +68,6 @@ local function loadConfig()
 	end
 end
 
--- Charger la configuration avant de construire l'UI
 loadConfig()
 
 local function applyTheme(color)
@@ -78,7 +76,7 @@ local function applyTheme(color)
 		UI.openBtn.BackgroundColor3 = color
 		TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play()
 	end
-	saveConfig() -- Sauvegarde dès qu'on change de couleur
+	saveConfig() 
 end
 
 --------------------------------------------------
@@ -96,7 +94,7 @@ local function blurToggle(state)
 end
 
 --------------------------------------------------
--- SYSTEME DE DRAG (GLISSER-DÉPOSER)
+-- SYSTEME DE DRAG
 --------------------------------------------------
 local function makeDraggable(dragFrame, moveFrame)
 	local dragging, dragInput, dragStart, startPos
@@ -286,21 +284,25 @@ local function buildUI()
 	-- CONFIGURATION DE L'ONGLET PLAYER
 	--------------------------------------------------
 	local pLayout = Instance.new("UIListLayout")
-	pLayout.Padding = UDim.new(0, 10)
+	pLayout.Padding = UDim.new(0, 6)
 	pLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	pLayout.Parent = playerPage
 
 	local pPadding = Instance.new("UIPadding")
-	pPadding.PaddingTop = UDim.new(0, 12)
+	pPadding.PaddingTop = UDim.new(0, 8)
 	pPadding.Parent = playerPage
 
 	local function getHum()
 		return Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
 	end
 
+	local function getRoot()
+		return Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+	end
+
 	local function createPlayerOption(name, default, callback)
 		local row = Instance.new("Frame")
-		row.Size = UDim2.new(0.9, 0, 0, 36)
+		row.Size = UDim2.new(0.95, 0, 0, 28)
 		row.BackgroundTransparency = 1
 		row.Parent = playerPage
 
@@ -309,19 +311,19 @@ local function buildUI()
 		lab.Text = name
 		lab.TextColor3 = Theme.Text
 		lab.Font = Enum.Font.GothamMedium
-		lab.TextSize = 14
+		lab.TextSize = 13
 		lab.TextXAlignment = Enum.TextXAlignment.Left
 		lab.BackgroundTransparency = 1
 		lab.Parent = row
 
 		local input = Instance.new("TextBox")
-		input.Size = UDim2.new(0.35, 0, 0.8, 0)
-		input.Position = UDim2.new(0.65, 0, 0.1, 0)
+		input.Size = UDim2.new(0.35, 0, 0.9, 0)
+		input.Position = UDim2.new(0.65, 0, 0.05, 0)
 		input.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 		input.Text = tostring(default)
 		input.TextColor3 = Theme.Text
 		input.Font = Enum.Font.Gotham
-		input.TextSize = 13
+		input.TextSize = 12
 		input.Parent = row
 		local inputCorner = Instance.new("UICorner")
 		inputCorner.Parent = input
@@ -332,12 +334,33 @@ local function buildUI()
 		end)
 	end
 
-	createPlayerOption("Vitesse (WalkSpeed)", 16, function(val)
+	local function createPlayerToggle(name, callback)
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0.95, 0, 0, 28)
+		btn.Text = name .. " : OFF"
+		btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+		btn.TextColor3 = Theme.Text
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 12
+		btn.Parent = playerPage
+		local corner = Instance.new("UICorner")
+		corner.Parent = btn
+
+		local state = false
+		btn.MouseButton1Click:Connect(function()
+			state = not state
+			btn.Text = name .. (state and " : ON" or " : OFF")
+			btn.BackgroundColor3 = state and Theme.Green or Color3.fromRGB(26, 29, 38)
+			callback(state)
+		end)
+	end
+
+	createPlayerOption("⚡ Vitesse (WalkSpeed)", 16, function(val)
 		local hum = getHum()
 		if hum then hum.WalkSpeed = val end
 	end)
 
-	createPlayerOption("Saut (JumpPower)", 50, function(val)
+	createPlayerOption("🦘 Saut (JumpPower)", 50, function(val)
 		local hum = getHum()
 		if hum then 
 			hum.UseJumpPower = true
@@ -345,17 +368,129 @@ local function buildUI()
 		end
 	end)
 
+	local infJumpConn
+	createPlayerToggle("🚀 Saut Infini", function(enabled)
+		if enabled then
+			infJumpConn = UserInputService.JumpRequest:Connect(function()
+				local hum = getHum()
+				if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+			end)
+		else
+			if infJumpConn then infJumpConn:Disconnect() end
+		end
+	end)
+
+	local noclipConn
+	createPlayerToggle("👻 Noclip (Murs)", function(enabled)
+		if enabled then
+			noclipConn = game:GetService("RunService").Stepped:Connect(function()
+				if Player.Character then
+					for _, part in pairs(Player.Character:GetDescendants()) do
+						if part:IsA("BasePart") then part.CanCollide = false end
+					end
+				end
+			end)
+		else
+			if noclipConn then noclipConn:Disconnect() end
+		end
+	end)
+
+	local telemetryConn
+	createPlayerToggle("📍 Clic Téléport (Ctrl+Clic)", function(enabled)
+		if enabled then
+			telemetryConn = UserInputService.InputBegan:Connect(function(input, processed)
+				if not processed and input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+					local mouse = Player:GetMouse()
+					local root = getRoot()
+					if root and mouse.Hit then
+						root.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0))
+					end
+				end
+			end)
+		else
+			if telemetryConn then telemetryConn:Disconnect() end
+		end
+	end)
+
+	local camera = workspace.CurrentCamera
+	local freecamActive = false
+	local freecamPart
+	local freecamConn
+	local camSpeed = 1 
+
+	createPlayerToggle("🎥 Freecam (Caméra Libre)", function(enabled)
+		freecamActive = enabled
+		if enabled then
+			local startCFrame = camera.CFrame
+			camera.CameraType = Enum.CameraType.Scriptable
+			
+			freecamPart = Instance.new("Part")
+			freecamPart.Size = Vector3.new(1,1,1)
+			freecamPart.Transparency = 1
+			freecamPart.CanCollide = false
+			freecamPart.Anchored = true
+			freecamPart.CFrame = startCFrame
+			freecamPart.Parent = workspace
+			
+			freecamConn = game:GetService("RunService").RenderStepped:Connect(function(dt)
+				if not freecamActive or not freecamPart then return end
+				
+				local lSpeed = camSpeed * (dt * 60)
+				local moveVector = Vector3.new(0,0,0)
+				
+				if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then
+					moveVector = moveVector + Vector3.new(0, 0, -lSpeed)
+				end
+				if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+					moveVector = moveVector + Vector3.new(0, 0, lSpeed)
+				end
+				if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then
+					moveVector = moveVector + Vector3.new(-lSpeed, 0, 0)
+				end
+				if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+					moveVector = moveVector + Vector3.new(lSpeed, 0, 0)
+				end
+				if UserInputService:IsKeyDown(Enum.KeyCode.E) then
+					moveVector = moveVector + Vector3.new(0, lSpeed, 0)
+				end
+				if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+					moveVector = moveVector + Vector3.new(0, -lSpeed, 0)
+				end
+				
+				if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+					UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+					local delta = UserInputService:GetMouseDelta()
+					
+					local camCFrame = camera.CFrame
+					local newRot = CFrame.Angles(0, -math.rad(delta.X/2), 0) * camCFrame.Rotation * CFrame.Angles(-math.rad(delta.Y/2), 0, 0)
+					freecamPart.CFrame = CFrame.new(freecamPart.Position) * newRot
+					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+				end
+				
+				freecamPart.CFrame = freecamPart.CFrame * CFrame.new(moveVector)
+				camera.CFrame = freecamPart.CFrame
+			end)
+		else
+			if freecamConn then freecamConn:Disconnect() end
+			if freecamPart then freecamPart:Destroy() freecamPart = nil end
+			
+			camera.CameraType = Enum.CameraType.Custom
+			local hum = getHum()
+			if hum then camera.CameraSubject = hum end
+		end
+	end)
+
 	local resetBtn = Instance.new("TextButton")
-	resetBtn.Size = UDim2.new(0.9, 0, 0, 34)
+	resetBtn.Size = UDim2.new(0.95, 0, 0, 28)
 	resetBtn.Text = "💀 Réinitialiser le Personnage"
 	resetBtn.BackgroundColor3 = Color3.fromRGB(240, 70, 80)
 	resetBtn.TextColor3 = Color3.new(1,1,1)
 	resetBtn.Font = Enum.Font.GothamBold
-	resetBtn.TextSize = 13
+	resetBtn.TextSize = 12
 	resetBtn.Parent = playerPage
+
 	local resetCorner = Instance.new("UICorner")
 	resetCorner.Parent = resetBtn
-
 	resetBtn.MouseButton1Click:Connect(function()
 		if Player.Character then Player.Character:BreakJoints() end
 	end)
@@ -432,7 +567,7 @@ local function buildUI()
 	for _, p in pairs(Players:GetPlayers()) do managePlayerESP(p) end
 
 	--------------------------------------------------
-	-- CONFIGURATION DES SETTINGS (Avec état chargé)
+	-- CONFIGURATION DES SETTINGS
 	--------------------------------------------------
 	local toggle = Instance.new("TextButton")
 	toggle.Size = UDim2.new(0,140,0,34)
@@ -450,7 +585,7 @@ local function buildUI()
 		toggleState = not toggleState
 		toggle.Text = toggleState and "Toggle: ON" or "Toggle: OFF"
 		toggle.BackgroundColor3 = toggleState and Theme.Green or Color3.fromRGB(26, 29, 38)
-		saveConfig() -- Sauvegarde immédiate du changement de valeur
+		saveConfig() 
 	end)
 
 	--------------------------------------------------
@@ -552,6 +687,8 @@ local function buildUI()
 	end)
 
 	close.MouseButton1Click:Connect(closeUI)
+	
+	open()
 end
 
 --------------------------------------------------
@@ -640,7 +777,4 @@ local function makeKeyUI()
 	end)
 end
 
---------------------------------------------------
--- LANCEMENT
---------------------------------------------------
 makeKeyUI()
