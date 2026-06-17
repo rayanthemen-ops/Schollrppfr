@@ -566,7 +566,6 @@ local function buildUI()
 			statusLabel.Text = "⚠️ Éjection forcée..."
 			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
 		end
-
 		task.wait(2)
 		escapeNoclip:Disconnect()
 		statusLabel.Text = "Statut : En attente d'activation..."
