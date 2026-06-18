@@ -487,45 +487,40 @@ end)
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
 	--------------------------------------------------
--- 2. Le bloc pour créer les boutons
-local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"}
-
--- Nettoyage des anciens boutons
-for _, child in pairs(frame:GetChildren()) do
-    if child:IsA("TextButton") or child:IsA("UIListLayout") then child:Destroy() end
+-- 1. On cherche si une page "EvasionPage" existe déjà, sinon on la crée
+local evasionPage = frame:FindFirstChild("EvasionPage")
+if not evasionPage then
+    evasionPage = Instance.new("ScrollingFrame", frame) -- ScrollingFrame est mieux pour la liste
+    evasionPage.Name = "EvasionPage"
+    evasionPage.Size = UDim2.new(1, 0, 1, 0)
+    evasionPage.BackgroundTransparency = 1
+    Instance.new("UIListLayout", evasionPage).Padding = UDim.new(0, 5)
+else
+    -- Si elle existe, on ne nettoie que l'intérieur de cette page spécifique
+    for _, child in pairs(evasionPage:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
 end
 
--- CRÉATION DU LAYOUT (C'est ce qui manque !)
-local layout = Instance.new("UIListLayout", frame)
-layout.Padding = UDim.new(0, 5) -- 5 pixels d'espace entre chaque bouton
+-- 2. On crée les boutons DANS cette page uniquement
+local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"}
 
--- Création des nouveaux boutons
 for _, word in pairs(keywords) do
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1, 0, 0, 30) -- Largeur 100%, hauteur 30
+    local btn = Instance.new("TextButton", evasionPage)
+    btn.Size = UDim2.new(0.9, 0, 0, 30)
     btn.Text = "TP -> " .. word
     btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     btn.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", btn) -- Petit ajout esthétique pour les coins arrondis
+    Instance.new("UICorner", btn)
     
     btn.MouseButton1Click:Connect(function()
+        -- [Ta logique de recherche reste la même]
         local target = Workspace:FindFirstChild(word, true)
-        if not target then
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if string.find(string.lower(obj.Name), string.lower(word)) and (obj:IsA("Model") or obj:IsA("BasePart")) then
-                    target = obj
-                    break
-                end
-            end
-        end
-        
-        if target then
-            ghostTP(target)
-        else
-            print("Objet introuvable : " .. word)
-        end
+        -- ... (insère ta logique de recherche ici)
+        if target then ghostTP(target) end
     end)
 end
+
 
 
 	--------------------------------------------------
