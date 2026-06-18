@@ -981,3 +981,6 @@ local VALID_KEY = p1 .. p2
 	frame.Size = UDim2.new(0, 320, 0, 240) 
 
 end
+-- Initialisation du système
+makeKeyUI()
+print("SF HUB V6 chargé avec succès.")
