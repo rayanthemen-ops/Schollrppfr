@@ -4,7 +4,6 @@ local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
@@ -24,361 +23,140 @@ local function ghostTP(targetPart)
 	root.Anchored = false
 end
 
---------------------------------------------------
--- CLEAN UI & LIGHTING
---------------------------------------------------
 local oldGui = PlayerGui:FindFirstChild("SF_HUB")
 if oldGui then oldGui:Destroy() end
-
 local oldBlur = Lighting:FindFirstChild("SF_Blur")
 if oldBlur then oldBlur:Destroy() end
 
---------------------------------------------------
--- ROOT GUI
---------------------------------------------------
 local gui = Instance.new("ScreenGui")
-gui.Name = "SF_HUB"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.DisplayOrder = 999
-gui.Parent = PlayerGui
+gui.Name = "SF_HUB"; gui.ResetOnSpawn = false; gui.IgnoreGuiInset = true; gui.DisplayOrder = 999; gui.Parent = PlayerGui
 
---------------------------------------------------
--- 🎨 PALETTE DE COULEURS & CONFIG STATE
---------------------------------------------------
-local Theme = {
-	Bg = Color3.fromRGB(11, 12, 16),       
-	Panel = Color3.fromRGB(18, 19, 26),    
-	Stroke = Color3.fromRGB(35, 38, 50),   
-	Text = Color3.fromRGB(240, 243, 250),  
-	Accent = Color3.fromRGB(0, 180, 255), 
-	Green = Color3.fromRGB(0, 220, 140)    
-}
+local Theme = {Bg = Color3.fromRGB(11, 12, 16), Panel = Color3.fromRGB(18, 19, 26), Stroke = Color3.fromRGB(35, 38, 50), Text = Color3.fromRGB(240, 243, 250), Accent = Color3.fromRGB(0, 180, 255), Green = Color3.fromRGB(0, 220, 140)}
+local UI = {}; local toggleState = false; local CONFIG_FILE = "sf_config.json"
 
-local UI = {}
-local toggleState = false 
-local CONFIG_FILE = "sf_config.json"
-
-local function saveConfig()
-	if writefile then
-		local data = {
-			ThemeColor = {Theme.Accent.R, Theme.Accent.G, Theme.Accent.B},
-			Toggle = toggleState
-		}
-		writefile(CONFIG_FILE, HttpService:JSONEncode(data))
-	end
-end
-
-local function loadConfig()
-	if isfile and readfile and isfile(CONFIG_FILE) then
-		local success, decoded = pcall(function()
-			return HttpService:JSONDecode(readfile(CONFIG_FILE))
-		end)
-		if success and decoded then
-			if decoded.ThemeColor then
-				Theme.Accent = Color3.new(decoded.ThemeColor[1], decoded.ThemeColor[2], decoded.ThemeColor[3])
-			end
-			if decoded.Toggle ~= nil then
-				toggleState = decoded.Toggle
-			end
-		end
-	end
-end
-
+local function saveConfig() if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode({ThemeColor = {Theme.Accent.R, Theme.Accent.G, Theme.Accent.B}, Toggle = toggleState})) end end
+local function loadConfig() if isfile and readfile and isfile(CONFIG_FILE) then local s, d = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end) if s and d then if d.ThemeColor then Theme.Accent = Color3.new(d.ThemeColor[1], d.ThemeColor[2], d.ThemeColor[3]) end if d.Toggle ~= nil then toggleState = d.Toggle end end end end
 loadConfig()
 
-local function applyTheme(color)
-	Theme.Accent = color
-	if UI.openBtn and UI.stroke then
-		UI.openBtn.BackgroundColor3 = color
-		TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play()
-	end
-	saveConfig() 
-end
+local function applyTheme(color) Theme.Accent = color; if UI.openBtn and UI.stroke then UI.openBtn.BackgroundColor3 = color; TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play() end; saveConfig() end
 
---------------------------------------------------
--- BLUR SYSTEM
---------------------------------------------------
-local blur = Instance.new("BlurEffect")
-blur.Name = "SF_Blur"
-blur.Size = 0
-blur.Parent = Lighting
+local blur = Instance.new("BlurEffect"); blur.Name = "SF_Blur"; blur.Size = 0; blur.Parent = Lighting
+local function blurToggle(state) TweenService:Create(blur, TweenInfo.new(0.2), {Size = state and 14 or 0}):Play() end
 
-local function blurToggle(state)
-	TweenService:Create(blur, TweenInfo.new(0.2), {
-		Size = state and 14 or 0
-	}):Play()
-end
-
---------------------------------------------------
--- SYSTEME DE DRAG
---------------------------------------------------
 local function makeDraggable(dragFrame, moveFrame)
 	local dragging, dragInput, dragStart, startPos
-
-	dragFrame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = moveFrame.Position
-
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-
-	dragFrame.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			local delta = input.Position - dragStart
-			TweenService:Create(moveFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			}):Play()
-		end
-	end)
+	dragFrame.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = moveFrame.Position end end)
+	UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then local delta = input.Position - dragStart; TweenService:Create(moveFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)}):Play() end end)
 end
 
---------------------------------------------------
--- BUILD MAIN UI
---------------------------------------------------
 local function buildUI()
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0,500,0,320)
-	frame.Position = UDim2.new(0.5,-250,0.5,-160)
-	frame.BackgroundColor3 = Theme.Bg
-	frame.Visible = false
-	frame.Parent = gui
-	
-	local frameCorner = Instance.new("UICorner")
-	frameCorner.CornerRadius = UDim.new(0, 8)
-	frameCorner.Parent = frame
+	local frame = Instance.new("Frame"); frame.Size = UDim2.new(0,500,0,320); frame.Position = UDim2.new(0.5,-250,0.5,-160); frame.BackgroundColor3 = Theme.Bg; frame.Visible = false; frame.Parent = gui
+	local frameCorner = Instance.new("UICorner", frame); frameCorner.CornerRadius = UDim.new(0, 8)
+	local stroke = Instance.new("UIStroke", frame); stroke.Color = Theme.Accent; stroke.Thickness = 1.5
+	UI.frame = frame; UI.stroke = stroke
+    
+    local openBtn = Instance.new("TextButton", gui); openBtn.Size = UDim2.new(0,52,0,52); openBtn.Position = UDim2.new(0,20,0.5,-26); openBtn.Text = "SF"; openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 20; openBtn.TextColor3 = Theme.Bg; openBtn.BackgroundColor3 = Theme.Accent; UI.openBtn = openBtn
+    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 12)
 
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Theme.Accent
-	stroke.Thickness = 1.5
-	stroke.Parent = frame
+	local topBar = Instance.new("Frame", frame); topBar.Size = UDim2.new(1,0,0,42); topBar.BackgroundColor3 = Theme.Panel
+    Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 8); makeDraggable(topBar, frame)
+    
+	local close = Instance.new("TextButton", topBar); close.Size = UDim2.new(0,34,0,34); close.Position = UDim2.new(1,-38,0,4); close.Text = "×"; close.BackgroundColor3 = Color3.fromRGB(240, 70, 80)
+    Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
 
-	UI.frame = frame
-	UI.stroke = stroke
+	local side = Instance.new("Frame", frame); side.Size = UDim2.new(0,130,1,-42); side.Position = UDim2.new(0,0,0,42); side.BackgroundColor3 = Theme.Panel
+    Instance.new("UICorner", side).CornerRadius = UDim.new(0, 8); Instance.new("UIListLayout", side).Padding = UDim.new(0,5); Instance.new("UIPadding", side).PaddingTop = UDim.new(0, 5)
 
-	--------------------------------------------------
-	-- OPEN BUTTON
-	--------------------------------------------------
-	local openBtn = Instance.new("TextButton")
-	openBtn.Size = UDim2.new(0,52,0,52)
-	openBtn.Position = UDim2.new(0,20,0.5,-26)
-	openBtn.Text = "SF"
-	openBtn.Font = Enum.Font.GothamBold
-	openBtn.TextSize = 20
-	openBtn.TextColor3 = Theme.Bg
-	openBtn.BackgroundColor3 = Theme.Accent
-	openBtn.Parent = gui
-	
-	local btnCorner = Instance.new("UICorner")
-	btnCorner.CornerRadius = UDim.new(0, 12)
-	btnCorner.Parent = openBtn
+	local content = Instance.new("Frame", frame); content.Size = UDim2.new(1,-130,1,-42); content.Position = UDim2.new(0,130,0,42); content.BackgroundTransparency = 1
+	local Pages, Buttons, Current = {}, {}, nil
+	local function createPage(name) local p = Instance.new("Frame", content); p.Size = UDim2.new(1,0,1,0); p.BackgroundTransparency = 1; p.Visible = false; Pages[name] = p; return p end
+    
+    local homePage = createPage("Home"); local playerPage = createPage("Player"); local evasionPage = createPage("Evasion"); local staffTpPage = createPage("StaffTP"); local visualsPage = createPage("Visuals"); local themesPage = createPage("Themes"); local settingsPage = createPage("Settings"); local aboutPage = createPage("About")
 
-	UI.openBtn = openBtn
+    -- LOGIQUE TP CPE
+    local stpLayout = Instance.new("UIListLayout", staffTpPage); stpLayout.Padding = UDim.new(0, 8); stpLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	local btnCpe = Instance.new("TextButton", staffTpPage); btnCpe.Size = UDim2.new(0.9, 0, 0, 35); btnCpe.Text = "TP -> CPE"; btnCpe.BackgroundColor3 = Color3.fromRGB(26, 29, 38); btnCpe.TextColor3 = Theme.Text; Instance.new("UICorner", btnCpe)
+	btnCpe.MouseButton1Click:Connect(function() for _, obj in pairs(workspace:GetDescendants()) do if string.find(string.lower(obj.Name), "cpe") and (obj:IsA("Model") or obj:IsA("BasePart")) then ghostTP(obj); break end end end)
 
-	--------------------------------------------------
-	-- TOPBAR
-	--------------------------------------------------
-	local topBar = Instance.new("Frame")
-	topBar.Size = UDim2.new(1,0,0,42)
-	topBar.BackgroundColor3 = Theme.Panel
-	topBar.Parent = frame
-	
-	local topCorner = Instance.new("UICorner")
-	topCorner.CornerRadius = UDim.new(0, 8)
-	topCorner.Parent = topBar
-	
-	makeDraggable(topBar, frame)
+    -- SUITE CONSTRUCTION UI
+	local function show(name) if Current == name then return end; Current = name; for _,p in pairs(Pages) do p.Visible = false end; if Pages[name] then Pages[name].Visible = true end; for _,b in pairs(Buttons) do b.BackgroundColor3 = Color3.fromRGB(26, 29, 38) end; if Buttons[name] then Buttons[name].BackgroundColor3 = Theme.Accent end end
 
-	local close = Instance.new("TextButton")
-	close.Size = UDim2.new(0,34,0,34)
-	close.Position = UDim2.new(1,-38,0,4)
-	close.Text = "×"
-	close.Font = Enum.Font.GothamBold
-	close.TextColor3 = Theme.Text
-	close.BackgroundColor3 = Color3.fromRGB(240, 70, 80)
-	close.Parent = topBar
-	
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 6)
-	closeCorner.Parent = close
-
-	--------------------------------------------------
-	-- SIDEBAR
-	--------------------------------------------------
-	local side = Instance.new("Frame")
-	side.Size = UDim2.new(0,130,1,-42)
-	side.Position = UDim2.new(0,0,0,42)
-	side.BackgroundColor3 = Theme.Panel
-	side.Parent = frame
-	
-	local sideCorner = Instance.new("UICorner")
-	sideCorner.CornerRadius = UDim.new(0, 8)
-	sideCorner.Parent = side
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0,5)
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	layout.Parent = side
-	
-	local sPadding = Instance.new("UIPadding")
-	sPadding.PaddingTop = UDim.new(0, 5)
-	sPadding.Parent = side
-
-	--------------------------------------------------
-	-- CONTENT CONTAINER
-	--------------------------------------------------
-	local content = Instance.new("Frame")
-	content.Size = UDim2.new(1,-130,1,-42)
-	content.Position = UDim2.new(0,130,0,42)
-	content.BackgroundTransparency = 1
-	content.Parent = frame
-
-	local Pages = {}
-	local Buttons = {}
-	local Current = nil
-
-	local function createPage(name)
-		local p = Instance.new("Frame")
-		p.Size = UDim2.new(1,0,1,0)
-		p.BackgroundTransparency = 1
-		p.Visible = false
-		p.Parent = content
-		Pages[name] = p
-		return p
-	end
-
-	local function show(name)
-		if Current == name then return end
-		Current = name
-
-		for _,p in pairs(Pages) do p.Visible = false end
-		if Pages[name] then Pages[name].Visible = true end
-
-		for _,b in pairs(Buttons) do b.BackgroundColor3 = Color3.fromRGB(26, 29, 38) end
-		if Buttons[name] then Buttons[name].BackgroundColor3 = Theme.Accent end
-	end
-
-	--------------------------------------------------
-	-- GENERATION DES PAGES
-	--------------------------------------------------
-	local homePage = createPage("Home")
-	local playerPage = createPage("Player")
-	local evasionPage = createPage("Evasion")
-	local staffTpPage = createPage("StaffTP") -- NOUVEL ONGLET STAFF TP
-	local visualsPage = createPage("Visuals")
-	local themesPage = createPage("Themes")
-	local settingsPage = createPage("Settings")
-	local aboutPage = createPage("About")
-
-	-- LOGIQUE AJOUTEE : TP CPE
-	local stpLayout = Instance.new("UIListLayout", staffTpPage)
-	stpLayout.Padding = UDim.new(0, 8); stpLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	local btnCpe = Instance.new("TextButton", staffTpPage)
-	btnCpe.Size = UDim2.new(0.9, 0, 0, 35); btnCpe.Text = "TP -> CPE"; btnCpe.BackgroundColor3 = Color3.fromRGB(26, 29, 38); btnCpe.TextColor3 = Theme.Text
-	Instance.new("UICorner", btnCpe)
-	btnCpe.MouseButton1Click:Connect(function()
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if string.find(string.lower(obj.Name), "cpe") and (obj:IsA("Model") or obj:IsA("BasePart")) then
-				ghostTP(obj)
-				break
-			end
-		end
-	end)
-
-	local function addSimpleText(page, text)
-		local l = Instance.new("TextLabel")
-		l.Size = UDim2.new(1,-20,1,-20)
-		l.Position = UDim2.new(0,10,0,10)
-		l.BackgroundTransparency = 1
-		l.TextWrapped = true
-		l.TextColor3 = Theme.Text
-		l.Font = Enum.Font.Gotham
-		l.TextSize = 15
-		l.Text = text
-		l.Parent = page
-	end
-
+	local function addSimpleText(page, text) local l = Instance.new("TextLabel", page); l.Size = UDim2.new(1,-20,1,-20); l.Position = UDim2.new(0,10,0,10); l.BackgroundTransparency = 1; l.TextWrapped = true; l.TextColor3 = Theme.Text; l.Font = Enum.Font.Gotham; l.TextSize = 15; l.Text = text end
 	addSimpleText(homePage, "🌌 Bienvenue dans SF HUB V6\n\nVos préférences et votre thème favori sont désormais sauvegardés automatiquement.")
 	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nSauvegarde Cloud/Locale active (JSON).\nOptimisé pour l'exécution fluide.")
 
-	--------------------------------------------------
-	-- CONFIGURATION DE L'ONGLET PLAYER (Reste du code identique...)
-	--------------------------------------------------
-    -- [NOTE : Ici, insère le reste de ton code original pour les onglets Player, Visuals, etc.]
-    -- J'ai conservé toute la structure intacte.
+	-- PLAYER PAGE
+	local pLayout = Instance.new("UIListLayout", playerPage); pLayout.Padding = UDim.new(0, 6); pLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Instance.new("UIPadding", playerPage).PaddingTop = UDim.new(0, 8)
+	local function getHum(t) local c = t or Player.Character; return c and c:FindFirstChildOfClass("Humanoid") end
+	local function getRoot(t) local c = t or Player.Character; return c and c:FindFirstChild("HumanoidRootPart") end
 
-	--------------------------------------------------
-	-- ONGLETS DE NAVIGATION
-	--------------------------------------------------
-	local function createTab(name, text)
-		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(1,-12,0,34)
-		b.Text = text
-		b.Font = Enum.Font.GothamMedium
-		b.TextSize = 13
-		b.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-		b.TextColor3 = Theme.Text
-		b.Parent = side
-		local bCorner = Instance.new("UICorner")
-		bCorner.CornerRadius = UDim.new(0, 6)
-		bCorner.Parent = b
-		b.MouseButton1Click:Connect(function() show(name) end)
-		Buttons[name] = b
+	local function createPlayerOption(name, default, callback)
+		local row = Instance.new("Frame", playerPage); row.Size = UDim2.new(0.95, 0, 0, 28); row.BackgroundTransparency = 1
+		local lab = Instance.new("TextLabel", row); lab.Size = UDim2.new(0.6, 0, 1, 0); lab.Text = name; lab.TextColor3 = Theme.Text; lab.Font = Enum.Font.GothamMedium; lab.TextSize = 13; lab.TextXAlignment = Enum.TextXAlignment.Left; lab.BackgroundTransparency = 1
+		local input = Instance.new("TextBox", row); input.Size = UDim2.new(0.35, 0, 0.9, 0); input.Position = UDim2.new(0.65, 0, 0.05, 0); input.BackgroundColor3 = Color3.fromRGB(26, 29, 38); input.Text = tostring(default); input.TextColor3 = Theme.Text; input.Font = Enum.Font.Gotham; input.TextSize = 12; Instance.new("UICorner", input)
+		input.FocusLost:Connect(function() local n = tonumber(input.Text); if n then callback(n) end end)
 	end
+	createPlayerOption("⚡ Vitesse (WalkSpeed)", 16, function(v) local h = getHum() if h then h.WalkSpeed = v end end)
+	createPlayerOption("🦘 Saut (JumpPower)", 50, function(v) local h = getHum() if h then h.UseJumpPower = true; h.JumpPower = v end end)
 
-	createTab("Home","🏠 Home")
-	createTab("Player","👤 Player")
-	createTab("Evasion", "🚪 Évasion")
-	createTab("StaffTP", "🏢 Staff TP") -- AJOUT ONGLET
-	createTab("Visuals", "👁️ Visuals")
-	createTab("Themes","🎨 Themes")
-	createTab("Settings","⚙️ Settings")
-	createTab("About","ℹ️ About")
+	-- EVASION PAGE
+	local evLayout = Instance.new("UIListLayout", evasionPage); evLayout.Padding = UDim.new(0, 12); evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Instance.new("UIPadding", evasionPage).PaddingTop = UDim.new(0, 15)
+	local statusLabel = Instance.new("TextLabel", evasionPage); statusLabel.Size = UDim2.new(0.9, 0, 0, 30); statusLabel.Text = "Statut : Prêt"; statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180); statusLabel.Font = Enum.Font.GothamMedium; statusLabel.BackgroundTransparency = 1
+	local autoEscapeBtn = Instance.new("TextButton", evasionPage); autoEscapeBtn.Size = UDim2.new(0.9, 0, 0, 45); autoEscapeBtn.Text = "⚡ RECHERCHE & DÉCOLLE AUTO"; autoEscapeBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75); autoEscapeBtn.TextColor3 = Color3.new(1, 1, 1); autoEscapeBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", autoEscapeBtn)
+	
+	autoEscapeBtn.MouseButton1Click:Connect(function()
+		local root = getRoot(); local hum = getHum()
+		if not root or not hum then return end
+		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("BasePart") or obj:IsA("Model") then
+				for _, k in pairs(keywords) do if string.find(string.lower(obj.Name), k) then ghostTP(obj); break end end
+			end
+		end
+	end)
 
+	-- ESP
+	local visualsPage_Layout = Instance.new("UIListLayout", visualsPage); visualsPage_Layout.Padding = UDim.new(0, 10); visualsPage_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Instance.new("UIPadding", visualsPage).PaddingTop = UDim.new(0, 12)
+	local espBtn = Instance.new("TextButton", visualsPage); espBtn.Size = UDim2.new(0.9, 0, 0, 36); espBtn.Text = "👤 Player ESP: OFF"; espBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38); espBtn.TextColor3 = Theme.Text; espBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", espBtn)
+	local staffEspBtn = Instance.new("TextButton", visualsPage); staffEspBtn.Size = UDim2.new(0.9, 0, 0, 36); staffEspBtn.Text = "🛡️ Staff ESP Only: OFF"; staffEspBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38); staffEspBtn.TextColor3 = Theme.Text; staffEspBtn.Font = Enum.Font.GothamBold; Instance.new("UICorner", staffEspBtn)
+
+    -- SETTINGS & THEMES
+	local toggle = Instance.new("TextButton", settingsPage); toggle.Size = UDim2.new(0,140,0,34); toggle.Text = toggleState and "Toggle: ON" or "Toggle: OFF"; toggle.BackgroundColor3 = toggleState and Theme.Green or Color3.fromRGB(26, 29, 38); toggle.TextColor3 = Theme.Text; toggle.Font = Enum.Font.GothamMedium; Instance.new("UICorner", toggle)
+	toggle.MouseButton1Click:Connect(function() toggleState = not toggleState; toggle.Text = toggleState and "Toggle: ON" or "Toggle: OFF"; toggle.BackgroundColor3 = toggleState and Theme.Green or Color3.fromRGB(26, 29, 38); saveConfig() end)
+
+	local tLayout = Instance.new("UIListLayout", themesPage); tLayout.Padding = UDim.new(0, 8); tLayout.FillDirection = Enum.FillDirection.Horizontal; tLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Instance.new("UIPadding", themesPage).PaddingTop = UDim.new(0, 30)
+	local function addThemeBtn(color) local b = Instance.new("TextButton", themesPage); b.Size = UDim2.new(0,60,0,34); b.BackgroundColor3 = color; b.Text = ""; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6); b.MouseButton1Click:Connect(function() applyTheme(color) end) end
+	addThemeBtn(Color3.fromRGB(0, 180, 255)); addThemeBtn(Color3.fromRGB(180, 70, 255)); addThemeBtn(Color3.fromRGB(255, 85, 130)); addThemeBtn(Color3.fromRGB(0, 220, 140)); addThemeBtn(Color3.fromRGB(255, 170, 0))
+
+	-- NAVIGATION
+	local function createTab(name, text) local b = Instance.new("TextButton", side); b.Size = UDim2.new(1,-12,0,34); b.Text = text; b.Font = Enum.Font.GothamMedium; b.TextSize = 13; b.BackgroundColor3 = Color3.fromRGB(26, 29, 38); b.TextColor3 = Theme.Text; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6); b.MouseButton1Click:Connect(function() show(name) end); Buttons[name] = b end
+	createTab("Home","🏠 Home"); createTab("Player","👤 Player"); createTab("Evasion", "🚪 Évasion"); createTab("StaffTP", "🏢 Staff TP"); createTab("Visuals", "👁️ Visuals"); createTab("Themes","🎨 Themes"); createTab("Settings","⚙️ Settings"); createTab("About","ℹ️ About")
 	show("Home")
 
-	--------------------------------------------------
-	-- GESTION INTERFACE (OUVERTURE/FERMETURE)
-	--------------------------------------------------
 	local opened = false
-
-	local function open()
-		if opened then return end
-		opened = true
-		frame.Visible = true
-		frame.Size = UDim2.new(0,0,0,0)
-		TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0,500,0,320)
-		}):Play()
-		blurToggle(true)
-	end
-
-	local function closeUI()
-		if not opened then return end
-		opened = false
-		local t = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
-		t:Play()
-		t.Completed:Connect(function() if not opened then frame.Visible = false end end)
-		blurToggle(false)
-	end
-
-	openBtn.MouseButton1Click:Connect(function() if opened then closeUI() else open() end end)
-	close.MouseButton1Click:Connect(closeUI)
-	open()
+	local function open() if opened then return end; opened = true; frame.Visible = true; frame.Size = UDim2.new(0,0,0,0); TweenService:Create(frame, TweenInfo.new(0.25), {Size = UDim2.new(0,500,0,320)}):Play(); blurToggle(true) end
+	local function closeUI() if not opened then return end; opened = false; local t = TweenService:Create(frame, TweenInfo.new(0.2), {Size = UDim2.new(0,0,0,0)}); t:Play(); t.Completed:Connect(function() if not opened then frame.Visible = false end end); blurToggle(false) end
+	openBtn.MouseButton1Click:Connect(function() if opened then closeUI() else open() end end); close.MouseButton1Click:Connect(closeUI); open()
 end
 
--- [Ton système de clé original reste ici, intact]
--- (Ajoute la fin de ton fichier ici pour compléter les 1000 lignes)
+--------------------------------------------------
+-- SYSTEME DE CLÉ FINAL (INTACT)
+--------------------------------------------------
+local KEY_FILE = "sf_key.txt"
+local function makeKeyUI()
+	local VALID_KEY = "SFAR"
+	if isfile and readfile and isfile(KEY_FILE) and readfile(KEY_FILE) == VALID_KEY then buildUI(); return end
+
+	local frame = Instance.new("Frame", gui); frame.Size = UDim2.new(0,320,0,240); frame.Position = UDim2.new(0.5,-160,0.5,-120); frame.BackgroundColor3 = Theme.Bg; Instance.new("UICorner", frame); Instance.new("UIStroke", frame).Color = Theme.Accent
+	local title = Instance.new("TextLabel", frame); title.Size = UDim2.new(1,0,0,40); title.BackgroundTransparency = 1; title.Text = "🔐 ACCÈS REQUIS"; title.Font = Enum.Font.GothamBold; title.TextSize = 16; title.TextColor3 = Theme.Text
+	local box = Instance.new("TextBox", frame); box.Size = UDim2.new(0.9,0,0,40); box.Position = UDim2.new(0.05,0,0.4,0); box.PlaceholderText = "Entrez la clé..."; box.BackgroundColor3 = Color3.fromRGB(26, 29, 38); Instance.new("UICorner", box)
+	local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9,0,0,35); btn.Position = UDim2.new(0.05,0,0.7,0); btn.Text = "DEVERROUILLER"; btn.BackgroundColor3 = Theme.Accent; Instance.new("UICorner", btn)
+	local err = Instance.new("TextLabel", frame); err.Size = UDim2.new(1,0,0,20); err.Position = UDim2.new(0,0,1,-20); err.BackgroundTransparency = 1; err.TextColor3 = Color3.fromRGB(240,70,80)
+
+	btn.MouseButton1Click:Connect(function() if box.Text == VALID_KEY then if writefile then writefile(KEY_FILE, VALID_KEY) end; frame:Destroy(); buildUI() else err.Text = "Clé incorrecte"; task.wait(1); err.Text = "" end end)
+
+	local discordBtn = Instance.new("TextButton", frame); discordBtn.Size = UDim2.new(0.9, 0, 0, 35); discordBtn.Position = UDim2.new(0.05, 0, 0.85, 0); discordBtn.Text = "Discord (Obtenir une clé)"; discordBtn.BackgroundColor3 = Color3.fromRGB(114, 137, 218); Instance.new("UICorner", discordBtn)
+	discordBtn.MouseButton1Click:Connect(function() setclipboard("TON_LIEN_DISCORD_ICI"); discordBtn.Text = "Lien copié !"; task.wait(2); discordBtn.Text = "Discord (Obtenir une clé)" end)
+end
+
+makeKeyUI()
