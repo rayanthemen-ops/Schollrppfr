@@ -87,6 +87,27 @@ local function applyTheme(name)
         writefile(CONFIG_FILE, HttpService:JSONEncode(data))
     end
 end
+-- 1. FONCTION DE CHARGEMENT (INDISPENSABLE)
+local function loadConfig()
+    if isfile and readfile and isfile(CONFIG_FILE) then
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(CONFIG_FILE))
+        end)
+        if success and decoded then
+            if decoded.ThemeName then
+                applyTheme(decoded.ThemeName) -- Applique le thème sauvegardé
+            end
+            if decoded.Toggle ~= nil then
+                toggleState = decoded.Toggle
+            end
+        end
+    end
+end
+
+-- 2. LANCEMENT (À METTRE TOUT EN BAS DE TON SCRIPT)
+-- Ces deux lignes activent tout ce que tu as écrit au-dessus
+buildUI()      -- Construit ton interface
+loadConfig()   -- Charge ton thème sauvegardé (si existant)
 
 
 --------------------------------------------------
