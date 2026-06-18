@@ -96,34 +96,20 @@ local function loadConfig()
     end
 end
 --------------------------------------------------
--- CONSTRUCTION & LANCEMENT (À METTRE À LA FIN)
+--------------------------------------------------
+-- CONSTRUCTION & LANCEMENT
 --------------------------------------------------
 
 local function buildUI()
-    -- On crée une petite fenêtre pour tester
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 200, 0, 200)
-    frame.Position = UDim2.new(0.5, -100, 0.5, -100)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    frame.Parent = gui
-    
-    -- On crée un bouton pour le tester
-    UI.openBtn = Instance.new("TextButton")
-    UI.openBtn.Size = UDim2.new(0, 100, 0, 50)
-    UI.openBtn.Position = UDim2.new(0.5, -50, 0.5, -25)
-    UI.openBtn.Text = "TEST"
-    UI.openBtn.Parent = frame
-    
-    -- On crée un Stroke pour le tester
-    UI.stroke = Instance.new("UIStroke")
-    UI.stroke.Parent = UI.openBtn
-    
-    print("UI construite !")
+    -- Ici, tu ne mets RIEN. 
+    -- Ton menu est vide, donc rien ne s'affichera à l'écran.
+    -- Quand tu voudras ajouter tes vrais boutons, tu les écriras ici.
+    print("UI vide prête à recevoir ton vrai design.")
 end
 
--- LANCEMENT : C'est ici que le script "démarre"
-buildUI()    -- 1. On construit les objets
-loadConfig() -- 2. On applique les couleurs sauvegardées
+-- LANCEMENT :
+buildUI()    -- Appelle la fonction vide
+loadConfig() -- Applique les thèmes (qui ne trouveront rien pour l'instant, donc tout va bien)
 
 --------------------------------------------------
 -- BLUR SYSTEM
