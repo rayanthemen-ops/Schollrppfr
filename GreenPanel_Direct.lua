@@ -1,133 +1,62 @@
--- 🟢 DELTA MOBILE - DIRECT (SANS LOADSTRING) - Panel Vert "nom sf"
-
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
 
-if not player then
-    print("❌ Erreur : Pas de joueur")
-    return
+-- UI Principale (Adaptée Mobile)
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 250, 0, 150)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+local scanBtn = Instance.new("TextButton", mainFrame)
+scanBtn.Size = UDim2.new(0.8, 0, 0, 50)
+scanBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
+scanBtn.Text = "🔍 SCANNER CODES"
+scanBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+
+-- Système de Scan Intelligent
+local function findCodes()
+    local foundCodes = {}
+    
+    -- On scanne les endroits probables
+    local searchLocations = {ReplicatedStorage, game:GetService("Workspace")}
+    
+    for _, location in pairs(searchLocations) do
+        for _, obj in pairs(location:GetDescendants()) do
+            -- Recherche par nom de dossier ou contenu
+            if string.find(string.lower(obj.Name), "code") then
+                if obj:IsA("StringValue") or obj:IsA("NumberValue") then
+                    table.insert(foundCodes, obj.Name .. " : " .. obj.Value)
+                elseif obj:IsA("ModuleScript") then
+                    table.insert(foundCodes, "Module trouvé (vérifier manuellement) : " .. obj.Name)
+                end
+            end
+        end
+    end
+    return foundCodes
 end
 
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Nettoyer anciennes GUI
-if playerGui:FindFirstChild("GreenPanelGui") then
-    playerGui:FindFirstChild("GreenPanelGui"):Destroy()
+-- Panneau des résultats
+local function showResults(codes)
+    local panel = Instance.new("Frame", gui)
+    panel.Size = UDim2.new(0.9, 0, 0.6, 0)
+    panel.Position = UDim2.new(0.05, 0, 0.2, 0)
+    panel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    
+    local list = Instance.new("ScrollingFrame", panel)
+    list.Size = UDim2.new(1, 0, 1, 0)
+    
+    for i, code in pairs(codes) do
+        local label = Instance.new("TextLabel", list)
+        label.Size = UDim2.new(1, 0, 0, 40)
+        label.Position = UDim2.new(0, 0, 0, (i-1)*45)
+        label.Text = code
+        label.TextColor3 = Color3.new(1,1,1)
+    end
 end
 
--- CRÉER L'ÉCRAN PRINCIPAL
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "GreenPanelGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
-
-local panelOpen = true
-
--- ═══════════════════════════════════════════════════════════
--- PANEL VERT PRINCIPAL
--- ═══════════════════════════════════════════════════════════
-
-local mainPanel = Instance.new("Frame")
-mainPanel.Name = "MainPanel"
-mainPanel.Size = UDim2.new(0.8, 0, 0.6, 0)
-mainPanel.Position = UDim2.new(0.1, 0, 0.2, 0)
-mainPanel.BackgroundColor3 = Color3.fromRGB(34, 177, 76) -- VERT VRAI
-mainPanel.BorderSizePixel = 4
-mainPanel.BorderColor3 = Color3.fromRGB(0, 100, 0)
-mainPanel.Parent = screenGui
-
--- Coins arrondis
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 20)
-corner.Parent = mainPanel
-
--- ═══════════════════════════════════════════════════════════
--- TEXTE "nom sf" EN GRAND
--- ═══════════════════════════════════════════════════════════
-
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "TitleLabel"
-titleLabel.Size = UDim2.new(1, 0, 1, 0)
-titleLabel.Position = UDim2.new(0, 0, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "nom sf"
-titleLabel.TextScaled = true
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.Font = Enum.Font.GothamBlack
-titleLabel.Parent = mainPanel
-
--- ═══════════════════════════════════════════════════════════
--- BOUTON FERMER X
--- ═══════════════════════════════════════════════════════════
-
-local closeButton = Instance.new("TextButton")
-closeButton.Name = "CloseButton"
-closeButton.Size = UDim2.new(0, 70, 0, 70)
-closeButton.Position = UDim2.new(1, -85, 0, 10)
-closeButton.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Text = "X"
-closeButton.TextSize = 40
-closeButton.Font = Enum.Font.GothamBold
-closeButton.BorderSizePixel = 0
-closeButton.ZIndex = 100
-closeButton.Parent = mainPanel
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 15)
-closeCorner.Parent = closeButton
-
--- ═══════════════════════════════════════════════════════════
--- BOUTON OUVRIR
--- ═══════════════════════════════════════════════════════════
-
-local openButton = Instance.new("TextButton")
-openButton.Name = "OpenButton"
-openButton.Size = UDim2.new(0, 140, 0, 60)
-openButton.Position = UDim2.new(0.05, 0, 0.05, 0)
-openButton.BackgroundColor3 = Color3.fromRGB(34, 177, 76)
-openButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-openButton.Text = "OUVRIR"
-openButton.TextSize = 22
-openButton.Font = Enum.Font.GothamBold
-openButton.BorderSizePixel = 2
-openButton.BorderColor3 = Color3.fromRGB(0, 100, 0)
-openButton.Visible = false
-openButton.ZIndex = 100
-openButton.Parent = screenGui
-
-local openCorner = Instance.new("UICorner")
-openCorner.CornerRadius = UDim.new(0, 12)
-openCorner.Parent = openButton
-
--- ═══════════════════════════════════════════════════════════
--- FONCTIONS
--- ═══════════════════════════════════════════════════════════
-
-local function closePanel()
-    panelOpen = false
-    mainPanel.Visible = false
-    openButton.Visible = true
-    print("❌ Panel fermé")
-end
-
-local function openPanel()
-    panelOpen = true
-    mainPanel.Visible = true
-    openButton.Visible = false
-    print("✅ Panel ouvert")
-end
-
--- ═══════════════════════════════════════════════════════════
--- ÉVÉNEMENTS BOUTONS
--- ═══════════════════════════════════════════════════════════
-
-closeButton.MouseButton1Click:Connect(function()
-    closePanel()
+scanBtn.MouseButton1Click:Connect(function()
+    local codes = findCodes()
+    showResults(codes)
 end)
-
-openButton.MouseButton1Click:Connect(function()
-    openPanel()
-end)
-
-print("✅✅✅ PANEL VERT CRÉÉ ! Utilise les boutons pour ouvrir/fermer ✅✅✅")
