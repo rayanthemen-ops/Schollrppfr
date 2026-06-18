@@ -40,6 +40,9 @@ gui.Parent = PlayerGui
 --------------------------------------------------
 -- 🎨 SYSTÈME DE THÈMES COMPLET
 --------------------------------------------------
+--------------------------------------------------
+-- 🎨 SYSTÈME DE THÈMES COMPLET
+--------------------------------------------------
 
 local UI = {openBtn = nil, stroke = nil} -- Conteneur pour tes éléments UI
 local toggleState = false 
@@ -58,7 +61,7 @@ local function applyTheme(name)
     local theme = Presets[name]
     if not theme then warn("Thème inexistant : " .. name) return end
     
-    -- A. Mise à jour des UIGradients
+    -- A. Mise à jour automatique de TOUS les UIGradients dans ton GUI
     for _, obj in pairs(gui:GetDescendants()) do
         if obj:IsA("UIGradient") then
             TweenService:Create(obj, TweenInfo.new(0.5), {
@@ -81,9 +84,10 @@ local function applyTheme(name)
     -- C. Sauvegarde du choix
     if writefile then
         local data = {ThemeName = name, Toggle = toggleState}
-        local success = pcall(function()
+        local success, err = pcall(function()
             writefile(CONFIG_FILE, HttpService:JSONEncode(data))
         end)
+        if not success then warn("Erreur sauvegarde : " .. tostring(err)) end
     end
 end
 
@@ -95,7 +99,8 @@ local function loadConfig()
         end)
         if success and decoded then
             if decoded.ThemeName then
-                applyTheme(decoded.ThemeName)
+                -- Petit délai pour s'assurer que l'UI est bien créée avant d'appliquer
+                task.defer(function() applyTheme(decoded.ThemeName) end)
             end
             if decoded.Toggle ~= nil then
                 toggleState = decoded.Toggle
@@ -103,8 +108,6 @@ local function loadConfig()
         end
     end
 end
-
-
 
 --------------------------------------------------
 -- BLUR SYSTEM
