@@ -487,45 +487,29 @@ end)
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
 	--------------------------------------------------
-	-- 🚪 ONGLET ÉVASION (
---------------------------------------------------
--- 🚪 CONFIGURATION ÉVASION (BASÉE SUR TON SCRIPT 
--- 1. On définit la fonction Ghost (à mettre tout en haut du script)
-local function ghostTP(target)
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
-    local root = char.HumanoidRootPart
-    local pos = (target:IsA("Model") and (target:FindFirstChild("HumanoidRootPart") and target.HumanoidRootPart.CFrame or target:GetPrimaryPartCFrame())) or target.CFrame
-    
-    root.Anchored = true
-    for i = 1, 10 do 
-        root.CFrame = root.CFrame:Lerp(pos, i/10)
-        task.wait(0.04)
-    end
-    root.Anchored = false
-end
-
--- 2. Le bloc pour créer les boutons (celui qui nettoie et affiche tout)
+-- 2. Le bloc pour créer les boutons
 local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"}
 
 -- Nettoyage des anciens boutons
 for _, child in pairs(frame:GetChildren()) do
-    if child:IsA("TextButton") then child:Destroy() end
+    if child:IsA("TextButton") or child:IsA("UIListLayout") then child:Destroy() end
 end
+
+-- CRÉATION DU LAYOUT (C'est ce qui manque !)
+local layout = Instance.new("UIListLayout", frame)
+layout.Padding = UDim.new(0, 5) -- 5 pixels d'espace entre chaque bouton
 
 -- Création des nouveaux boutons
 for _, word in pairs(keywords) do
     local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.Size = UDim2.new(1, 0, 0, 30) -- Largeur 100%, hauteur 30
     btn.Text = "TP -> " .. word
     btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     btn.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", btn) -- Petit ajout esthétique pour les coins arrondis
     
     btn.MouseButton1Click:Connect(function()
         local target = Workspace:FindFirstChild(word, true)
-        
-        -- Recherche par mot-clé si le nom exact n'est pas trouvé
         if not target then
             for _, obj in pairs(Workspace:GetDescendants()) do
                 if string.find(string.lower(obj.Name), string.lower(word)) and (obj:IsA("Model") or obj:IsA("BasePart")) then
@@ -536,12 +520,13 @@ for _, word in pairs(keywords) do
         end
         
         if target then
-            ghostTP(target) -- On utilise ta fonction Ghost ici !
+            ghostTP(target)
         else
             print("Objet introuvable : " .. word)
         end
     end)
 end
+
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
