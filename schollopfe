@@ -34,14 +34,19 @@ gui.Parent = PlayerGui
 --------------------------------------------------
 -- 🎨 SYSTÈME DE THÈMES FUSIONNÉ
 --------------------------------------------------
+local Theme = {
+	Bg = Color3.fromRGB(11, 12, 16),       
+	Panel = Color3.fromRGB(18, 19, 26),    
+	Stroke = Color3.fromRGB(35, 38, 50),   
+	Text = Color3.fromRGB(240, 243, 250),  
+	Accent = Color3.fromRGB(0, 180, 255), 
+	Green = Color3.fromRGB(0, 220, 140)    
+}
+local UI = {}
+local toggleState = false 
+local CONFIG_FILE = "sf_config.json"
 
 local Presets = {
-    ["Cyberpunk"] = {Color1 = Color3.fromRGB(158, 42, 255), Color2 = Color3.fromRGB(0, 242, 255)},
-    ["Toxic"]     = {Color1 = Color3.fromRGB(0, 255, 127),  Color2 = Color3.fromRGB(255, 255, 0)},
-    ["Sunset"]    = {Color1 = Color3.fromRGB(255, 85, 85),  Color2 = Color3.fromRGB(255, 170, 0)},
-    ["DeepSea"]   = {Color1 = Color3.fromRGB(0, 150, 255),  Color2 = Color3.fromRGB(0, 255, 200)},
-    ["Gold"]      = {Color1 = Color3.fromRGB(255, 215, 0),  Color2 = Color3.fromRGB(184, 134, 11)}
-}
 
 -- Fonction unique pour appliquer le thème
 local function applyTheme(name)
