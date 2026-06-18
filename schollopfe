@@ -486,38 +486,42 @@ end)
 	--------------------------------------------------
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
--- 1. La fonction de TP (si tu ne l'as pas déjà, mets-la en haut de ton script avec les autres)
-local function ghostTP(targetPart)
-    local char = Player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local root = char.HumanoidRootPart
-    local pos = targetPart:IsA("Model") and (targetPart:FindFirstChild("HumanoidRootPart") and targetPart.HumanoidRootPart.CFrame or targetPart:GetPrimaryPartCFrame()) or targetPart.CFrame
-    root.Anchored = true
-    for i = 1, 10 do root.CFrame = root.CFrame:Lerp(pos, i/10); task.wait(0.04) end
-    root.Anchored = false
-end
+	--------------------------------------------------
+	-- 🚪 ONGLET ÉVASION (LOGIQUE FUSIONNÉE)
+	--------------------------------------------------
+	local evLayout = Instance.new("UIListLayout", evasionPage)
+	evLayout.Padding = UDim.new(0, 8); evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Instance.new("UIPadding", evasionPage).PaddingTop = UDim.new(0, 10)
 
--- 2. La logique pour tes boutons (à mettre dans ta section Staff TP)
-local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur"}
+	local statusLabel = Instance.new("TextLabel", evasionPage)
+	statusLabel.Size = UDim2.new(0.9, 0, 0, 30); statusLabel.Text = "Prêt à scanner..."; statusLabel.TextColor3 = Theme.Accent; statusLabel.BackgroundTransparency = 1
 
-for _, btn in pairs(staffTpPage:GetChildren()) do
-    if btn:IsA("TextButton") then
-        local word = string.lower(string.gsub(btn.Text, "TP -> ", ""))
-        btn.MouseButton1Click:Connect(function()
-            local found = nil
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if string.find(string.lower(obj.Name), word) and (obj:IsA("Model") or obj:IsA("BasePart")) then
-                    found = obj
-                    break
-                end
-            end
-            
-            if found then
-                ghostTP(found)
-            end
-        end)
-    end
-end
+	-- Liste combinée : Mots-clés Evasion + Mots-clés Staff
+	local allKeywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber", "staff", "admin", "base", "salle", "cpe", "proviseur"}
+
+	for _, word in pairs(allKeywords) do
+		local btn = Instance.new("TextButton", evasionPage)
+		btn.Size = UDim2.new(0.9, 0, 0, 35); btn.Text = "TP -> " .. word
+		btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38); btn.TextColor3 = Theme.Text; btn.Font = Enum.Font.GothamBold
+		Instance.new("UICorner", btn)
+		
+		btn.MouseButton1Click:Connect(function()
+			local found = nil
+			for _, obj in pairs(workspace:GetDescendants()) do
+				if string.find(string.lower(obj.Name), word) and (obj:IsA("Model") or obj:IsA("BasePart")) then
+					found = obj
+					break
+				end
+			end
+			
+			if found then
+				statusLabel.Text = "Cible : " .. found.Name
+				ghostTP(found) -- Utilise ta fonction ghostTP définie plus haut
+			else
+				statusLabel.Text = "Non trouvé : " .. word
+			end
+		end)
+	end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
