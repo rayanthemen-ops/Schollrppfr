@@ -30,10 +30,11 @@ gui.Parent = PlayerGui
 --------------------------------------------------
 -- 🎨 PALETTE DE COULEURS & 
 --------------------------------------------------
--- 🎨 SYSTÈME DE THÈMES (COPIE CE BLOC)
+-- 🎨 SYSTÈME DE THÈMES (COPIE 
+--------------------------------------------------
+-- 🎨 SYSTÈME DE THÈMES FUSIONNÉ
 --------------------------------------------------
 
--- 1. Définition des palettes
 local Presets = {
     ["Cyberpunk"] = {Color1 = Color3.fromRGB(158, 42, 255), Color2 = Color3.fromRGB(0, 242, 255)},
     ["Toxic"]     = {Color1 = Color3.fromRGB(0, 255, 127),  Color2 = Color3.fromRGB(255, 255, 0)},
@@ -42,16 +43,15 @@ local Presets = {
     ["Gold"]      = {Color1 = Color3.fromRGB(255, 215, 0),  Color2 = Color3.fromRGB(184, 134, 11)}
 }
 
--- 2. Fonction de mise à jour globale
+-- Fonction unique pour appliquer le thème
 local function applyTheme(name)
     local theme = Presets[name]
     if not theme then warn("Thème inexistant : " .. name) return end
     
-    -- Parcourt tout ton GUI pour trouver et mettre à jour tous les UIGradient
-    for _, obj in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetDescendants()) do
+    -- 1. Mise à jour visuelle (Gradients)
+    for _, obj in pairs(PlayerGui:GetDescendants()) do
         if obj:IsA("UIGradient") then
-            -- On anime la transition pour plus de fluidité
-            game:GetService("TweenService"):Create(obj, TweenInfo.new(0.5), {
+            TweenService:Create(obj, TweenInfo.new(0.5), {
                 Color = ColorSequence.new({
                     ColorSequenceKeypoint.new(0, theme.Color1),
                     ColorSequenceKeypoint.new(1, theme.Color2)
@@ -59,42 +59,33 @@ local function applyTheme(name)
             }):Play()
         end
     end
+    
+    -- 2. Sauvegarde du choix
+    if writefile then
+        local data = {ThemeName = name, Toggle = toggleState}
+        writefile(CONFIG_FILE, HttpService:JSONEncode(data))
+    end
 end
 
---------------------------------------------------
--- COMMENT L'UTILISER :
---------------------------------------------------
--- Il suffit d'appeler : applyTheme("NomDuTheme")
--- Exemple sur un bouton : 
--- btn.MouseButton1Click:Connect(function() applyTheme("Cyberpunk") end)
-
-
+-- Fonction pour charger au démarrage
 local function loadConfig()
-	if isfile and readfile and isfile(CONFIG_FILE) then
-		local success, decoded = pcall(function()
-			return HttpService:JSONDecode(readfile(CONFIG_FILE))
-		end)
-		if success and decoded then
-			if decoded.ThemeColor then
-				Theme.Accent = Color3.new(decoded.ThemeColor[1], decoded.ThemeColor[2], decoded.ThemeColor[3])
-			end
-			if decoded.Toggle ~= nil then
-				toggleState = decoded.Toggle
-			end
-		end
-	end
+    if isfile and readfile and isfile(CONFIG_FILE) then
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(CONFIG_FILE))
+        end)
+        if success and decoded then
+            if decoded.ThemeName then
+                applyTheme(decoded.ThemeName) -- Applique le thème sauvegardé
+            end
+            if decoded.Toggle ~= nil then
+                toggleState = decoded.Toggle
+            end
+        end
+    end
 end
 
+-- Appel initial
 loadConfig()
-
-local function applyTheme(color)
-	Theme.Accent = color
-	if UI.openBtn and UI.stroke then
-		UI.openBtn.BackgroundColor3 = color
-		TweenService:Create(UI.stroke, TweenInfo.new(0.3), {Color = color}):Play()
-	end
-	saveConfig() 
-end
 
 --------------------------------------------------
 -- BLUR SYSTEM
