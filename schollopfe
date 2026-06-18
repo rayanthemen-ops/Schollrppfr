@@ -153,19 +153,26 @@ local function makeKeyUI()
 	local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0.9,0,0,35); btn.Position = UDim2.new(0.05,0,0.7,0); btn.Text = "DEVERROUILLER"; btn.BackgroundColor3 = Theme.Accent; Instance.new("UICorner", btn)
 	local err = Instance.new("TextLabel", frame); err.Size = UDim2.new(1,0,0,20); err.Position = UDim2.new(0,0,1,-20); err.BackgroundTransparency = 1; err.TextColor3 = Color3.fromRGB(240,70,80)
 
-	btn.MouseButton1Click:Connect(function() if box.Text == VALID_KEY then if writefile then writefile(KEY_FILE, VALID_KEY) end; frame:Destroy(); buildUI() else err.Text = "Clé incorrecte"; task.wait(1); err.Text = "" end end)
+	btn.MouseButton1Click:Connect(function() if box.Text == VALID_KEY then if writefile then writefile(KEY_FILE, VALID_KEY) end; frame:Destroy(); buildUI() else err.Text = "Clé incorrecte"; task.wait(1); err.Text = "" end 
 
-	local discordBtn = Instance.new("TextButton", frame); discordBtn.Size = UDim2.new(0.9, 0, 0, 35); discordBtn.Position = UDim2.new(0.05, 0, 0.85, 0); discordBtn.Text = "Discord (Obtenir une clé)"; discordBtn.BackgroundColor3 = Color3.fromRGB(114, 137, 218); Instance.new("UICorner", discordBtn)
-	discordBtn.MouseButton1Click:Connect(function() setclipboard("TON_LIEN_DISCORD_ICI"); discordBtn.Text = "Lien copié !"; task.wait(2); discordBtn.Text = "Discord (Obtenir une clé)" end)
-end
+	local discordBtn = Instance.new("TextButton", frame)
+	discordBtn.Size = UDim2.new(0.9, 0, 0, 35)
+	discordBtn.Position = UDim2.new(0.05, 0, 0.85, 0)
+	discordBtn.Text = "Discord (Obtenir une clé)"
+	discordBtn.BackgroundColor3 = Color3.fromRGB(114, 137, 218)
+	discordBtn.TextColor3 = Color3.new(1, 1, 1)
+	discordBtn.Font = Enum.Font.GothamBold
+	discordBtn.TextSize = 14
+	Instance.new("UICorner", discordBtn)
+
+	discordBtn.MouseButton1Click:Connect(function()
+		setclipboard("TON_LIEN_DISCORD_ICI")
+		discordBtn.Text = "Lien copié !"
+		task.wait(2)
+		discordBtn.Text = "Discord (Obtenir une clé)"
+	end)
+end -- Ferme la fonction makeKeyUI()
+
+-- Lancement propre
 print("--- SCRIPT CHARGÉ ---")
-
--- Test d'affichage minimaliste forcé
-task.spawn(function()
-    print("Tentative d'affichage de l'UI...")
-    pcall(function()
-        makeKeyUI()
-    end)
-end)
-
 makeKeyUI()
