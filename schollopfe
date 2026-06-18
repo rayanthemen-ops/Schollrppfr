@@ -51,12 +51,12 @@ local toggleState = false
 local CONFIG_FILE = "sf_config.json"
 
 local Presets = {
-    ["Cyberpunk"] = {Color1 = Color3.fromRGB(158, 42, 255), Color2 = Color3.fromRGB(0, 242, 255)},
-    ["Toxic"]     = {Color1 = Color3.fromRGB(0, 255, 127),  Color2 = Color3.fromRGB(255, 255, 0)},
-    ["Sunset"]    = {Color1 = Color3.fromRGB(255, 85, 85),  Color2 = Color3.fromRGB(255, 170, 0)},
-    ["DeepSea"]   = {Color1 = Color3.fromRGB(0, 150, 255),  Color2 = Color3.fromRGB(0, 255, 200)},
-    ["Gold"]      = {Color1 = Color3.fromRGB(255, 215, 0),  Color2 = Color3.fromRGB(184, 134, 11)}
-} -- <--- C'est ici qu'il fallait fermer la table !
+    ["Nebula"]      = {Color1 = Color3.fromRGB(189, 0, 255), Color2 = Color3.fromRGB(0, 255, 255)}, -- Violet/Cyan
+    ["Emerald"]     = {Color1 = Color3.fromRGB(0, 255, 128), Color2 = Color3.fromRGB(0, 150, 60)},  -- Vert Acide
+    ["Royal"]       = {Color1 = Color3.fromRGB(255, 215, 0), Color2 = Color3.fromRGB(75, 0, 130)},   -- Or/Violet Profond
+    ["Lava"]        = {Color1 = Color3.fromRGB(255, 60, 0),  Color2 = Color3.fromRGB(255, 200, 0)},  -- Rouge/Jaune
+    ["Midnight"]    = {Color1 = Color3.fromRGB(20, 20, 40),  Color2 = Color3.fromRGB(100, 0, 255)}    -- Sombre/Néon
+}
 
 -- Fonction unique pour appliquer le thème
 local function applyTheme(name)
