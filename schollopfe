@@ -28,30 +28,46 @@ gui.DisplayOrder = 999
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- 🎨 PALETTE DE COULEURS & CONFIG STATE
+-- 🎨 PALETTE DE COULEURS & 
 --------------------------------------------------
-local Theme = {
-	Bg = Color3.fromRGB(11, 12, 16),       
-	Panel = Color3.fromRGB(18, 19, 26),    
-	Stroke = Color3.fromRGB(35, 38, 50),   
-	Text = Color3.fromRGB(240, 243, 250),  
-	Accent = Color3.fromRGB(0, 180, 255), 
-	Green = Color3.fromRGB(0, 220, 140)    
+-- 🎨 SYSTÈME DE THÈMES (COPIE CE BLOC)
+--------------------------------------------------
+
+-- 1. Définition des palettes
+local Presets = {
+    ["Cyberpunk"] = {Color1 = Color3.fromRGB(158, 42, 255), Color2 = Color3.fromRGB(0, 242, 255)},
+    ["Toxic"]     = {Color1 = Color3.fromRGB(0, 255, 127),  Color2 = Color3.fromRGB(255, 255, 0)},
+    ["Sunset"]    = {Color1 = Color3.fromRGB(255, 85, 85),  Color2 = Color3.fromRGB(255, 170, 0)},
+    ["DeepSea"]   = {Color1 = Color3.fromRGB(0, 150, 255),  Color2 = Color3.fromRGB(0, 255, 200)},
+    ["Gold"]      = {Color1 = Color3.fromRGB(255, 215, 0),  Color2 = Color3.fromRGB(184, 134, 11)}
 }
 
-local UI = {}
-local toggleState = false 
-local CONFIG_FILE = "sf_config.json"
-
-local function saveConfig()
-	if writefile then
-		local data = {
-			ThemeColor = {Theme.Accent.R, Theme.Accent.G, Theme.Accent.B},
-			Toggle = toggleState
-		}
-		writefile(CONFIG_FILE, HttpService:JSONEncode(data))
-	end
+-- 2. Fonction de mise à jour globale
+local function applyTheme(name)
+    local theme = Presets[name]
+    if not theme then warn("Thème inexistant : " .. name) return end
+    
+    -- Parcourt tout ton GUI pour trouver et mettre à jour tous les UIGradient
+    for _, obj in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetDescendants()) do
+        if obj:IsA("UIGradient") then
+            -- On anime la transition pour plus de fluidité
+            game:GetService("TweenService"):Create(obj, TweenInfo.new(0.5), {
+                Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, theme.Color1),
+                    ColorSequenceKeypoint.new(1, theme.Color2)
+                })
+            }):Play()
+        end
+    end
 end
+
+--------------------------------------------------
+-- COMMENT L'UTILISER :
+--------------------------------------------------
+-- Il suffit d'appeler : applyTheme("NomDuTheme")
+-- Exemple sur un bouton : 
+-- btn.MouseButton1Click:Connect(function() applyTheme("Cyberpunk") end)
+
 
 local function loadConfig()
 	if isfile and readfile and isfile(CONFIG_FILE) then
