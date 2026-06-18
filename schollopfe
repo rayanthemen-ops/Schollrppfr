@@ -876,6 +876,7 @@ end
 --------------------------------------------------
 -- 🔐 LE SYSTEME DE CLE
 --------------------------------------------------
+Local KEY_FILE = "sf_key. txt"
 local function makeKeyUI()
 local p1 = "SF"
 local p2 = "AR"
