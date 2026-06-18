@@ -58,12 +58,12 @@ local Presets = {
     ["Midnight"]    = {Color1 = Color3.fromRGB(20, 20, 40),  Color2 = Color3.fromRGB(100, 0, 255)}    -- Sombre/Néon
 }
 
--- Fonction unique pour appliquer le thème
+-- 1. FONCTION FUSIONNÉE (Utilise seulement celle-ci)
 local function applyTheme(name)
     local theme = Presets[name]
     if not theme then warn("Thème inexistant : " .. name) return end
     
-    -- 1. Mise à jour visuelle (Gradients)
+    -- A. Mise à jour automatique de TOUS les UIGradient
     for _, obj in pairs(PlayerGui:GetDescendants()) do
         if obj:IsA("UIGradient") then
             TweenService:Create(obj, TweenInfo.new(0.5), {
@@ -75,29 +75,19 @@ local function applyTheme(name)
         end
     end
     
-    -- 2. Sauvegarde du choix
+    -- B. Mise à jour de tes objets spécifiques (pour ne pas perdre ton ancienne logique)
+    if UI.openBtn and UI.stroke then
+        UI.openBtn.BackgroundColor3 = theme.Color1
+        TweenService:Create(UI.stroke, TweenInfo.new(0.5), {Color = theme.Color1}):Play()
+    end
+    
+    -- C. Sauvegarde du choix
     if writefile then
         local data = {ThemeName = name, Toggle = toggleState}
         writefile(CONFIG_FILE, HttpService:JSONEncode(data))
     end
 end
 
--- Fonction pour charger au démarrage
-local function loadConfig()
-    if isfile and readfile and isfile(CONFIG_FILE) then
-        local success, decoded = pcall(function()
-            return HttpService:JSONDecode(readfile(CONFIG_FILE))
-        end)
-        if success and decoded then
-            if decoded.ThemeName then
-                applyTheme(decoded.ThemeName) -- Applique le thème sauvegardé
-            end
-            if decoded.Toggle ~= nil then
-                toggleState = decoded.Toggle
-            end
-        end
-    end
-end
 
 --------------------------------------------------
 -- BLUR SYSTEM
