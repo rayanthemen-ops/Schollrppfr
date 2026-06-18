@@ -877,8 +877,9 @@ end
 -- 🔐 LE SYSTEME DE CLE
 --------------------------------------------------
 local function makeKeyUI()
-	local VALID_KEY = "SFAR"
-	local KEY_FILE = "sf_key.txt"
+local p1 = "SF"
+local p2 = "AR"
+local VALID_KEY = p1 .. p2
 
 	if isfile and readfile and isfile(KEY_FILE) then
 		if readfile(KEY_FILE) == VALID_KEY then
