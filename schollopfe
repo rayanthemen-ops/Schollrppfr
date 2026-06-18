@@ -37,34 +37,29 @@ gui.Parent = PlayerGui
 --------------------------------------------------
 -- 🎨 SYSTÈME DE THÈMES FUSIONNÉ
 --------------------------------------------------
+--------------------------------------------------
+-- 🎨 SYSTÈME DE THÈMES COMPLET
+--------------------------------------------------
 
-local Theme = {
-	Bg = Color3.fromRGB(11, 12, 16),       
-	Panel = Color3.fromRGB(18, 19, 26),    
-	Stroke = Color3.fromRGB(35, 38, 50),   
-	Text = Color3.fromRGB(240, 243, 250),  
-	Accent = Color3.fromRGB(0, 180, 255), 
-	Green = Color3.fromRGB(0, 220, 140)    
-}
-local UI = {}
+local UI = {openBtn = nil, stroke = nil} -- Conteneur pour tes éléments UI
 local toggleState = false 
 local CONFIG_FILE = "sf_config.json"
 
 local Presets = {
-    ["Nebula"]      = {Color1 = Color3.fromRGB(189, 0, 255), Color2 = Color3.fromRGB(0, 255, 255)}, -- Violet/Cyan
-    ["Emerald"]     = {Color1 = Color3.fromRGB(0, 255, 128), Color2 = Color3.fromRGB(0, 150, 60)},  -- Vert Acide
-    ["Royal"]       = {Color1 = Color3.fromRGB(255, 215, 0), Color2 = Color3.fromRGB(75, 0, 130)},   -- Or/Violet Profond
-    ["Lava"]        = {Color1 = Color3.fromRGB(255, 60, 0),  Color2 = Color3.fromRGB(255, 200, 0)},  -- Rouge/Jaune
-    ["Midnight"]    = {Color1 = Color3.fromRGB(20, 20, 40),  Color2 = Color3.fromRGB(100, 0, 255)}    -- Sombre/Néon
+    ["Nebula"]      = {Color1 = Color3.fromRGB(189, 0, 255), Color2 = Color3.fromRGB(0, 255, 255)},
+    ["Emerald"]     = {Color1 = Color3.fromRGB(0, 255, 128), Color2 = Color3.fromRGB(0, 150, 60)},
+    ["Royal"]       = {Color1 = Color3.fromRGB(255, 215, 0), Color2 = Color3.fromRGB(75, 0, 130)},
+    ["Lava"]        = {Color1 = Color3.fromRGB(255, 60, 0),  Color2 = Color3.fromRGB(255, 200, 0)},
+    ["Midnight"]    = {Color1 = Color3.fromRGB(20, 20, 40),  Color2 = Color3.fromRGB(100, 0, 255)}
 }
 
--- 1. FONCTION FUSIONNÉE (Utilise seulement celle-ci)
+-- Fonction pour appliquer le thème
 local function applyTheme(name)
     local theme = Presets[name]
     if not theme then warn("Thème inexistant : " .. name) return end
     
-    -- A. Mise à jour automatique de TOUS les UIGradient
-    for _, obj in pairs(PlayerGui:GetDescendants()) do
+    -- A. Mise à jour des UIGradients
+    for _, obj in pairs(gui:GetDescendants()) do
         if obj:IsA("UIGradient") then
             TweenService:Create(obj, TweenInfo.new(0.5), {
                 Color = ColorSequence.new({
@@ -75,27 +70,32 @@ local function applyTheme(name)
         end
     end
     
-    -- B. Mise à jour de tes objets spécifiques (pour ne pas perdre ton ancienne logique)
-    if UI.openBtn and UI.stroke then
+    -- B. Mise à jour des objets spécifiques (avec sécurité si nil)
+    if UI.openBtn then
         UI.openBtn.BackgroundColor3 = theme.Color1
+    end
+    if UI.stroke then
         TweenService:Create(UI.stroke, TweenInfo.new(0.5), {Color = theme.Color1}):Play()
     end
     
     -- C. Sauvegarde du choix
     if writefile then
         local data = {ThemeName = name, Toggle = toggleState}
-        writefile(CONFIG_FILE, HttpService:JSONEncode(data))
+        local success = pcall(function()
+            writefile(CONFIG_FILE, HttpService:JSONEncode(data))
+        end)
     end
 end
--- 1. FONCTION DE CHARGEMENT (INDISPENSABLE)
+
+-- Fonction pour charger la configuration
 local function loadConfig()
-    if isfile and readfile and isfile(CONFIG_FILE) then
+    if isfile and isfile(CONFIG_FILE) then
         local success, decoded = pcall(function()
             return HttpService:JSONDecode(readfile(CONFIG_FILE))
         end)
         if success and decoded then
             if decoded.ThemeName then
-                applyTheme(decoded.ThemeName) -- Applique le thème sauvegardé
+                applyTheme(decoded.ThemeName)
             end
             if decoded.Toggle ~= nil then
                 toggleState = decoded.Toggle
@@ -104,10 +104,6 @@ local function loadConfig()
     end
 end
 
--- 2. LANCEMENT (À METTRE TOUT EN BAS DE TON SCRIPT)
--- Ces deux lignes activent tout ce que tu as écrit au-dessus
-buildUI()      -- Construit ton interface
-loadConfig()   -- Charge ton thème sauvegardé (si existant)
 
 
 --------------------------------------------------
