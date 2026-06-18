@@ -489,24 +489,36 @@ end)
 	--------------------------------------------------
 	-- 🚪 ONGLET ÉVASION (LOGIQUE FUSIONNÉE)
 	--------------------------------------------------
+	--------------------------------------------------
+	-- 🚪 CONFIGURATION ÉVASION (AVEC LOGIQUE STAFF)
+	--------------------------------------------------
 	local evLayout = Instance.new("UIListLayout", evasionPage)
-	evLayout.Padding = UDim.new(0, 8); evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	Instance.new("UIPadding", evasionPage).PaddingTop = UDim.new(0, 10)
+	evLayout.Padding = UDim.new(0, 8)
+	evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	
+	local evPadding = Instance.new("UIPadding", evasionPage)
+	evPadding.PaddingTop = UDim.new(0, 10)
 
 	local statusLabel = Instance.new("TextLabel", evasionPage)
-	statusLabel.Size = UDim2.new(0.9, 0, 0, 30); statusLabel.Text = "Prêt à scanner..."; statusLabel.TextColor3 = Theme.Accent; statusLabel.BackgroundTransparency = 1
+	statusLabel.Size = UDim2.new(0.9, 0, 0, 30)
+	statusLabel.Text = "Scanner prêt..."
+	statusLabel.TextColor3 = Theme.Accent
+	statusLabel.BackgroundTransparency = 1
 
-	-- Liste combinée : Mots-clés Evasion + Mots-clés Staff
-	local allKeywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber", "staff", "admin", "base", "salle", "cpe", "proviseur"}
+	local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur"}
 
-	for _, word in pairs(allKeywords) do
+	for _, word in pairs(keywords) do
 		local btn = Instance.new("TextButton", evasionPage)
-		btn.Size = UDim2.new(0.9, 0, 0, 35); btn.Text = "TP -> " .. word
-		btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38); btn.TextColor3 = Theme.Text; btn.Font = Enum.Font.GothamBold
+		btn.Size = UDim2.new(0.9, 0, 0, 35)
+		btn.Text = "TP -> " .. word
+		btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+		btn.TextColor3 = Theme.Text
+		btn.Font = Enum.Font.GothamBold
 		Instance.new("UICorner", btn)
 		
 		btn.MouseButton1Click:Connect(function()
 			local found = nil
+			-- Recherche dans tout le workspace
 			for _, obj in pairs(workspace:GetDescendants()) do
 				if string.find(string.lower(obj.Name), word) and (obj:IsA("Model") or obj:IsA("BasePart")) then
 					found = obj
@@ -516,7 +528,8 @@ end)
 			
 			if found then
 				statusLabel.Text = "Cible : " .. found.Name
-				ghostTP(found) -- Utilise ta fonction ghostTP définie plus haut
+				-- Appel de la fonction de TP
+				ghostTP(found)
 			else
 				statusLabel.Text = "Non trouvé : " .. word
 			end
