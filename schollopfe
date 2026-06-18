@@ -487,41 +487,55 @@ end)
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
 	--------------------------------------------------
--- 1. On cherche si une page "EvasionPage" existe déjà, sinon on la crée
-local evasionPage = frame:FindFirstChild("EvasionPage")
-if not evasionPage then
-    evasionPage = Instance.new("ScrollingFrame", frame) -- ScrollingFrame est mieux pour la liste
-    evasionPage.Name = "EvasionPage"
-    evasionPage.Size = UDim2.new(1, 0, 1, 0)
-    evasionPage.BackgroundTransparency = 1
-    Instance.new("UIListLayout", evasionPage).Padding = UDim.new(0, 5)
-else
-    -- Si elle existe, on ne nettoie que l'intérieur de cette page spécifique
-    for _, child in pairs(evasionPage:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
+-- 1. On cherche la fenêtre principale
+local playerGui = game.Players.LocalPlayer.PlayerGui
+local mainFrame = playerGui:FindFirstChild("SF_HUB", true) and playerGui:FindFirstChild("SF_HUB", true):FindFirstChild("MainFrame", true)
+
+if mainFrame then
+    -- Création d'une page dédiée pour tes TP
+    local tpPage = mainFrame:FindFirstChild("TP_Page") or Instance.new("Frame", mainFrame)
+    tpPage.Name = "TP_Page"
+    tpPage.Size = UDim2.new(0.6, 0, 0.7, 0) -- Taille adaptée au cadre noir
+    tpPage.Position = UDim2.new(0.35, 0, 0.15, 0) -- Positionnée sur le cadre noir
+    tpPage.BackgroundTransparency = 1
+    
+    -- Nettoyage
+    for _, child in pairs(tpPage:GetChildren()) do child:Destroy() end
+    
+    local layout = Instance.new("UIListLayout", tpPage)
+    layout.Padding = UDim.new(0, 5)
+
+    -- Fonction de TP sécurisée
+    local function ghostTP(target)
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local root = char.HumanoidRootPart
+            local pos = (target:IsA("Model") and (target:FindFirstChild("HumanoidRootPart") and target.HumanoidRootPart.CFrame or target:GetPrimaryPartCFrame())) or target.CFrame
+            root.CFrame = pos
+        end
+    end
+
+    -- Création des boutons
+    local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"}
+    for _, word in pairs(keywords) do
+        local btn = Instance.new("TextButton", tpPage)
+        btn.Size = UDim2.new(1, 0, 0, 30)
+        btn.Text = "TP -> " .. word
+        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        Instance.new("UICorner", btn)
+        
+        btn.MouseButton1Click:Connect(function()
+            local target = Workspace:FindFirstChild(word, true)
+            if not target then
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if string.find(string.lower(obj.Name), string.lower(word)) then target = obj break end
+                end
+            end
+            if target then ghostTP(target) else print("Introuvable : " .. word) end
+        end)
     end
 end
-
--- 2. On crée les boutons DANS cette page uniquement
-local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"}
-
-for _, word in pairs(keywords) do
-    local btn = Instance.new("TextButton", evasionPage)
-    btn.Size = UDim2.new(0.9, 0, 0, 30)
-    btn.Text = "TP -> " .. word
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", btn)
-    
-    btn.MouseButton1Click:Connect(function()
-        -- [Ta logique de recherche reste la même]
-        local target = Workspace:FindFirstChild(word, true)
-        -- ... (insère ta logique de recherche ici)
-        if target then ghostTP(target) end
-    end)
-end
-
-
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
