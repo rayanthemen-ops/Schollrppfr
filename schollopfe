@@ -1,4 +1,4 @@
-local Players = game:GetService("Players")
+Je peut amélioré quoi ? local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
@@ -486,99 +486,56 @@ end)
 	--------------------------------------------------
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
-	local evLayout = Instance.new("UIListLayout")
-	evLayout.Padding = UDim.new(0, 12)
-	evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	evLayout.Parent = evasionPage
+	--------------------------------------------------
+-- 1. On cherche la fenêtre principale
+local playerGui = game.Players.LocalPlayer.PlayerGui
+local mainFrame = playerGui:FindFirstChild("SF_HUB", true) and playerGui:FindFirstChild("SF_HUB", true):FindFirstChild("MainFrame", true)
 
-	local evPadding = Instance.new("UIPadding")
-	evPadding.PaddingTop = UDim.new(0, 15)
-	evPadding.Parent = evasionPage
+if mainFrame then
+    -- Création d'une page dédiée pour tes TP
+    local tpPage = mainFrame:FindFirstChild("TP_Page") or Instance.new("Frame", mainFrame)
+    tpPage.Name = "TP_Page"
+    tpPage.Size = UDim2.new(0.6, 0, 0.7, 0) -- Taille adaptée au cadre noir
+    tpPage.Position = UDim2.new(0.35, 0, 0.15, 0) -- Positionnée sur le cadre noir
+    tpPage.BackgroundTransparency = 1
+    
+    -- Nettoyage
+    for _, child in pairs(tpPage:GetChildren()) do child:Destroy() end
+    
+    local layout = Instance.new("UIListLayout", tpPage)
+    layout.Padding = UDim.new(0, 5)
 
-	local statusLabel = Instance.new("TextLabel")
-	statusLabel.Size = UDim2.new(0.9, 0, 0, 30)
-	statusLabel.Text = "Statut : En attente d'activation..."
-	statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	statusLabel.Font = Enum.Font.GothamMedium
-	statusLabel.TextSize = 13
-	statusLabel.BackgroundTransparency = 1
-	statusLabel.Parent = evasionPage
+    -- Fonction de TP sécurisée
+    local function ghostTP(target)
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local root = char.HumanoidRootPart
+            local pos = (target:IsA("Model") and (target:FindFirstChild("HumanoidRootPart") and target.HumanoidRootPart.CFrame or target:GetPrimaryPartCFrame())) or target.CFrame
+            root.CFrame = pos
+        end
+    end
 
-	local autoEscapeBtn = Instance.new("TextButton")
-	autoEscapeBtn.Size = UDim2.new(0.9, 0, 0, 45)
-	autoEscapeBtn.Text = "⚡ RECHERCHE & DÉCOLLE AUTO"
-	autoEscapeBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
-	autoEscapeBtn.TextColor3 = Color3.new(1, 1, 1)
-	autoEscapeBtn.Font = Enum.Font.GothamBold
-	autoEscapeBtn.TextSize = 14
-	autoEscapeBtn.Parent = evasionPage
-	
-	local autoCorner = Instance.new("UICorner")
-	autoCorner.Parent = autoEscapeBtn
-
-	autoEscapeBtn.MouseButton1Click:Connect(function()
-		local char = Player.Character
-		local root = getRoot(char)
-		local hum = getHum(char)
-		if not root or not hum then return end
-
-		statusLabel.Text = "🔍 Analyse..."
-		statusLabel.TextColor3 = Theme.Accent
-		hum.Sit = false
-		root.Velocity = Vector3.new(0, 0, 0)
-
-		-- Activation du Noclip
-		local escapeNoclip = RunService.Stepped:Connect(function()
-			if char then
-				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
-				end
-			end
-		end)
-
-		-- Recherche de cible
-		local foundTarget = false
-		local targetCFrame = nil
-		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
-
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if obj:IsA("BasePart") or obj:IsA("Model") then
-				local nameLower = string.lower(obj.Name)
-				for _, keyword in pairs(keywords) do
-					if string.find(nameLower, keyword) then
-						foundTarget = true
-						targetCFrame = obj:IsA("BasePart") and obj.CFrame or (obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame)
-						break
-					end
-				end
-			end
-			if foundTarget then break end
-		end
-
-		-- Exécution du déplacement par étapes
-		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Bypass Anti-Cheat..."
-			
-			-- On détache la RootPart du moteur physique
-			root.Anchored = true
-			
-			-- On change la position en une seule fois
-			local targetPos = targetCFrame.Position + Vector3.new(0, 3, 0)
-			root.CFrame = CFrame.new(targetPos)
-			
-			-- On attend un court instant avant de désancrer
-			task.wait(0.1)
-			root.Anchored = false
-			
-			statusLabel.TextColor3 = Theme.Green
-			statusLabel.Text = "✅ Position forcée !"
-		else
-			-- Ce "else" est le seul qui doit exister ici
-			statusLabel.Text = "⚠️ Éjection forcée..."
-			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
-		end
-	end) -- Cette ligne ferme enfin la fonction du bouton
-
+    -- Création des boutons
+    local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"}
+    for _, word in pairs(keywords) do
+        local btn = Instance.new("TextButton", tpPage)
+        btn.Size = UDim2.new(1, 0, 0, 30)
+        btn.Text = "TP -> " .. word
+        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        Instance.new("UICorner", btn)
+        
+        btn.MouseButton1Click:Connect(function()
+            local target = Workspace:FindFirstChild(word, true)
+            if not target then
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if string.find(string.lower(obj.Name), string.lower(word)) then target = obj break end
+                end
+            end
+            if target then ghostTP(target) else print("Introuvable : " .. word) end
+        end)
+    end
+end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
@@ -981,3 +938,5 @@ local VALID_KEY = p1 .. p2
 	frame.Size = UDim2.new(0, 320, 0, 240) 
 
 end
+-- Initialisation du système
+makeKeyUI()
