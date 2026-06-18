@@ -28,19 +28,6 @@ gui.DisplayOrder = 999
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- 🎨 PALETTE DE COULEURS & 
---------------------------------------------------
--- 🎨 SYSTÈME DE THÈMES (COPIE 
---------------------------------------------------
--- 🎨 SYSTÈME DE THÈMES FUSIONNÉ
---------------------------------------------------
---------------------------------------------------
--- 🎨 SYSTÈME DE THÈMES FUSIONNÉ
---------------------------------------------------
---------------------------------------------------
--- 🎨 SYSTÈME DE THÈMES COMPLET
---------------------------------------------------
---------------------------------------------------
 -- 🎨 SYSTÈME DE THÈMES COMPLET
 --------------------------------------------------
 
@@ -99,7 +86,7 @@ local function loadConfig()
         end)
         if success and decoded then
             if decoded.ThemeName then
-                -- Petit délai pour s'assurer que l'UI est bien créée avant d'appliquer
+                -- Applique le thème après un court délai pour être sûr que l'UI existe
                 task.defer(function() applyTheme(decoded.ThemeName) end)
             end
             if decoded.Toggle ~= nil then
