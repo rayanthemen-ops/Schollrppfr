@@ -487,51 +487,64 @@ end)
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
 	--------------------------------------------------
-	-- 🚪 ONGLET ÉVASION (LOGIQUE FUSIONNÉE)
-	--------------------------------------------------
-	--------------------------------------------------
-	-- 🚪 CONFIGURATION ÉVASION (DEBUG INTÉGRÉ)
-	for _, child in pairs(evasionPage:GetChildren()) do
-		if not child:IsA("UIListLayout") and not child:IsA("UIPadding") then
-			child:Destroy()
-		end
-	end
+	-- 🚪 ONGLET ÉVASION (
+--------------------------------------------------
+-- 🚪 CONFIGURATION ÉVASION (BASÉE SUR TON SCRIPT QUI MARCHE)
+--------------------------------------------------
 
-	local statusLabel = Instance.new("TextLabel", evasionPage)
-	statusLabel.Size = UDim2.new(0.9, 0, 0, 30); statusLabel.Text = "Scanner prêt..."; statusLabel.TextColor3 = Theme.Accent; statusLabel.BackgroundTransparency = 1
-	statusLabel.Parent = evasionPage
+-- On nettoie l'onglet proprement
+for _, child in pairs(evasionPage:GetChildren()) do
+    if not child:IsA("UIListLayout") and not child:IsA("UIPadding") then
+        child:Destroy()
+    end
+end
 
-	local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur"}
+local statusLabel = Instance.new("TextLabel", evasionPage)
+statusLabel.Size = UDim2.new(0.9, 0, 0, 30); statusLabel.Text = "Scanner prêt..."; statusLabel.TextColor3 = Theme.Accent; statusLabel.BackgroundTransparency = 1
 
-	for _, word in pairs(keywords) do
-		local btn = Instance.new("TextButton", evasionPage)
-		btn.Size = UDim2.new(0.9, 0, 0, 35); btn.Text = "TP -> " .. word
-		btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38); btn.TextColor3 = Theme.Text; btn.Font = Enum.Font.GothamBold
-		Instance.new("UICorner", btn)
-		
-		btn.MouseButton1Click:Connect(function()
-			local found = nil
-			-- DEBUG : On cherche dans le workspace
-			print("Recherche de : " .. word) 
-			
-			for _, obj in pairs(workspace:GetDescendants()) do
-				-- On cherche un objet qui contient ton mot
-				if string.find(string.lower(obj.Name), word) and (obj:IsA("Model") or obj:IsA("BasePart")) then
-					found = obj
-					print("Objet trouvé : " .. obj.Name) -- Si ça s'affiche dans F9, c'est que l'objet est trouvé
-					break
-				end
-			end
-			
-			if found then
-				statusLabel.Text = "Cible : " .. found.Name
-				ghostTP(found)
-			else
-				statusLabel.Text = "Non trouvé : " .. word
-				warn("Impossible de trouver un objet contenant : " .. word)
-			end
-		end)
-	end
+local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur", "modrome"} -- J'ai ajouté modrome
+
+for _, word in pairs(keywords) do
+    local btn = Instance.new("TextButton", evasionPage)
+    btn.Size = UDim2.new(0.9, 0, 0, 35); btn.Text = "TP -> " .. word
+    btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38); btn.TextColor3 = Theme.Text; btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", btn)
+    
+    btn.MouseButton1Click:Connect(function()
+        -- Utilisation de la méthode Workspace:FindFirstChild avec 'true' (recherche profonde)
+        local found = Workspace:FindFirstChild(word, true) 
+        
+        -- Si non trouvé par nom exact, on cherche un nom qui contient le mot
+        if not found then
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                if string.find(string.lower(obj.Name), word) and (obj:IsA("Model") or obj:IsA("BasePart")) then
+                    found = obj
+                    break
+                end
+            end
+        end
+        
+        if found then
+            statusLabel.Text = "Cible : " .. found.Name
+            
+            -- Ta fonction ghostTP (que tu dois avoir en haut du script)
+            local char = Player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local root = char.HumanoidRootPart
+                local pos = found:IsA("Model") and (found:FindFirstChild("HumanoidRootPart") and found.HumanoidRootPart.CFrame or found:GetPrimaryPartCFrame()) or found.CFrame
+                
+                root.Anchored = true
+                for i = 1, 10 do 
+                    root.CFrame = root.CFrame:Lerp(pos, i/10)
+                    task.wait(0.04)
+                end
+                root.Anchored = false
+            end
+        else
+            statusLabel.Text = "Non trouvé : " .. word
+        end
+    end)
+end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
