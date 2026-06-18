@@ -486,99 +486,38 @@ end)
 	--------------------------------------------------
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
 	--------------------------------------------------
-	local evLayout = Instance.new("UIListLayout")
-	evLayout.Padding = UDim.new(0, 12)
-	evLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	evLayout.Parent = evasionPage
+-- 1. La fonction de TP (si tu ne l'as pas déjà, mets-la en haut de ton script avec les autres)
+local function ghostTP(targetPart)
+    local char = Player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local root = char.HumanoidRootPart
+    local pos = targetPart:IsA("Model") and (targetPart:FindFirstChild("HumanoidRootPart") and targetPart.HumanoidRootPart.CFrame or targetPart:GetPrimaryPartCFrame()) or targetPart.CFrame
+    root.Anchored = true
+    for i = 1, 10 do root.CFrame = root.CFrame:Lerp(pos, i/10); task.wait(0.04) end
+    root.Anchored = false
+end
 
-	local evPadding = Instance.new("UIPadding")
-	evPadding.PaddingTop = UDim.new(0, 15)
-	evPadding.Parent = evasionPage
+-- 2. La logique pour tes boutons (à mettre dans ta section Staff TP)
+local keywords = {"staff", "admin", "base", "salle", "cpe", "proviseur"}
 
-	local statusLabel = Instance.new("TextLabel")
-	statusLabel.Size = UDim2.new(0.9, 0, 0, 30)
-	statusLabel.Text = "Statut : En attente d'activation..."
-	statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-	statusLabel.Font = Enum.Font.GothamMedium
-	statusLabel.TextSize = 13
-	statusLabel.BackgroundTransparency = 1
-	statusLabel.Parent = evasionPage
-
-	local autoEscapeBtn = Instance.new("TextButton")
-	autoEscapeBtn.Size = UDim2.new(0.9, 0, 0, 45)
-	autoEscapeBtn.Text = "⚡ RECHERCHE & DÉCOLLE AUTO"
-	autoEscapeBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
-	autoEscapeBtn.TextColor3 = Color3.new(1, 1, 1)
-	autoEscapeBtn.Font = Enum.Font.GothamBold
-	autoEscapeBtn.TextSize = 14
-	autoEscapeBtn.Parent = evasionPage
-	
-	local autoCorner = Instance.new("UICorner")
-	autoCorner.Parent = autoEscapeBtn
-
-	autoEscapeBtn.MouseButton1Click:Connect(function()
-		local char = Player.Character
-		local root = getRoot(char)
-		local hum = getHum(char)
-		if not root or not hum then return end
-
-		statusLabel.Text = "🔍 Analyse..."
-		statusLabel.TextColor3 = Theme.Accent
-		hum.Sit = false
-		root.Velocity = Vector3.new(0, 0, 0)
-
-		-- Activation du Noclip
-		local escapeNoclip = RunService.Stepped:Connect(function()
-			if char then
-				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
-				end
-			end
-		end)
-
-		-- Recherche de cible
-		local foundTarget = false
-		local targetCFrame = nil
-		local keywords = {"toilet", "wc", "escape", "sorti", "evas", "decolle", "spawn", "liber"}
-
-		for _, obj in pairs(workspace:GetDescendants()) do
-			if obj:IsA("BasePart") or obj:IsA("Model") then
-				local nameLower = string.lower(obj.Name)
-				for _, keyword in pairs(keywords) do
-					if string.find(nameLower, keyword) then
-						foundTarget = true
-						targetCFrame = obj:IsA("BasePart") and obj.CFrame or (obj:GetPrimaryPartCFrame() or obj:FindFirstChildWhichIsA("BasePart").CFrame)
-						break
-					end
-				end
-			end
-			if foundTarget then break end
-		end
-
-		-- Exécution du déplacement par étapes
-		if foundTarget and targetCFrame then
-			statusLabel.Text = "🔓 Bypass Anti-Cheat..."
-			
-			-- On détache la RootPart du moteur physique
-			root.Anchored = true
-			
-			-- On change la position en une seule fois
-			local targetPos = targetCFrame.Position + Vector3.new(0, 3, 0)
-			root.CFrame = CFrame.new(targetPos)
-			
-			-- On attend un court instant avant de désancrer
-			task.wait(0.1)
-			root.Anchored = false
-			
-			statusLabel.TextColor3 = Theme.Green
-			statusLabel.Text = "✅ Position forcée !"
-		else
-			-- Ce "else" est le seul qui doit exister ici
-			statusLabel.Text = "⚠️ Éjection forcée..."
-			root.CFrame = root.CFrame * CFrame.new(0, 65, 0)
-		end
-	end) -- Cette ligne ferme enfin la fonction du bouton
-
+for _, btn in pairs(staffTpPage:GetChildren()) do
+    if btn:IsA("TextButton") then
+        local word = string.lower(string.gsub(btn.Text, "TP -> ", ""))
+        btn.MouseButton1Click:Connect(function()
+            local found = nil
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if string.find(string.lower(obj.Name), word) and (obj:IsA("Model") or obj:IsA("BasePart")) then
+                    found = obj
+                    break
+                end
+            end
+            
+            if found then
+                ghostTP(found)
+            end
+        end)
+    end
+end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
