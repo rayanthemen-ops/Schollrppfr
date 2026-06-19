@@ -3,9 +3,45 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
+local HttpService = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+local Mouse = Player:GetMouse()
+
+-- Nom du fichier de sauvegarde
+local SAVE_FILE = "SF_HUB_Config.json"
+
+-- Configuration par défaut
+local Config = {
+	KeyUnlocked = false,
+	SelectedColor = {120, 170, 255} -- Bleu par défaut
+}
+
+-- Fonctions de sauvegarde / chargement
+local function loadSettings()
+	if isfile and readfile and isfile(SAVE_FILE) then
+		local success, data = pcall(function()
+			return HttpService:JSONDecode(readfile(SAVE_FILE))
+		end)
+		if success and type(data) == "table" then
+			Config.KeyUnlocked = data.KeyUnlocked or false
+			if data.SelectedColor then
+				Config.SelectedColor = data.SelectedColor
+			end
+		end
+	end
+end
+
+local function saveSettings()
+	if writefile then
+		local data = HttpService:JSONEncode(Config)
+		writefile(SAVE_FILE, data)
+	end
+end
+
+-- Charger la config au démarrage
+loadSettings()
 
 -- Variable globale UI sécurisée
 local UI = {}
@@ -26,16 +62,57 @@ gui.IgnoreGuiInset = true
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- 🔐 KEY SYSTEM
+-- 🎨 THEME SYSTEM V6
+--------------------------------------------------
+local Theme = {
+	Bg = Color3.fromRGB(18,18,22),
+	Panel = Color3.fromRGB(28,28,35),
+	Stroke = Color3.fromRGB(90,100,120),
+	Text = Color3.fromRGB(235,235,235),
+	Accent = Color3.fromRGB(Config.SelectedColor[1], Config.SelectedColor[2], Config.SelectedColor[3]),
+	Accent2 = Color3.fromRGB(170,120,255),
+	Green = Color3.fromRGB(90,200,160)
+}
+
+local function applyTheme(color)
+	Theme.Accent = color
+	Config.SelectedColor = {math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255)}
+	saveSettings()
+	if UI.openBtn and UI.stroke then
+		UI.openBtn.BackgroundColor3 = color
+		UI.stroke.Color = color
+	end
+end
+
+--------------------------------------------------
+-- BLUR
+--------------------------------------------------
+local blur = Lighting:FindFirstChild("SF_Blur") or Instance.new("BlurEffect")
+blur.Name = "SF_Blur"
+blur.Size = 0
+blur.Parent = Lighting
+
+local function blurToggle(state)
+	TweenService:Create(blur, TweenInfo.new(0.2), {
+		Size = state and 14 or 0
+	}):Play()
+end
+
+--------------------------------------------------
+-- 🔐 KEY SYSTEM WITH AUTO-SAVE
 --------------------------------------------------
 local VALID_KEY = "SFAR"
-local unlocked = false
 
 local function makeKeyUI()
+	if Config.KeyUnlocked then
+		buildUI()
+		return
+	end
+
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0,320,0,190)
 	frame.Position = UDim2.new(0.5,-160,0.5,-95)
-	frame.BackgroundColor3 = Color3.fromRGB(18,18,22)
+	frame.BackgroundColor3 = Theme.Bg
 	frame.Parent = gui
 	Instance.new("UICorner", frame)
 
@@ -67,7 +144,7 @@ local function makeKeyUI()
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 16
 	btn.TextColor3 = Color3.new(1,1,1)
-	btn.BackgroundColor3 = Color3.fromRGB(120,170,255)
+	btn.BackgroundColor3 = Theme.Accent
 	btn.Parent = frame
 	Instance.new("UICorner", btn)
 
@@ -83,7 +160,8 @@ local function makeKeyUI()
 
 	btn.MouseButton1Click:Connect(function()
 		if box.Text == VALID_KEY then
-			unlocked = true
+			Config.KeyUnlocked = true
+			saveSettings()
 			frame:Destroy()
 			buildUI()
 		else
@@ -95,42 +173,7 @@ local function makeKeyUI()
 end
 
 --------------------------------------------------
--- 🎨 THEME SYSTEM V6
---------------------------------------------------
-local Theme = {
-	Bg = Color3.fromRGB(18,18,22),
-	Panel = Color3.fromRGB(28,28,35),
-	Stroke = Color3.fromRGB(90,100,120),
-	Text = Color3.fromRGB(235,235,235),
-	Accent = Color3.fromRGB(120,170,255),
-	Accent2 = Color3.fromRGB(170,120,255),
-	Green = Color3.fromRGB(90,200,160)
-}
-
-local function applyTheme(color)
-	Theme.Accent = color
-	if UI.openBtn and UI.stroke then
-		UI.openBtn.BackgroundColor3 = color
-		UI.stroke.Color = color
-	end
-end
-
---------------------------------------------------
--- BLUR
---------------------------------------------------
-local blur = Lighting:FindFirstChild("SF_Blur") or Instance.new("BlurEffect")
-blur.Name = "SF_Blur"
-blur.Size = 0
-blur.Parent = Lighting
-
-local function blurToggle(state)
-	TweenService:Create(blur, TweenInfo.new(0.2), {
-		Size = state and 14 or 0
-	}):Play()
-end
-
---------------------------------------------------
--- BUILD UI (après key)
+-- BUILD UI
 --------------------------------------------------
 function buildUI()
 	local frame = Instance.new("Frame")
@@ -142,7 +185,7 @@ function buildUI()
 	Instance.new("UICorner", frame)
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = Theme.Stroke
+	stroke.Color = Theme.Accent
 	stroke.Thickness = 2
 	stroke.Parent = frame
 
@@ -184,7 +227,6 @@ function buildUI()
 	close.Parent = topBar
 	Instance.new("UICorner", close)
 
-	-- Système de Drag (Glisser-déposer)
 	local dragging, dragInput, dragStart, startPos
 	local function updateDrag(input)
 		local delta = input.Position - dragStart
@@ -289,14 +331,14 @@ function buildUI()
 	createPage("About","ℹ️ About SF HUB V6")
 
 	--------------------------------------------------
-	-- 🚀 FONCTIONNALITÉ : TP BASS (PLUT GARDEN)
+	-- 🚀 REFAIT : METHODE CLICK TO TP (ANTI-CHEAT BYPASS)
 	--------------------------------------------------
 	local playerPage = Pages["Player"]
 
 	local tpBtn = Instance.new("TextButton")
 	tpBtn.Size = UDim2.new(0,200,0,40)
 	tpBtn.Position = UDim2.new(0,15,0,60)
-	tpBtn.Text = "🌀 TP Plut Garden (Bass)"
+	tpBtn.Text = "🎯 Click to TP (Bypass)"
 	tpBtn.Font = Enum.Font.GothamBold
 	tpBtn.TextSize = 14
 	tpBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
@@ -304,39 +346,49 @@ function buildUI()
 	tpBtn.Parent = playerPage
 	Instance.new("UICorner", tpBtn)
 
-	-- Logique d'analyse et de TP Triangle/Bass bypass
+	local teleporting = false
+
 	tpBtn.MouseButton1Click:Connect(function()
-		local char = Player.Character
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if teleporting then return end
+		teleporting = true
 		
-		if hrp then
-			-- 1. Recherche dynamique de la zone du Jardin (Plut Garden) dans la map
-			local targetPart = workspace:FindFirstChild("Plut Garden", true) or workspace:FindFirstChild("Garden", true)
-			local targetPos
+		tpBtn.Text = "🖱️ Clique où tu veux aller..."
+		
+		local connection
+		connection = Mouse.Button1Down:Connect(function()
+			local char = Player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
 			
-			if targetPart and targetPart:IsA("BasePart") then
-				targetPos = targetPart.Position + Vector3.new(0, 3, 0) -- Se pose un peu au-dessus
+			if hrp and Mouse.Hit then
+				local targetPos = Mouse.Hit.Position + Vector3.new(0, 3, 0)
+				
+				-- Desactiver temporairement les collisions pour eviter d'etre bloqué par un toit/mur
+				for _, part in pairs(char:GetDescendants()) do
+					if part:IsA("BasePart") then part.CanCollide = false end
+				end
+				
+				-- Bypass physique (Anti-Velocity Reset)
+				local bv = Instance.new("BodyVelocity")
+				bv.Velocity = Vector3.new(0,0,0)
+				bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+				bv.Parent = hrp
+				
+				-- TP Instant avec micro-delai physique pour forcer la replication serveur
+				hrp.CFrame = CFrame.new(targetPos)
+				task.wait(0.05)
+				hrp.CFrame = CFrame.new(targetPos)
+				
+				bv:Destroy()
+				tpBtn.Text = "✅ Téléporté !"
 			else
-				-- Coordonnées de secours si l'objet n'est pas trouvé par son nom exact
-				targetPos = Vector3.new(120, 5, -250) 
+				tpBtn.Text = "❌ Erreur Character"
 			end
 			
-			-- 2. DÉBUT DU TP BASS BYPASS (Pattern en triangle lointain vers le bas)
-			-- Étape A : On descend instantanément très loin en dessous pour casser l'anti-cheat
-			hrp.CFrame = CFrame.new(hrp.Position.X, -400, hrp.Position.Z)
-			task.wait(0.15)
-			
-			-- Étape B : On se déplace horizontalement sous la map vers les coordonnées x, z de la base
-			hrp.CFrame = CFrame.new(targetPos.X, -400, targetPos.Z)
-			task.wait(0.15)
-			
-			-- Étape C : Réapparition sécurisée au point final (Plut Garden)
-			hrp.CFrame = CFrame.new(targetPos)
-		else
-			tpBtn.Text = "❌ Character non trouvé"
+			connection:Disconnect()
 			task.wait(1)
-			tpBtn.Text = "🌀 TP Plut Garden (Bass)"
-		end
+			tpBtn.Text = "🎯 Click to TP (Bypass)"
+			teleporting = false
+		end)
 	end)
 
 	--------------------------------------------------
@@ -344,19 +396,22 @@ function buildUI()
 	--------------------------------------------------
 	local settings = Pages["Settings"]
 
-	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.new(0,140,0,30)
-	toggle.Position = UDim2.new(0,10,0,60)
-	toggle.Text = "Toggle: OFF"
-	toggle.BackgroundColor3 = Color3.fromRGB(40,40,50)
-	toggle.TextColor3 = Theme.Text
-	toggle.Parent = settings
-	Instance.new("UICorner", toggle)
+	local resetBtn = Instance.new("TextButton")
+	resetBtn.Size = UDim2.new(0,160,0,30)
+	resetBtn.Position = UDim2.new(0,10,0,60)
+	resetBtn.Text = "🗑️ Réinitialiser Sauvegarde"
+	resetBtn.BackgroundColor3 = Color3.fromRGB(200,80,80)
+	resetBtn.TextColor3 = Theme.Text
+	resetBtn.Parent = settings
+	Instance.new("UICorner", resetBtn)
 
-	local state = false
-	toggle.MouseButton1Click:Connect(function()
-		state = not state
-		toggle.Text = state and "Toggle: ON" or "Toggle: OFF"
+	resetBtn.MouseButton1Click:Connect(function()
+		if delfile then
+			delfile(SAVE_FILE)
+			resetBtn.Text = "Config Supprimée !"
+			task.wait(1)
+			resetBtn.Text = "🗑️ Réinitialiser Sauvegarde"
+		end
 	end)
 
 	--------------------------------------------------
@@ -376,7 +431,7 @@ function buildUI()
 		end)
 	end
 
-	addTheme(Theme.Accent, 10)
+	addTheme(Color3.fromRGB(120,170,255), 10)
 	addTheme(Theme.Accent2, 120)
 	addTheme(Theme.Green, 230)
 
