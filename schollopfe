@@ -542,30 +542,29 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
 	--------------------------------------------------
-	local tpBaseStaffPage = createPage("TP_Staff") -- On crée la page
-	
-	-- Liste des boutons (que tu pourras remplir plus tard)
-	local staffOptions = {"Base Staff 1", "Base Staff 2", "Zone Admin"}
-	
-	local tpLayout = Instance.new("UIListLayout", tpBaseStaffPage)
-	tpLayout.Padding = UDim.new(0, 5)
-	tpLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local function createTPList(page, options)
+    local tpLayout = Instance.new("UIListLayout", page)
+    tpLayout.Padding = UDim.new(0, 5)
+    tpLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    
+    local sPadding = Instance.new("UIPadding", page)
+    sPadding.PaddingTop = UDim.new(0, 5)
 
-	for _, name in pairs(staffOptions) do
-		local btn = Instance.new("TextButton", tpBaseStaffPage)
-		btn.Size = UDim2.new(0.9, 0, 0, 35)
-		btn.Text = "TP -> " .. name
-		btn.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
-		btn.TextColor3 = Theme.Text
-		btn.Font = Enum.Font.GothamMedium
-		
-		Instance.new("UICorner", btn)
-		
-		btn.MouseButton1Click:Connect(function()
-			print("Fonction de TP pour : " .. name .. " à implémenter ici.")
-			-- C'est ici que tu ajouteras tes futures fonctions de TP
-		end)
-	end
+    for _, name in pairs(options) do
+        local btn = Instance.new("TextButton", page)
+        btn.Size = UDim2.new(0.9, 0, 0, 35)
+        btn.Text = "TP -> " .. name
+        btn.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
+        btn.TextColor3 = Theme.Text
+        btn.Font = Enum.Font.GothamMedium
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        
+        btn.MouseButton1Click:Connect(function()
+            print("Téléportation vers : " .. name)
+            -- Insère ta logique de TP ici
+        end)
+    end
+end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
