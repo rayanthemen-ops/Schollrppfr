@@ -542,7 +542,7 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
 	--------------------------------------------------
--- 1. Configuration de l'organisation
+-- 1. Configuration de l'organisation de l'onglet (ce que tu avais déjà)
 local tpbass_Layout = Instance.new("UIListLayout")
 tpbass_Layout.Padding = UDim.new(0, 5)
 tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -552,7 +552,7 @@ local tpbass_Padding = Instance.new("UIPadding")
 tpbass_Padding.PaddingTop = UDim.new(0, 10)
 tpbass_Padding.Parent = tpbassPage
 
--- 2. Bouton unique pour TP Base Staff
+-- 2. Création du bouton unique dans l'onglet
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
@@ -566,24 +566,42 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 6)
 corner.Parent = btn
 
--- 3. Logique du TP Sécurisé intégrée directement
+-- 3. Intégration de TA logique de TP (la recherche + les 2 étapes)
 btn.MouseButton1Click:Connect(function()
-    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    
-    btn.Text = "TP en cours..."
-    hrp.Anchored = true
-    
-    -- Étape 1 : Mi-chemin pour éviter la détection
-    hrp.CFrame = CFrame.new(hrp.Position.X, -25, hrp.Position.Z)
-    task.wait(0.4)
-    
-    -- Étape 2 : TP à la base (Remplace 0,0,0 par tes vraies coordonnées)
-    hrp.CFrame = CFrame.new(Vector3.new(0, 0, 0) + Vector3.new(0, 5, 0))
-    task.wait(0.4)
-    
-    hrp.Anchored = false
-    btn.Text = "TP -> Base Staff"
+
+    -- Recherche de la cible avec ta logique
+    local target = nil
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+            target = obj.Position
+            break
+        end
+    end
+
+    if target then
+        btn.Text = "TP en cours..."
+        
+        -- ÉTAPE 1 : TP à mi-chemin
+        local midPoint = Vector3.new(hrp.Position.X, -25, hrp.Position.Z)
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(midPoint)
+        task.wait(0.4) 
+        
+        -- ÉTAPE 2 : TP à la cible finale
+        hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
+        task.wait(0.4)
+        
+        hrp.Anchored = false
+        btn.Text = "ARRIVÉ !"
+        task.wait(2)
+        btn.Text = "TP -> Base Staff"
+    else
+        btn.Text = "Cible non trouvée"
+        task.wait(2)
+        btn.Text = "TP -> Base Staff"
+    end
 end)
 
 	--------------------------------------------------
