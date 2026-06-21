@@ -480,6 +480,8 @@ local function updateFreecam(dt)
     end
 end
 
+
+-- MODIFICATION DU TOGGLE
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local root = getRoot()
@@ -487,38 +489,33 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     
     if enabled then
         initFreecamAngles()
+        -- Désactive les contrôles de base de Roblox
+        Controls:Disable() 
         
-        -- 1. Forcer la caméra en Scriptable et supprimer toute contrainte
         camera.CameraType = Enum.CameraType.Scriptable
         camera.CameraSubject = nil
         
-        -- 2. "Détacher" physiquement le personnage sans le laisser sur place
         if root then 
             root.Anchored = true 
             root.CanCollide = false 
-            -- Téléporte le personnage très loin sous la map (optionnel) pour éviter les collisions
-            root.CFrame = root.CFrame * CFrame.new(0, -500, 0) 
         end
         
-        if hum then 
-            hum.PlatformStand = true 
-            hum:ChangeState(Enum.HumanoidStateType.Physics)
-        end
+        if hum then hum.PlatformStand = true end
         
         freecamConn = RunService.RenderStepped:Connect(updateFreecam)
     else
-        -- 3. Restauration propre
+        -- Réactive les contrôles de base
+        Controls:Enable()
+        
         if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
         
         if root then 
             root.Anchored = false 
             root.CanCollide = true 
-            root.CFrame = root.CFrame * CFrame.new(0, 500, 0) -- Retour à la position originale
         end
         
         if hum then 
             hum.PlatformStand = false 
-            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             camera.CameraSubject = hum
         end
         
