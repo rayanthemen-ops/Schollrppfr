@@ -218,7 +218,7 @@ local function buildUI()
 	layout.Parent = side
 	
 	local sPadding = Instance.new("UIPadding")
-	sPadding.PaddingTop = UDim.new(0, 5)
+	sPadding.PaddingTop = UDim.new(0, 2)
 	sPadding.Parent = side
 
 	--------------------------------------------------
