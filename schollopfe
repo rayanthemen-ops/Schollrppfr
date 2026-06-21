@@ -282,6 +282,7 @@ local function buildUI()
 
 	addSimpleText(homePage, "🌌 Bienvenue dans SF HUB \n\nVos préférences et votre thème favori sont désormais sauvegardés automatiquement.")
 	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nSauvegarde Cloud/Locale active (JSON).\nOptimisé pour l'exécution fluide.")
+	addSimpleText(tpbassPage,"🚧 ARRIVE BIENTOT.")
 
 	--------------------------------------------------
 	-- CONFIGURATION DE L'ONGLET PLAYER
