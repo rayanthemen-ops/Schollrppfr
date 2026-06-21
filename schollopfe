@@ -1016,5 +1016,18 @@ local VALID_KEY = p1 .. p2
 	frame.Size = UDim2.new(0, 320, 0, 240) 
 
 end
--- Initialisation du système
+
+-- Notification en haut à droite (Style système)
+local StarterGui = game:GetService("StarterGui")
+
+task.spawn(function()
+    task.wait(1) -- Petit délai pour laisser le temps au jeu de charger
+    StarterGui:SetCore("SendNotification", {
+        Title = "SF HUB",
+        Text = "Créé par l'équipe SF. Bienvenue !",
+        Duration = 5, -- La durée d'affichage en secondes
+        Icon = "rbxassetid://123456789" -- Optionnel : mets l'ID de ton logo ici
+    })
+end)
+
 makeKeyUI()
