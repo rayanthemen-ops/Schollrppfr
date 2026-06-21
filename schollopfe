@@ -428,72 +428,73 @@ local function buildUI()
 		end
 	end)
 
-	-- FREECAM CONFIG
--- VARIABLES GLOBALES
+--------------------------------------------------
+-- FREECAM SYSTEM (COMPLET)
+--------------------------------------------------
 local camera = workspace.CurrentCamera
-local UserInputService = game:GetService("UserInputService")
 local freecamActive = false
 local freecamConn = nil
 local camSpeed = 1.5
+local yaw = 0
+local pitch = 0
 
--- OPTION VITESSE
+-- Option Vitesse
 createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
     camSpeed = val
 end)
 
--- FONCTION DE DÉPLACEMENT ET ROTATION
+-- Initialisation des angles pour éviter le saut au démarrage
+local function initFreecamAngles()
+    local _, y, _ = camera.CFrame:ToEulerAnglesYXZ()
+    yaw = y
+    pitch = 0
+end
+
+-- Fonction de mouvement et rotation fluide
 local function updateFreecam(dt)
     if not freecamActive then return end
     
-    -- On force les paramètres de caméra
-    if camera.CameraType ~= Enum.CameraType.Scriptable then camera.CameraType = Enum.CameraType.Scriptable end
-    if camera.CameraSubject ~= nil then camera.CameraSubject = nil end
+    -- 1. Rotation
+    local delta = UserInputService:GetMouseDelta()
+    if delta.Magnitude > 0 then
+        yaw = yaw - (delta.X * 0.005)
+        pitch = math.clamp(pitch - (delta.Y * 0.005), -1.5, 1.5)
+    end
+    local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
     
-    -- Mouvement (Joystick)
+    -- 2. Déplacement
     local hum = getHum()
     local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
     
     if moveDir.Magnitude > 0 then
-        local look = camera.CFrame.LookVector
-        local right = camera.CFrame.RightVector
-        local move = (right * moveDir.X) + (look * -moveDir.Z)
-        camera.CFrame = camera.CFrame + (move * (camSpeed * 3))
-    end
-    
-    -- Rotation (Glisser le doigt)
-    local delta = UserInputService:GetMouseDelta()
-    if delta.Magnitude > 0 then
-        local pitch = -delta.Y * 0.005 
-        local yaw = -delta.X * 0.005
-        camera.CFrame = camera.CFrame * CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
+        local move = (rotation * CFrame.new(moveDir * (camSpeed * 60 * dt))).Position
+        camera.CFrame = CFrame.new(camera.CFrame.Position + move) * rotation
+    else
+        camera.CFrame = CFrame.new(camera.CFrame.Position) * rotation
     end
 end
 
--- TOGGLE
+-- Toggle de la Freecam
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local root = getRoot()
     local hum = getHum()
     
     if enabled then
+        initFreecamAngles()
+        if camera.CameraType ~= Enum.CameraType.Scriptable then camera.CameraType = Enum.CameraType.Scriptable end
         if root then root.Anchored = true; root.CanCollide = false end
-        if hum then hum.PlatformStand = true end
+        if hum then hum.PlatformStand = true; camera.CameraSubject = nil end
         
-        -- On connecte la fonction ici
         freecamConn = RunService.RenderStepped:Connect(updateFreecam)
     else
-        -- On déconnecte proprement
         if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
         if root then root.Anchored = false; root.CanCollide = true end
-        if hum then hum.PlatformStand = false end
+        if hum then hum.PlatformStand = false; camera.CameraSubject = hum end
         
         camera.CameraType = Enum.CameraType.Custom
-        if hum then camera.CameraSubject = hum end
     end
 end)
-
-
-
 
 	--------------------------------------------------
 	-- 🚪 ONGLET EXCLUSIF : EVASION DÉCOLLE
