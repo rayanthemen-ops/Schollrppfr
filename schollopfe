@@ -203,8 +203,8 @@ local function buildUI()
 	-- SIDEBAR
 	--------------------------------------------------
 	local side = Instance.new("Frame")
-	side.Size = UDim2.new(0,130,1,-50)
-	side.Position = UDim2.new(0,0,0,50)
+	side.Size = UDim2.new(0,130,1,-42)
+	side.Position = UDim2.new(0,0,0,42)
 	side.BackgroundColor3 = Theme.Panel
 	side.Parent = frame
 	
@@ -213,12 +213,12 @@ local function buildUI()
 	sideCorner.Parent = side
 
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0,2)
+	layout.Padding = UDim.new(0,1)
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.Parent = side
 	
 	local sPadding = Instance.new("UIPadding")
-	sPadding.PaddingTop = UDim.new(0, 2)
+	sPadding.PaddingTop = UDim.new(0,1)
 	sPadding.Parent = side
 
 	--------------------------------------------------
