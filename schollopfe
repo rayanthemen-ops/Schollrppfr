@@ -431,6 +431,17 @@ local function buildUI()
 --------------------------------------------------
 -- FREECAM SYSTEM (COMPLET)
 --------------------------------------------------
+-- Dans ta fonction updateFreecam(dt), ajoute ceci au début :
+local function updateFreecam(dt)
+    if not freecamActive then return end
+    
+    -- FORCE LE CHARGEMENT DES OBJETS AUTOUR DE LA CAMÉRA
+    if workspace.StreamingEnabled then
+        local player = game:GetService("Players").LocalPlayer
+        player:RequestStreamAroundAsync(camera.CFrame.Position)
+    end
+    
+    -- ... reste de ton code de mouvement ...
 local camera = workspace.CurrentCamera
 local freecamActive = false
 local freecamConn = nil
