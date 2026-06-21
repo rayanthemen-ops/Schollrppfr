@@ -202,10 +202,15 @@ local function buildUI()
 	--------------------------------------------------
 	-- SIDEBAR
 	--------------------------------------------------
-	local side = Instance.new("Frame")
-	side.Size = UDim2.new(0,130,1,-42)
-	side.Position = UDim2.new(0,0,0,42)
+	--------------------------------------------------
+	-- SIDEBAR (Modifiée pour le défilement)
+	--------------------------------------------------
+	local side = Instance.new("ScrollingFrame") -- On passe de Frame à ScrollingFrame
+	side.Size = UDim2.new(0, 130, 1, -42)
+	side.Position = UDim2.new(0, 0, 0, 42)
 	side.BackgroundColor3 = Theme.Panel
+	side.BorderSizePixel = 0
+	side.ScrollBarThickness = 4 -- Barre de défilement fine
 	side.Parent = frame
 	
 	local sideCorner = Instance.new("UICorner")
@@ -213,13 +218,18 @@ local function buildUI()
 	sideCorner.Parent = side
 
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0,1)
+	layout.Padding = UDim.new(0, 10) -- Ton espace entre les boutons (pixels)
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.Parent = side
 	
 	local sPadding = Instance.new("UIPadding")
-	sPadding.PaddingTop = UDim.new(0,1)
+	sPadding.PaddingTop = UDim.new(0, 10)
 	sPadding.Parent = side
+
+    -- CECI EST LE SECRET : Ça agrandit la zone de défilement automatiquement
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        side.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+    end)
 
 	--------------------------------------------------
 	-- CONTENT CONTAINER
