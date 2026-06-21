@@ -821,6 +821,7 @@ end
 	createTab("Home","🏠 Home")
 	createTab("Player","👤 Player")
 	createTab("Evasion", "🚪 Évasion") -- Onglet inséré proprement !
+	createTab("tp Bass", "t tpBass"")
 	createTab("Visuals", "👁️ Visuals")
 	createTab("Themes","🎨 Themes")
 	createTab("Settings","⚙️ Settings")
