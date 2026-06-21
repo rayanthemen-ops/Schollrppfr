@@ -213,12 +213,12 @@ local function buildUI()
 	sideCorner.Parent = side
 
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0,1)
+	layout.Padding = UDim.new(0,10)
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.Parent = side
 	
 	local sPadding = Instance.new("UIPadding")
-	sPadding.PaddingTop = UDim.new(0,1)
+	sPadding.PaddingTop = UDim.new(0,10)
 	sPadding.Parent = side
 
 	--------------------------------------------------
