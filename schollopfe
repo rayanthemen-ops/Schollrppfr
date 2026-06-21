@@ -203,8 +203,8 @@ local function buildUI()
 	-- SIDEBAR
 	--------------------------------------------------
 	local side = Instance.new("Frame")
-	side.Size = UDim2.new(0,130,1,-42)
-	side.Position = UDim2.new(0,0,0,42)
+	side.Size = UDim2.new(0,130,1,-50)
+	side.Position = UDim2.new(0,0,0,50)
 	side.BackgroundColor3 = Theme.Panel
 	side.Parent = frame
 	
