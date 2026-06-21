@@ -542,36 +542,49 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
 	--------------------------------------------------
--- 1. Configuration de l'organisation de la page (Layout et Padding)
+-- 1. Configuration de l'organisation
 local tpbass_Layout = Instance.new("UIListLayout")
-tpbass_Layout.Padding = UDim.new(0, 5) -- Espace entre les boutons
+tpbass_Layout.Padding = UDim.new(0, 5)
 tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 tpbass_Layout.Parent = tpbassPage
 
 local tpbass_Padding = Instance.new("UIPadding")
-tpbass_Padding.PaddingTop = UDim.new(0, 10) -- Marge du haut
+tpbass_Padding.PaddingTop = UDim.new(0, 10)
 tpbass_Padding.Parent = tpbassPage
 
--- 2. Fonction simplifiée pour créer tes boutons rapidement
-local function createButton(text, parent)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 35)
-    btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-    btn.TextColor3 = Theme.Text
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
-    btn.Parent = parent
+-- 2. Bouton unique pour TP Base Staff
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9, 0, 0, 35)
+btn.Text = "TP -> Base Staff"
+btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+btn.TextColor3 = Theme.Text
+btn.Font = Enum.Font.GothamBold
+btn.TextSize = 13
+btn.Parent = tpbassPage
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 6)
+corner.Parent = btn
+
+-- 3. Logique du TP Sécurisé intégrée directement
+btn.MouseButton1Click:Connect(function()
+    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
     
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-    return btn
-end
--- 3. Création de tes boutons (ajoute-en autant que tu veux ici)
-createButton("TP -> Base 1", tpbassPage)
-createButton("TP -> Garage", tpbassPage)
-createButton("TP -> Zone Secrète", tpbassPage)
+    btn.Text = "TP en cours..."
+    hrp.Anchored = true
+    
+    -- Étape 1 : Mi-chemin pour éviter la détection
+    hrp.CFrame = CFrame.new(hrp.Position.X, -25, hrp.Position.Z)
+    task.wait(0.4)
+    
+    -- Étape 2 : TP à la base (Remplace 0,0,0 par tes vraies coordonnées)
+    hrp.CFrame = CFrame.new(Vector3.new(0, 0, 0) + Vector3.new(0, 5, 0))
+    task.wait(0.4)
+    
+    hrp.Anchored = false
+    btn.Text = "TP -> Base Staff"
+end)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
