@@ -567,7 +567,6 @@ local function createButton(text, parent)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
     return btn
-end
 
 -- 3. Création de tes boutons (ajoute-en autant que tu veux ici)
 createButton("TP -> Base 1", tpbassPage)
