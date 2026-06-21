@@ -542,29 +542,37 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
 	--------------------------------------------------
-local function createTPList(page, options)
-    local tpLayout = Instance.new("UIListLayout", page)
-    tpLayout.Padding = UDim.new(0, 5)
-    tpLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    
-    local sPadding = Instance.new("UIPadding", page)
-    sPadding.PaddingTop = UDim.new(0, 5)
+-- 1. Configuration de l'organisation de la page (Layout et Padding)
+local tpbass_Layout = Instance.new("UIListLayout")
+tpbass_Layout.Padding = UDim.new(0, 5) -- Espace entre les boutons
+tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tpbass_Layout.Parent = tpbassPage
 
-    for _, name in pairs(options) do
-        local btn = Instance.new("TextButton", page)
-        btn.Size = UDim2.new(0.9, 0, 0, 35)
-        btn.Text = "TP -> " .. name
-        btn.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
-        btn.TextColor3 = Theme.Text
-        btn.Font = Enum.Font.GothamMedium
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-        
-        btn.MouseButton1Click:Connect(function()
-            print("Téléportation vers : " .. name)
-            -- Insère ta logique de TP ici
-        end)
-    end
+local tpbass_Padding = Instance.new("UIPadding")
+tpbass_Padding.PaddingTop = UDim.new(0, 10) -- Marge du haut
+tpbass_Padding.Parent = tpbassPage
+
+-- 2. Fonction simplifiée pour créer tes boutons rapidement
+local function createButton(text, parent)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+    btn.TextColor3 = Theme.Text
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 13
+    btn.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    return btn
 end
+
+-- 3. Création de tes boutons (ajoute-en autant que tu veux ici)
+createButton("TP -> Base 1", tpbassPage)
+createButton("TP -> Garage", tpbassPage)
+createButton("TP -> Zone Secrète", tpbassPage)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
