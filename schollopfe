@@ -431,17 +431,9 @@ local function buildUI()
 --------------------------------------------------
 -- FREECAM SYSTEM (COMPLET)
 --------------------------------------------------
--- Dans ta fonction updateFreecam(dt), ajoute ceci au début :
-local function updateFreecam(dt)
-    if not freecamActive then return end
-    
-    -- FORCE LE CHARGEMENT DES OBJETS AUTOUR DE LA CAMÉRA
-    if workspace.StreamingEnabled then
-        local player = game:GetService("Players").LocalPlayer
-        player:RequestStreamAroundAsync(camera.CFrame.Position)
-    end
-    
-    -- ... reste de ton code de mouvement ...
+--------------------------------------------------
+-- FREECAM SYSTEM (FINAL & OPTIMISÉ)
+--------------------------------------------------
 local camera = workspace.CurrentCamera
 local freecamActive = false
 local freecamConn = nil
@@ -449,21 +441,24 @@ local camSpeed = 1.5
 local yaw = 0
 local pitch = 0
 
--- Option Vitesse
 createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
     camSpeed = val
 end)
 
--- Initialisation des angles pour éviter le saut au démarrage
 local function initFreecamAngles()
     local _, y, _ = camera.CFrame:ToEulerAnglesYXZ()
     yaw = y
     pitch = 0
 end
 
--- Fonction de mouvement et rotation fluide
 local function updateFreecam(dt)
     if not freecamActive then return end
+    
+    -- FORCER LE STREAMING (Chargement de zone lointaine)
+    -- On le fait uniquement si la position change beaucoup pour ne pas saturer le réseau
+    if workspace.StreamingEnabled then
+        Player:RequestStreamAroundAsync(camera.CFrame.Position)
+    end
     
     -- 1. Rotation
     local delta = UserInputService:GetMouseDelta()
@@ -485,7 +480,6 @@ local function updateFreecam(dt)
     end
 end
 
--- Toggle de la Freecam
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local root = getRoot()
