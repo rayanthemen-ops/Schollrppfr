@@ -1030,4 +1030,47 @@ task.spawn(function()
     })
 end)
 
+--------------------------------------------------
+-- RESIZER AMÉLIORÉ (Plus facile à attraper)
+--------------------------------------------------
+local resizer = Instance.new("TextLabel")
+resizer.Name = "Resizer"
+resizer.Size = UDim2.new(0, 20, 0, 20) -- Un peu plus grand
+resizer.Position = UDim2.new(1, -20, 1, -20)
+resizer.BackgroundColor3 = Theme.Accent
+resizer.Text = "◢" -- Petit symbole pour montrer qu'on peut tirer
+resizer.TextColor3 = Color3.new(1,1,1)
+resizer.Font = Enum.Font.GothamBold
+resizer.Parent = frame
+
+local resizerCorner = Instance.new("UICorner")
+resizerCorner.CornerRadius = UDim.new(0, 4)
+resizerCorner.Parent = resizer
+
+-- Logique de redimensionnement
+local dragging, dragStart, startSize
+resizer.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startSize = frame.Size
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        -- On met à jour la taille du cadre
+        local newX = math.max(300, startSize.X.Offset + delta.X)
+        local newY = math.max(200, startSize.Y.Offset + delta.Y)
+        frame.Size = UDim2.new(0, newX, 0, newY)
+    end
+end)
+
 makeKeyUI()
