@@ -572,7 +572,6 @@ local function createButton(text, parent)
 createButton("TP -> Base 1", tpbassPage)
 createButton("TP -> Garage", tpbassPage)
 createButton("TP -> Zone Secrète", tpbassPage)
-end
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
