@@ -226,7 +226,7 @@ local function buildUI()
 	sPadding.PaddingTop = UDim.new(0, 10)
 	sPadding.Parent = side
 
-    -- CECI EST LE SECRET : Ça agrandit la zone de défilement automatiquement
+
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         side.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
     end)
