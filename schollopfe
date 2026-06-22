@@ -581,7 +581,7 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
 	--------------------------------------------------
--- 1. Configuration de l'organisation de l'onglet (ce que tu avais déjà)
+-- 1. Configuration de l'organisation de l'onglet
 local tpbass_Layout = Instance.new("UIListLayout")
 tpbass_Layout.Padding = UDim.new(0, 5)
 tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -591,12 +591,12 @@ local tpbass_Padding = Instance.new("UIPadding")
 tpbass_Padding.PaddingTop = UDim.new(0, 10)
 tpbass_Padding.Parent = tpbassPage
 
--- 2. Création du bouton unique dans l'onglet
+-- 2. Création du bouton
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-btn.TextColor3 = Theme.Text
+btn.TextColor3 = Theme.Text -- Assure-toi que 'Theme' est bien défini dans ton script
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 13
 btn.Parent = tpbassPage
@@ -605,12 +605,14 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 6)
 corner.Parent = btn
 
--- 3. Intégration de TA logique de TP (la recherche + les 2 étapes)
+-- 3. Logique de TP optimisée
 btn.MouseButton1Click:Connect(function()
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local character = LocalPlayer.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    
     if not hrp then return end
 
-    -- Recherche de la cible avec ta logique
+    -- Recherche de la cible
     local target = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -621,6 +623,11 @@ btn.MouseButton1Click:Connect(function()
 
     if target then
         btn.Text = "TP en cours..."
+        btn.Active = false -- Empêche de recliquer pendant le processus
+        
+        -- Sauvegarde de l'état du personnage pour éviter les bugs de physique
+        local originalVelocity = hrp.AssemblyLinearVelocity
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
         
         -- ÉTAPE 1 : TP à mi-chemin
         local midPoint = Vector3.new(hrp.Position.X, -25, hrp.Position.Z)
@@ -632,8 +639,11 @@ btn.MouseButton1Click:Connect(function()
         hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
         task.wait(0.4)
         
+        -- Fin de la séquence
         hrp.Anchored = false
         btn.Text = "ARRIVÉ !"
+        btn.Active = true
+        
         task.wait(2)
         btn.Text = "TP -> Base Staff"
     else
