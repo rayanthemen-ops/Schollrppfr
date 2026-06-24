@@ -593,10 +593,10 @@ tpbass_Padding.Parent = tpbassPage
 
 -- 2. Création du bouton
 local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9, 0, 0, 35)
+btn.Size = UDim2.new(0.9, 0, 0, 35) -- Adapté pour UIListLayout
 btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-btn.TextColor3 = Theme.Text -- Assure-toi que 'Theme' est bien défini dans ton script
+btn.TextColor3 = Theme.Text 
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 13
 btn.Parent = tpbassPage
@@ -623,10 +623,9 @@ btn.MouseButton1Click:Connect(function()
 
     if target then
         btn.Text = "TP en cours..."
-        btn.Active = false -- Empêche de recliquer pendant le processus
+        btn.Active = false
         
-        -- Sauvegarde de l'état du personnage pour éviter les bugs de physique
-        local originalVelocity = hrp.AssemblyLinearVelocity
+        -- Sauvegarde/Reset vélocité
         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
         
         -- ÉTAPE 1 : TP à mi-chemin
@@ -639,7 +638,7 @@ btn.MouseButton1Click:Connect(function()
         hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
         task.wait(0.4)
         
-        -- Fin de la séquence
+        -- Restauration
         hrp.Anchored = false
         btn.Text = "ARRIVÉ !"
         btn.Active = true
