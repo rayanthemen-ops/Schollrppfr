@@ -525,7 +525,8 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚪 ONGLET : TP BASE STAFF (MODIFIÉ SUR TA BASE STABLE)
+-- 🚪 ONGLET : TP BASE STAFF (VERSION COMPLÈTE : CHARGEMENT + TP)
+
 tpbassPage:ClearAllChildren()
 
 local tpb_Layout = Instance.new("UIListLayout", tpbassPage)
@@ -543,65 +544,76 @@ btn.Parent = tpbassPage
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
 btn.MouseButton1Click:Connect(function()
-	local plr = game:GetService("Players").LocalPlayer
-	if not plr or not plr.Character then return end
-	local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
+    -- 1. AFFICHAGE DU CHARGEMENT
+    local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    local screenGui = Instance.new("ScreenGui", playerGui)
+    local frame = Instance.new("Frame", screenGui)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    
+    local title = Instance.new("TextLabel", frame)
+    title.Text = "SF\nTP BASS"
+    title.TextColor3 = Color3.fromRGB(255, 165, 0)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 50
+    title.Size = UDim2.new(1, 0, 0.5, 0)
+    
+    local barBackground = Instance.new("Frame", frame)
+    barBackground.Size = UDim2.new(0.5, 0, 0, 10)
+    barBackground.Position = UDim2.new(0.25, 0, 0.6, 0)
+    barBackground.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    
+    local progressBar = Instance.new("Frame", barBackground)
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+    
+    -- Animation remplissage
+    for i = 1, 20 do
+        progressBar.Size = UDim2.new(i/20, 0, 1, 0)
+        task.wait(0.1)
+    end
+    screenGui:Destroy()
+    
+    -- 2. LOGIQUE DE TP (Le bloc que tu as validé)
+    local plr = game:GetService("Players").LocalPlayer
+    if not plr or not plr.Character then return end
+    local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-	local targetObj = nil
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-			targetObj = obj
-			break
-		end
-	end
+    local targetObj = nil
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+            targetObj = obj
+            break
+        end
+    end
 
-	if targetObj then
-		btn.Text = "VALIDATION..."
-		btn.Active = false
-		hrp.Anchored = true
-		hrp.CanCollide = false 
+    if targetObj then
+        hrp.Anchored = true
+        hrp.CanCollide = false 
+        local targetPos = Vector3.new(targetObj.Position.X, targetObj.Position.Y + 2.5, targetObj.Position.Z)
+        hrp.CFrame = CFrame.new(targetPos)
 
-		local targetPos = Vector3.new(targetObj.Position.X, targetObj.Position.Y + 2.5, targetObj.Position.Z)
+        local function glide(offset)
+            local startCFrame = hrp.CFrame
+            local goalCFrame = CFrame.new(targetPos + offset)
+            local steps = 20 
+            for i = 1, steps do
+                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / steps)
+                task.wait(0.04)
+            end
+        end
 
-		-- 1. TP initial
-		hrp.CFrame = CFrame.new(targetPos)
-
-		-- 2. Fonction de mouvement modifiée (déplacement progressif)
-		local function glide(offset)
-			local startCFrame = hrp.CFrame
-			local goalCFrame = CFrame.new(targetPos + offset)
-			local steps = 20 
-			for i = 1, steps do
-				hrp.CFrame = startCFrame:Lerp(goalCFrame, i / steps)
-				task.wait(0.04)
-			end
-		end
-
-		-- Séquence fluide : Trajectoire qui ne revient jamais au centre
-		glide(Vector3.new(0, 5, 0))    -- Monte en l'air
-		glide(Vector3.new(4, 3, 4))    -- Décale en haut à droite
-		glide(Vector3.new(6, 2, -2))   -- Glisse vers le côté
-		glide(Vector3.new(8, 2, -5))   -- S'éloigne encore plus
-		
-		-- 3. Figé 3 secondes (en position décalée)
-		task.wait(3)
-
-		-- 4. TP Brut de validation finale (le "Boum !")
-		-- On ajoute le 0.5 à partir de la dernière position connue
-		hrp.CFrame = hrp.CFrame * CFrame.new(0.5, 0, 0)
-		
-		hrp.CanCollide = true
-		hrp.Anchored = false
-		btn.Text = "ARRIVÉ !"
-		task.wait(2)
-		btn.Text = "TP -> Base Staff"
-		btn.Active = true
-	else
-		btn.Text = "Introuvable"
-		task.wait(2)
-		btn.Text = "TP -> Base Staff"
-	end
+        glide(Vector3.new(4, 5, 4))
+        glide(Vector3.new(6, 2, 0))
+        glide(Vector3.new(8, 2, -4))
+        
+        task.wait(3)
+        hrp.CFrame = hrp.CFrame * CFrame.new(0.5, 0, 0)
+        
+        hrp.CanCollide = true
+        hrp.Anchored = false
+    end
 end)
 
 	--------------------------------------------------
