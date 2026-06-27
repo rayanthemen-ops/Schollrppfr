@@ -525,7 +525,7 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚀 BLOC FINAL : TP BASE STAFF (FULL NOIR TOTAL + LENTEUR PRO)
+-- 🚀 BLOC : TP BASE STAFF (3 SECONDES / 3 ÉTAPES)
 tpbassPage:ClearAllChildren()
 
 local btn = Instance.new("TextButton")
@@ -542,24 +542,14 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- 1. CRÉATION DU CHARGEMENT "FULL NOIR FORCÉ"
+    -- Création du chargement Full Noir
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true 
     
-    -- Le cadre qui couvre TOUT (taille doublée pour déborder et cacher le gris)
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1.5, 0, 1.5, 0)
     frame.Position = UDim2.new(-0.25, 0, -0.25, 0) 
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    
-    local title = Instance.new("TextLabel", frame)
-    title.Text = "SF\nTP BASE"
-    title.TextColor3 = Color3.fromRGB(186, 85, 211)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 50
-    title.Size = UDim2.new(1, 0, 0.4, 0)
-    title.Position = UDim2.new(0, 0, 0.2, 0)
-    title.BackgroundTransparency = 1
     
     local barBackground = Instance.new("Frame", frame)
     barBackground.Size = UDim2.new(0.4, 0, 0, 15)
@@ -570,7 +560,6 @@ btn.MouseButton1Click:Connect(function()
     progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
     
-    -- 2. LOGIQUE DE TP (Ralentie au maximum)
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -584,27 +573,20 @@ btn.MouseButton1Click:Connect(function()
         hrp.CanCollide = false
         local targetBase = targetObj.Position
         
-        -- Mouvement très lent (task.wait 0.25 au lieu de 0.08)
-        local function glideTo(goalPos, progress)
-            local startCFrame = hrp.CFrame
-            local goalCFrame = CFrame.new(goalPos)
-            for i = 1, 30 do
-                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / 30)
-                progressBar.Size = UDim2.new(progress * (i / 30), 0, 1, 0)
-                task.wait(0.25) -- LENTEUR VRAIMENT PRO
-                game:GetService("RunService").RenderStepped:Wait()
-            end
-        end
+        -- 3 étapes de 1 seconde chacune = 3 secondes total
+        local stages = {0.33, 0.66, 1.0}
+        local positions = {
+            targetBase + Vector3.new(4, 5, 4),
+            targetBase + Vector3.new(6, 2, 0),
+            targetBase + Vector3.new(0, 2.5, 0)
+        }
 
-        glideTo(targetBase + Vector3.new(4, 5, 4), 0.3)
-        glideTo(targetBase + Vector3.new(6, 2, 0), 0.6)
-        glideTo(targetBase + Vector3.new(8, 2, -4), 0.9)
+        for i = 1, 3 do
+            hrp.CFrame = CFrame.new(positions[i])
+            progressBar.Size = UDim2.new(stages[i], 0, 1, 0)
+            task.wait(1) -- Exactement 1 seconde par étape
+        end
         
-        task.wait(2)
-        hrp.CFrame = CFrame.new(targetBase + Vector3.new(0, 2.5, 0)) * CFrame.new(0.5, 0, 0)
-        progressBar.Size = UDim2.new(1, 0, 1, 0)
-        
-        task.wait(2)
         hrp.CanCollide = true
         hrp.Anchored = false
         screenGui:Destroy()
