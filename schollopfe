@@ -525,7 +525,7 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚪 ONGLET : TP BASE STAFF (VALIDATION COMPLÈTE)
+-- 🚪 ONGLET : TP BASE STAFF (VERSION MODIFIÉE SUR TA BASE)
 tpbassPage:ClearAllChildren()
 
 local tpb_Layout = Instance.new("UIListLayout", tpbassPage)
@@ -559,35 +559,39 @@ btn.MouseButton1Click:Connect(function()
 	if targetObj then
 		btn.Text = "VALIDATION..."
 		btn.Active = false
-		
-		-- 1. TP Initial au sol
-		local groundY = targetObj.Position.Y + 2.5
-		local initialCFrame = CFrame.new(targetObj.Position.X, groundY, targetObj.Position.Z)
-		hrp.CFrame = initialCFrame
 		hrp.Anchored = true
+		hrp.CanCollide = false -- On désactive pour ne pas se faire rejeter par le sol
 
-		-- 2. Phase de mouvements répétés pendant ~3 secondes (Saccades Haut/Bas, Gauche/Droite)
-		local startTime = os.time()
-		while (os.time() - startTime) < 3 do
-			hrp.CFrame = initialCFrame * CFrame.new(0, 1, 0) -- Petit saut
-			task.wait(0.08)
-			hrp.CFrame = initialCFrame * CFrame.new(0, 0, 0) -- Sol
-			task.wait(0.08)
-			hrp.CFrame = initialCFrame * CFrame.new(1, 0, 0) -- Côté
-			task.wait(0.08)
-			hrp.CFrame = initialCFrame * CFrame.new(0, 0, 0) -- Sol
-			task.wait(0.08)
+		local targetPos = Vector3.new(targetObj.Position.X, targetObj.Position.Y + 2.5, targetObj.Position.Z)
+
+		-- 1. TP initial
+		hrp.CFrame = CFrame.new(targetPos)
+
+		-- 2. Mouvements FLUIDES (remplace tes anciennes boucles)
+		local function glide(offset, duration)
+			local startCFrame = hrp.CFrame
+			local goalCFrame = CFrame.new(targetPos + offset)
+			local steps = 15 -- Plus y'en a, plus c'est fluide
+			for i = 1, steps do
+				hrp.CFrame = startCFrame:Lerp(goalCFrame, i / steps)
+				task.wait(0.03)
+			end
 		end
-		
-		-- 3. Figé sur place (Sol)
-		hrp.CFrame = initialCFrame
-		task.wait(0.5)
 
-		-- 4. Le TP Brutal final de validation (Petit décalage < 1m)
-		-- On décale juste d'un demi-mètre sur le côté (X)
-		hrp.CFrame = initialCFrame * CFrame.new(0.5, 0, 0)
+		-- Séquence fluide
+		glide(Vector3.new(0, 2, 0), 0.5)   -- Haut fluide
+		glide(Vector3.new(0, 0, 0), 0.5)   -- Bas fluide
+		glide(Vector3.new(2, 0, 0), 0.5)   -- Droite fluide
+		glide(Vector3.new(-2, 0, 0), 0.5)  -- Gauche fluide
+		glide(Vector3.new(0, 0, 0), 0.5)   -- Retour centre
+
+		-- 3. Figé 3 secondes
+		task.wait(3)
+
+		-- 4. TP Brut de validation finale (le "Boum !")
+		hrp.CFrame = CFrame.new(targetPos + Vector3.new(0.5, 0, 0))
 		
-		task.wait(0.2)
+		hrp.CanCollide = true
 		hrp.Anchored = false
 		btn.Text = "ARRIVÉ !"
 		task.wait(2)
