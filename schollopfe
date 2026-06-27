@@ -576,19 +576,8 @@ if mainFrame then
             if target then ghostTP(target) else print("Introuvable : " .. word) end
         end)
     end
-end
-
 	--------------------------------------------------
-	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
-	--------------------------------------------------
-	--------------------------------------------------
-	-- 🚪 ONGLETS : TP BASE STAFF (Corrigé)
-	--------------------------------------------------
-	--------------------------------------------------
-	-- 🚪 ONGLETS : TP BASE STAFF (Corrigé et finalisé)
-	--------------------------------------------------
-	--------------------------------------------------
-	-- 🚪 ONGLETS : TP BASE STAFF (Validation par sautillement)
+	-- 🚪 ONGLETS : TP BASE STAFF (Validation "Vibration/Rotation" puis TP Brut)
 	--------------------------------------------------
 	local tpbass_Layout = Instance.new("UIListLayout")
 	tpbass_Layout.Padding = UDim.new(0, 5)
@@ -627,31 +616,33 @@ end
 		end
 
 		if target then
-			btn.Text = "TP EN COURS..."
+			btn.Text = "VALIDATION..."
 			btn.Active = false
 			
-			-- 1. Téléportation immédiate
-			hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
-			hrp.Anchored = true -- On se bloque direct à l'arrivée
+			-- 1. TP sur la zone pour commencer la validation
+			hrp.Anchored = true
+			hrp.CFrame = CFrame.new(target) 
 			
-			-- 2. TECHNIQUE DE VALIDATION (Le sautillement)
-			-- On bouge de haut en bas pour forcer le serveur à accepter la position
-			local posArrivee = hrp.CFrame
-			for i = 1, 5 do 
-				hrp.CFrame = posArrivee + Vector3.new(0, i/2, 0) -- Monte
+			-- 2. MOUVEMENTS DE VALIDATION (Haut/Bas + Rotation Droite) pendant 2 sec
+			local startCFrame = hrp.CFrame
+			for i = 1, 10 do
+				hrp.CFrame = startCFrame + Vector3.new(0, 0.5, 0) -- Monte
 				task.wait(0.1)
-				hrp.CFrame = posArrivee -- Redescend
+				hrp.CFrame = startCFrame * CFrame.Angles(0, math.rad(5), 0) -- Rotation droite
 				task.wait(0.1)
 			end
 			
-			-- 3. Fin de stabilisation
+			-- 3. TP BRUT FINAL (Pour "confirmer" la position au serveur)
+			hrp.CFrame = CFrame.new(target)
+			
+			-- Fin
 			hrp.Anchored = false
 			btn.Text = "ARRIVÉ !"
 			btn.Active = true
 			task.wait(2)
 			btn.Text = "TP -> Base Staff"
 		else
-			btn.Text = "Cible introuvable"
+			btn.Text = "Introuvable"
 			task.wait(2)
 			btn.Text = "TP -> Base Staff"
 		end
