@@ -587,8 +587,11 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Corrigé et finalisé)
 	--------------------------------------------------
+	--------------------------------------------------
+	-- 🚪 ONGLETS : TP BASE STAFF (Validation par sautillement)
+	--------------------------------------------------
 	local tpbass_Layout = Instance.new("UIListLayout")
-	tpbass_Layout.Padding = UDim.new(0, 5) -- Correction ici (UDim, pas UDim0)
+	tpbass_Layout.Padding = UDim.new(0, 5)
 	tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	tpbass_Layout.Parent = tpbassPage
 
@@ -610,10 +613,8 @@ end
 	corner.Parent = btn
 
 	btn.MouseButton1Click:Connect(function()
-		-- SÉCURITÉ : On récupère le joueur au moment du clic
 		local plr = game:GetService("Players").LocalPlayer
 		if not plr or not plr.Character then return end
-		
 		local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
 		if not hrp then return end
 
@@ -626,28 +627,31 @@ end
 		end
 
 		if target then
-			btn.Text = "TP en cours..."
+			btn.Text = "TP EN COURS..."
 			btn.Active = false
 			
-			hrp.Anchored = true
-			hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-			
-			-- ÉTAPE 1 : TP à mi-chemin
-			local midPoint = Vector3.new(hrp.Position.X, -25, hrp.Position.Z)
-			hrp.CFrame = CFrame.new(midPoint)
-			task.wait(0.4) 
-			
-			-- ÉTAPE 2 : TP à la cible finale (Hauteur +5)
+			-- 1. Téléportation immédiate
 			hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
-			task.wait(0.9)
+			hrp.Anchored = true -- On se bloque direct à l'arrivée
 			
+			-- 2. TECHNIQUE DE VALIDATION (Le sautillement)
+			-- On bouge de haut en bas pour forcer le serveur à accepter la position
+			local posArrivee = hrp.CFrame
+			for i = 1, 5 do 
+				hrp.CFrame = posArrivee + Vector3.new(0, i/2, 0) -- Monte
+				task.wait(0.1)
+				hrp.CFrame = posArrivee -- Redescend
+				task.wait(0.1)
+			end
+			
+			-- 3. Fin de stabilisation
 			hrp.Anchored = false
 			btn.Text = "ARRIVÉ !"
 			btn.Active = true
 			task.wait(2)
 			btn.Text = "TP -> Base Staff"
 		else
-			btn.Text = "Cible non trouvée"
+			btn.Text = "Cible introuvable"
 			task.wait(2)
 			btn.Text = "TP -> Base Staff"
 		end
