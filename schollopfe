@@ -525,9 +525,10 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚀 BLOC : TP BASE STAFF (CORRECTION COLLÉ AU SOL + ANTI-ROLLBACK)
+-- 🚀 BLOC FINAL : TP BASE STAFF (TP RÉEL + MOUVEMENT FLUIDE VIOLET)
 tpbassPage:ClearAllChildren()
 
+local TweenService = game:GetService("TweenService")
 local btn = Instance.new("TextButton", tpbassPage)
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
@@ -538,38 +539,32 @@ Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
-    local char = plr and plr.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChild("Humanoid")
-    if not hrp or not hum then return end
+    local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    -- Création de l'interface
+    -- Interface
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-    screenGui.IgnoreGuiInset = true 
+    screenGui.IgnoreGuiInset = true
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1.5, 0, 1.5, 0)
-    frame.Position = UDim2.new(-0.25, 0, -0.25, 0) 
+    frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     
-    -- Design identique (SF HUB)
     local title = Instance.new("TextLabel", frame)
     title.Text = "SF HUB\nTP BASE"
-    title.TextColor3 = Color3.fromRGB(255, 165, 0)
+    title.TextColor3 = Color3.fromRGB(186, 85, 211)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 60
-    title.Position = UDim2.new(0, 0, 0.3, 0)
+    title.Position = UDim2.new(0, 0, 0.2, 0)
     title.Size = UDim2.new(1, 0, 0.2, 0)
     title.BackgroundTransparency = 1
     
     local progressBar = Instance.new("Frame", frame)
-    progressBar.Size = UDim2.new(0, 0, 0, 10)
-    progressBar.Position = UDim2.new(0.3, 0, 0.7, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+    progressBar.Size = UDim2.new(0, 0, 0, 15)
+    progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
 
-    -- Logique Anti-Rollback
-    hrp.Anchored = true
-    hum:ChangeState(Enum.HumanoidStateType.Physics) -- Force l'état physique, pas de chute
-    
+    -- 1. RECHERCHE ET TP RÉEL
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -579,29 +574,32 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        -- Raycast pour trouver le sol exact (ne pas être en l'air)
-        local origin = targetObj.Position + Vector3.new(0, 10, 0)
-        local raycast = workspace:Raycast(origin, Vector3.new(0, -20, 0))
-        local groundY = raycast and raycast.Position.Y or targetObj.Position.Y
+        hrp.Anchored = true
+        -- TP immédiat sur la base (pour ne plus être en l'air)
+        local basePos = targetObj.Position + Vector3.new(0, 3.5, 0)
+        hrp.CFrame = CFrame.new(basePos)
         
-        -- On définit la position cible collée au sol (+3.5 pour les pieds)
-        local finalPos = Vector3.new(targetObj.Position.X, groundY + 3.5, targetObj.Position.Z)
+        -- 2. MOUVEMENT FLUIDE SUR PLACE (Collé au sol)
+        local function moveSmooth(offset, duration)
+            local targetCFrame = CFrame.new(basePos + offset)
+            local tween = TweenService:Create(hrp, TweenInfo.new(duration), {CFrame = targetCFrame})
+            tween:Play()
+            tween.Completed:Wait()
+        end
 
-        -- 3 étapes de remplissage
         for i = 1, 3 do
-            hrp.CFrame = CFrame.new(finalPos)
-            progressBar.Size = UDim2.new(0.4 * (i/3), 0, 0, 10)
-            task.wait(1)
+            progressBar.Size = UDim2.new(0.4 * (i/3), 0, 0, 15)
+            moveSmooth(Vector3.new(3, 0, 0), 0.5) -- Droite
+            moveSmooth(Vector3.new(-3, 0, 0), 0.5) -- Gauche
+            task.wait(0.2)
         end
         
         hrp.Anchored = false
-        hum:ChangeState(Enum.HumanoidStateType.GettingUp) -- Remise à la normale
         screenGui:Destroy()
     else
         screenGui:Destroy()
     end
 end)
-
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
 	--------------------------------------------------
