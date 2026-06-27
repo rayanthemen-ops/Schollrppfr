@@ -580,6 +580,9 @@ if mainFrame then
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Validation "Vibration/Rotation" puis TP Brut)
 	--------------------------------------------------
+	--------------------------------------------------
+	-- 🚪 ONGLETS : TP BASE STAFF (Version Anti-Rollback "Vibration")
+	--------------------------------------------------
 	local tpbass_Layout = Instance.new("UIListLayout")
 	tpbass_Layout.Padding = UDim.new(0, 5)
 	tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -617,27 +620,30 @@ if mainFrame then
 		end
 
 		if target then
-			btn.Text = "VALIDATION..."
+			btn.Text = "VIBRATION TP..."
 			btn.Active = false
 			
-			-- 1. TP sur la zone pour commencer la validation
 			hrp.Anchored = true
-			hrp.CFrame = CFrame.new(target) 
+			hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
 			
-			-- 2. MOUVEMENTS DE VALIDATION (Haut/Bas + Rotation Droite) pendant 2 sec
-			local startCFrame = hrp.CFrame
-			for i = 1, 10 do
-				hrp.CFrame = startCFrame + Vector3.new(0, 0.5, 0) -- Monte
+			-- PHASE DE VIBRATION (pour que le serveur accepte le mouvement)
+			local initialPos = hrp.CFrame
+			for i = 1, 3 do -- Répétition du mouvement pour "tromper" le serveur
+				hrp.CFrame = initialPos + Vector3.new(0, 2, 0)
 				task.wait(0.1)
-				hrp.CFrame = startCFrame * CFrame.Angles(0, math.rad(5), 0) -- Rotation droite
+				hrp.CFrame = initialPos - Vector3.new(0, 2, 0)
+				task.wait(0.1)
+				hrp.CFrame = initialPos * CFrame.Angles(0, math.rad(45), 0) -- Petite rotation
 				task.wait(0.1)
 			end
 			
-			-- 3. TP BRUT FINAL (Pour "confirmer" la position au serveur)
-			hrp.CFrame = CFrame.new(target)
+			-- TP FINAL
+			hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
 			
-			-- Fin
+			-- STABILISATION POST-TP
+			task.wait(1.0) 
 			hrp.Anchored = false
+			
 			btn.Text = "ARRIVÉ !"
 			btn.Active = true
 			task.wait(2)
