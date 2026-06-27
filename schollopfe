@@ -576,6 +576,7 @@ if mainFrame then
             if target then ghostTP(target) else print("Introuvable : " .. word) end
         end)
     end
+
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Validation "Vibration/Rotation" puis TP Brut)
 	--------------------------------------------------
