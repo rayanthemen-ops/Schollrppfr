@@ -524,64 +524,69 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 end)
 
 	--------------------------------------------------
-	-- 🚪 ONGLET : TP BASE STAFF (CORRIGÉ & SÉCURISÉ)
+		--------------------------------------------------
+	-- 🚪 ONGLET : TP BASE STAFF (VERSION PROPRE)
 	--------------------------------------------------
-	-- On s'assure que tpbassPage existe pour ne pas crash
-	if tpbassPage then
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(0.9, 0, 0, 35)
-		btn.Text = "TP -> Base Staff"
-		btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-		btn.TextColor3 = Color3.new(1, 1, 1) -- Blanc fixe
-		btn.Font = Enum.Font.GothamBold
-		btn.TextSize = 13
-		btn.Parent = tpbassPage
+	-- Nettoyage de la page tpbass
+	tpbassPage:ClearAllChildren()
 
-		local corner = Instance.new("UICorner", btn)
-		corner.CornerRadius = UDim.new(0, 6)
+	-- Layout pour bien organiser les boutons dans la page
+	local tpb_Layout = Instance.new("UIListLayout", tpbassPage)
+	tpb_Layout.Padding = UDim.new(0, 5)
+	tpb_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-		btn.MouseButton1Click:Connect(function()
-			local plr = game:GetService("Players").LocalPlayer
-			if not plr or not plr.Character then return end
-			local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-			if not hrp then return end
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9, 0, 0, 35)
+	btn.Text = "TP -> Base Staff"
+	btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 13
+	btn.Parent = tpbassPage
 
-			local target = nil
-			for _, obj in pairs(workspace:GetDescendants()) do
-				if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-					target = obj.Position
-					break
-				end
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+	btn.MouseButton1Click:Connect(function()
+		local plr = game:GetService("Players").LocalPlayer
+		if not plr or not plr.Character then return end
+		local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
+
+		local target = nil
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+				target = obj.Position
+				break
 			end
+		end
 
-			if target then
-				btn.Text = "VALIDATION..."
-				btn.Active = false
-				
-				hrp.Anchored = true
-				hrp.CFrame = CFrame.new(target) 
-				
-				local startCFrame = hrp.CFrame
-				for i = 1, 10 do
-					hrp.CFrame = startCFrame + Vector3.new(0, 0.5, 0)
-					task.wait(0.1)
-					hrp.CFrame = startCFrame * CFrame.Angles(0, math.rad(5), 0)
-					task.wait(0.1)
-				end
-				
-				hrp.CFrame = CFrame.new(target)
-				hrp.Anchored = false
-				btn.Text = "ARRIVÉ !"
-				btn.Active = true
-				task.wait(2)
-				btn.Text = "TP -> Base Staff"
-			else
-				btn.Text = "Introuvable"
-				task.wait(2)
-				btn.Text = "TP -> Base Staff"
+		if target then
+			btn.Text = "VALIDATION..."
+			btn.Active = false
+			
+			hrp.Anchored = true
+			hrp.CFrame = CFrame.new(target) 
+			
+			local startCFrame = hrp.CFrame
+			for i = 1, 10 do
+				hrp.CFrame = startCFrame + Vector3.new(0, 0.5, 0)
+				task.wait(0.1)
+				hrp.CFrame = startCFrame * CFrame.Angles(0, math.rad(5), 0)
+				task.wait(0.1)
 			end
-		end)
-	end
+			
+			hrp.CFrame = CFrame.new(target)
+			hrp.Anchored = false
+			btn.Text = "ARRIVÉ !"
+			btn.Active = true
+			task.wait(2)
+			btn.Text = "TP -> Base Staff"
+		else
+			btn.Text = "Introuvable"
+			task.wait(2)
+			btn.Text = "TP -> Base Staff"
+		end
+	end)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
