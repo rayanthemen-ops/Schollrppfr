@@ -525,36 +525,31 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚀 BLOC COMPLET : TP BASE STAFF (DESIGN NOIR/VIOLET + CHARGEMENT LIÉ)
+-- 🚀 BLOC COMPLET : TP BASE STAFF (FULL SCREEN + VITESSE AJUSTÉE)
 tpbassPage:ClearAllChildren()
 
--- 1. Layout pour tes boutons
-local tpb_Layout = Instance.new("UIListLayout", tpbassPage)
-tpb_Layout.Padding = UDim.new(0, 5)
-tpb_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
--- 2. Création du bouton
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
-btn.TextSize = 13
 btn.Parent = tpbassPage
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
--- 3. Liaison de l'action avec chargement intégré
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- Création du chargement (Noir & Violet)
+    -- 1. CRÉATION DU CHARGEMENT (FULL NOIR, SANS BANDEAU GRIS)
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+    screenGui.IgnoreGuiInset = true -- IMPORTANT : Supprime les marges de l'interface
+    
     local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.Size = UDim2.new(1, 0, 1, 0) -- Prend tout l'écran
+    frame.Position = UDim2.new(0, 0, 0, 0) -- Position bien calée
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Fond noir total
     
     local title = Instance.new("TextLabel", frame)
     title.Text = "SF\nTP BASE"
@@ -562,6 +557,8 @@ btn.MouseButton1Click:Connect(function()
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
     title.Size = UDim2.new(1, 0, 0.4, 0)
+    title.Position = UDim2.new(0, 0, 0.2, 0) -- Centré verticalement
+    title.BackgroundTransparency = 1
     
     local barBackground = Instance.new("Frame", frame)
     barBackground.Size = UDim2.new(0.5, 0, 0, 10)
@@ -572,7 +569,7 @@ btn.MouseButton1Click:Connect(function()
     progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
     
-    -- Logique de TP avec barre liée
+    -- 2. LOGIQUE DE TP ET MISE À JOUR BARRE (Ralentie pour la fluidité)
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -586,12 +583,14 @@ btn.MouseButton1Click:Connect(function()
         hrp.CanCollide = false
         local targetBase = targetObj.Position
         
+        -- Animation fluide et lente
         local function glideTo(goalPos, progress)
             local startCFrame = hrp.CFrame
             local goalCFrame = CFrame.new(goalPos)
-            for i = 1, 20 do
-                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / 20)
-                progressBar.Size = UDim2.new(progress * (i / 20), 0, 1, 0)
+            for i = 1, 25 do -- Plus de steps pour plus de fluidité
+                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / 25)
+                progressBar.Size = UDim2.new(progress * (i / 25), 0, 1, 0)
+                task.wait(0.08) -- Ralentit l'animation ici
                 game:GetService("RunService").RenderStepped:Wait()
             end
         end
@@ -600,7 +599,7 @@ btn.MouseButton1Click:Connect(function()
         glideTo(targetBase + Vector3.new(6, 2, 0), 0.6)
         glideTo(targetBase + Vector3.new(8, 2, -4), 0.9)
         
-        task.wait(0.5)
+        task.wait(1)
         hrp.CFrame = CFrame.new(targetBase + Vector3.new(0, 2.5, 0)) * CFrame.new(0.5, 0, 0)
         progressBar.Size = UDim2.new(1, 0, 1, 0)
         
