@@ -581,81 +581,74 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Structure)
 	--------------------------------------------------
--- 1. Configuration de l'organisation de l'onglet
-local tpbass_Layout = Instance.new("UIListLayout")
-tpbass_Layout.Padding = UDim.new(0, 5)
-tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-tpbass_Layout.Parent = tpbassPage
+	--------------------------------------------------
+	-- 🚪 ONGLETS : TP BASE STAFF (Corrigé)
+	--------------------------------------------------
+	local tpbass_Layout = Instance.new("UIListLayout")
+	tpbass_Layout.Padding = UDim0.new(0, 5)
+	tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	tpbass_Layout.Parent = tpbassPage
 
-local tpbass_Padding = Instance.new("UIPadding")
-tpbass_Padding.PaddingTop = UDim.new(0, 10)
-tpbass_Padding.Parent = tpbassPage
+	local tpbass_Padding = Instance.new("UIPadding")
+	tpbass_Padding.PaddingTop = UDim.new(0, 10)
+	tpbass_Padding.Parent = tpbassPage
 
--- 2. Création du bouton
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9, 0, 0, 35)
-btn.Text = "TP -> Base Staff"
-btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
--- Vérifie que 'Theme.Text' existe, sinon remplace par Color3.new(1, 1, 1)
-btn.TextColor3 = Theme and Theme.Text or Color3.fromRGB(255, 255, 255) 
-btn.Font = Enum.Font.GothamBold
-btn.TextSize = 13
-btn.Parent = tpbassPage
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9, 0, 0, 35)
+	btn.Text = "TP -> Base Staff"
+	btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+	btn.TextColor3 = Theme.Text 
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 13
+	btn.Parent = tpbassPage
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 6)
-corner.Parent = btn
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
 
--- 3. Logique de TP optimisée
-btn.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    
-    if not hrp then return end
+	btn.MouseButton1Click:Connect(function()
+		-- SÉCURITÉ : On récupère le joueur au moment du clic
+		local plr = game:GetService("Players").LocalPlayer
+		if not plr or not plr.Character then return end
+		
+		local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
 
-    -- Recherche de la cible
-    local target = nil
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-            target = obj.Position
-            break
-        end
-    end
+		local target = nil
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+				target = obj.Position
+				break
+			end
+		end
 
-    if target then
-        btn.Text = "TP en cours..."
-        btn.Active = false
-        
-        -- Désactivation de la physique pour éviter les sauts serveur
-        hrp.Anchored = true
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        
-        -- ÉTAPE 1 : TP à mi-chemin
-        local midPoint = Vector3.new(hrp.Position.X, -25, hrp.Position.Z)
-        hrp.CFrame = CFrame.new(midPoint)
-        task.wait(0.4) 
-        
-        -- ÉTAPE 2 : TP à la cible finale (+ 5 pour la hauteur de sécurité)
-        hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
-        task.wait(0.4)
-        
-        -- ÉTAPE 3 : Stabilisation courte avant libération
-        task.wait(0.5)
-        hrp.Anchored = false
-        
-        btn.Text = "ARRIVÉ !"
-        btn.Active = true
-        
-        task.wait(2)
-        btn.Text = "TP -> Base Staff"
-    else
-        btn.Text = "Cible non trouvée"
-        btn.Active = false
-        task.wait(2)
-        btn.Active = true
-        btn.Text = "TP -> Base Staff"
-    end
-end)
+		if target then
+			btn.Text = "TP en cours..."
+			btn.Active = false
+			
+			hrp.Anchored = true
+			hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+			
+			-- ÉTAPE 1 : TP à mi-chemin
+			local midPoint = Vector3.new(hrp.Position.X, -25, hrp.Position.Z)
+			hrp.CFrame = CFrame.new(midPoint)
+			task.wait(0.4) 
+			
+			-- ÉTAPE 2 : TP à la cible finale (Hauteur +5)
+			hrp.CFrame = CFrame.new(target + Vector3.new(0, 5, 0))
+			task.wait(0.9)
+			
+			hrp.Anchored = false
+			btn.Text = "ARRIVÉ !"
+			btn.Active = true
+			task.wait(2)
+			btn.Text = "TP -> Base Staff"
+		else
+			btn.Text = "Cible non trouvée"
+			task.wait(2)
+			btn.Text = "TP -> Base Staff"
+		end
+	end)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
