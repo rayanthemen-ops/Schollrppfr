@@ -584,8 +584,11 @@ end
 	--------------------------------------------------
 	-- 🚪 ONGLETS : TP BASE STAFF (Corrigé)
 	--------------------------------------------------
+	--------------------------------------------------
+	-- 🚪 ONGLETS : TP BASE STAFF (Corrigé et finalisé)
+	--------------------------------------------------
 	local tpbass_Layout = Instance.new("UIListLayout")
-	tpbass_Layout.Padding = UDim0.new(0, 5)
+	tpbass_Layout.Padding = UDim.new(0, 5) -- Correction ici (UDim, pas UDim0)
 	tpbass_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	tpbass_Layout.Parent = tpbassPage
 
