@@ -525,14 +525,15 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚪 ONGLET : TP BASE STAFF (VERSION COMPLÈTE : CHARGEMENT + TP)
-
+-- 🚀 BLOC COMPLET : TP BASE STAFF (DESIGN NOIR/VIOLET + CHARGEMENT LIÉ)
 tpbassPage:ClearAllChildren()
 
+-- 1. Layout pour tes boutons
 local tpb_Layout = Instance.new("UIListLayout", tpbassPage)
 tpb_Layout.Padding = UDim.new(0, 5)
 tpb_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
+-- 2. Création du bouton
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
@@ -543,43 +544,35 @@ btn.TextSize = 13
 btn.Parent = tpbassPage
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
+-- 3. Liaison de l'action avec chargement intégré
 btn.MouseButton1Click:Connect(function()
-    -- 1. AFFICHAGE DU CHARGEMENT
-    local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-    local screenGui = Instance.new("ScreenGui", playerGui)
+    local plr = game:GetService("Players").LocalPlayer
+    local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    -- Création du chargement (Noir & Violet)
+    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     
     local title = Instance.new("TextLabel", frame)
-    title.Text = "SF\nTP BASS"
-    title.TextColor3 = Color3.fromRGB(255, 165, 0)
+    title.Text = "SF\nTP BASE"
+    title.TextColor3 = Color3.fromRGB(186, 85, 211)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
-    title.Size = UDim2.new(1, 0, 0.5, 0)
+    title.Size = UDim2.new(1, 0, 0.4, 0)
     
     local barBackground = Instance.new("Frame", frame)
     barBackground.Size = UDim2.new(0.5, 0, 0, 10)
     barBackground.Position = UDim2.new(0.25, 0, 0.6, 0)
-    barBackground.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    barBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     
     local progressBar = Instance.new("Frame", barBackground)
     progressBar.Size = UDim2.new(0, 0, 1, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
     
-    -- Animation remplissage
-    for i = 1, 20 do
-        progressBar.Size = UDim2.new(i/20, 0, 1, 0)
-        task.wait(0.1)
-    end
-    screenGui:Destroy()
-    
-    -- 2. LOGIQUE DE TP (Le bloc que tu as validé)
-    local plr = game:GetService("Players").LocalPlayer
-    if not plr or not plr.Character then return end
-    local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
+    -- Logique de TP avec barre liée
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -590,29 +583,33 @@ btn.MouseButton1Click:Connect(function()
 
     if targetObj then
         hrp.Anchored = true
-        hrp.CanCollide = false 
-        local targetPos = Vector3.new(targetObj.Position.X, targetObj.Position.Y + 2.5, targetObj.Position.Z)
-        hrp.CFrame = CFrame.new(targetPos)
-
-        local function glide(offset)
+        hrp.CanCollide = false
+        local targetBase = targetObj.Position
+        
+        local function glideTo(goalPos, progress)
             local startCFrame = hrp.CFrame
-            local goalCFrame = CFrame.new(targetPos + offset)
-            local steps = 20 
-            for i = 1, steps do
-                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / steps)
-                task.wait(0.04)
+            local goalCFrame = CFrame.new(goalPos)
+            for i = 1, 20 do
+                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / 20)
+                progressBar.Size = UDim2.new(progress * (i / 20), 0, 1, 0)
+                game:GetService("RunService").RenderStepped:Wait()
             end
         end
 
-        glide(Vector3.new(4, 5, 4))
-        glide(Vector3.new(6, 2, 0))
-        glide(Vector3.new(8, 2, -4))
+        glideTo(targetBase + Vector3.new(4, 5, 4), 0.3)
+        glideTo(targetBase + Vector3.new(6, 2, 0), 0.6)
+        glideTo(targetBase + Vector3.new(8, 2, -4), 0.9)
         
-        task.wait(3)
-        hrp.CFrame = hrp.CFrame * CFrame.new(0.5, 0, 0)
+        task.wait(0.5)
+        hrp.CFrame = CFrame.new(targetBase + Vector3.new(0, 2.5, 0)) * CFrame.new(0.5, 0, 0)
+        progressBar.Size = UDim2.new(1, 0, 1, 0)
         
+        task.wait(1)
         hrp.CanCollide = true
         hrp.Anchored = false
+        screenGui:Destroy()
+    else
+        screenGui:Destroy()
     end
 end)
 
