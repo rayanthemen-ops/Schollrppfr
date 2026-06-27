@@ -525,7 +525,7 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚀 BLOC COMPLET : TP BASE STAFF (FULL SCREEN + VITESSE AJUSTÉE)
+-- 🚀 BLOC FINAL : TP BASE STAFF (FULL NOIR TOTAL + LENTEUR PRO)
 tpbassPage:ClearAllChildren()
 
 local btn = Instance.new("TextButton")
@@ -542,14 +542,15 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- 1. CRÉATION DU CHARGEMENT (FULL NOIR, SANS BANDEAU GRIS)
+    -- 1. CRÉATION DU CHARGEMENT "FULL NOIR FORCÉ"
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-    screenGui.IgnoreGuiInset = true -- IMPORTANT : Supprime les marges de l'interface
+    screenGui.IgnoreGuiInset = true 
     
+    -- Le cadre qui couvre TOUT (taille doublée pour déborder et cacher le gris)
     local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(1, 0, 1, 0) -- Prend tout l'écran
-    frame.Position = UDim2.new(0, 0, 0, 0) -- Position bien calée
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Fond noir total
+    frame.Size = UDim2.new(1.5, 0, 1.5, 0)
+    frame.Position = UDim2.new(-0.25, 0, -0.25, 0) 
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     
     local title = Instance.new("TextLabel", frame)
     title.Text = "SF\nTP BASE"
@@ -557,19 +558,19 @@ btn.MouseButton1Click:Connect(function()
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
     title.Size = UDim2.new(1, 0, 0.4, 0)
-    title.Position = UDim2.new(0, 0, 0.2, 0) -- Centré verticalement
+    title.Position = UDim2.new(0, 0, 0.2, 0)
     title.BackgroundTransparency = 1
     
     local barBackground = Instance.new("Frame", frame)
-    barBackground.Size = UDim2.new(0.5, 0, 0, 10)
-    barBackground.Position = UDim2.new(0.25, 0, 0.6, 0)
-    barBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    barBackground.Size = UDim2.new(0.4, 0, 0, 15)
+    barBackground.Position = UDim2.new(0.3, 0, 0.5, 0)
+    barBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     
     local progressBar = Instance.new("Frame", barBackground)
     progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
     
-    -- 2. LOGIQUE DE TP ET MISE À JOUR BARRE (Ralentie pour la fluidité)
+    -- 2. LOGIQUE DE TP (Ralentie au maximum)
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -583,14 +584,14 @@ btn.MouseButton1Click:Connect(function()
         hrp.CanCollide = false
         local targetBase = targetObj.Position
         
-        -- Animation fluide et lente
+        -- Mouvement très lent (task.wait 0.25 au lieu de 0.08)
         local function glideTo(goalPos, progress)
             local startCFrame = hrp.CFrame
             local goalCFrame = CFrame.new(goalPos)
-            for i = 1, 25 do -- Plus de steps pour plus de fluidité
-                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / 25)
-                progressBar.Size = UDim2.new(progress * (i / 25), 0, 1, 0)
-                task.wait(0.08) -- Ralentit l'animation ici
+            for i = 1, 30 do
+                hrp.CFrame = startCFrame:Lerp(goalCFrame, i / 30)
+                progressBar.Size = UDim2.new(progress * (i / 30), 0, 1, 0)
+                task.wait(0.25) -- LENTEUR VRAIMENT PRO
                 game:GetService("RunService").RenderStepped:Wait()
             end
         end
@@ -599,11 +600,11 @@ btn.MouseButton1Click:Connect(function()
         glideTo(targetBase + Vector3.new(6, 2, 0), 0.6)
         glideTo(targetBase + Vector3.new(8, 2, -4), 0.9)
         
-        task.wait(1)
+        task.wait(2)
         hrp.CFrame = CFrame.new(targetBase + Vector3.new(0, 2.5, 0)) * CFrame.new(0.5, 0, 0)
         progressBar.Size = UDim2.new(1, 0, 1, 0)
         
-        task.wait(1)
+        task.wait(2)
         hrp.CanCollide = true
         hrp.Anchored = false
         screenGui:Destroy()
