@@ -525,7 +525,7 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚪 ONGLET : TP BASE STAFF (VERSION BRUTE)
+-- 🚪 ONGLET : TP BASE STAFF (VALIDATION COMPLÈTE)
 tpbassPage:ClearAllChildren()
 
 local tpb_Layout = Instance.new("UIListLayout", tpbassPage)
@@ -548,33 +548,51 @@ btn.MouseButton1Click:Connect(function()
 	local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
 	if not hrp then return end
 
-	local target = nil
+	local targetObj = nil
 	for _, obj in pairs(workspace:GetDescendants()) do
 		if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-			target = obj.Position
+			targetObj = obj
 			break
 		end
 	end
 
-	if target then
-		btn.Text = "POSITIONNEMENT..."
+	if targetObj then
+		btn.Text = "VALIDATION..."
 		btn.Active = false
 		
-		-- 1. TP brutal au sol pour éviter les dégâts de chute comme vu dans image.png
+		-- 1. TP Initial au sol
+		local groundY = targetObj.Position.Y + 2.5
+		local initialCFrame = CFrame.new(targetObj.Position.X, groundY, targetObj.Position.Z)
+		hrp.CFrame = initialCFrame
 		hrp.Anchored = true
-		hrp.CFrame = CFrame.new(target + Vector3.new(0, 3, 0)) 
+
+		-- 2. Phase de mouvements répétés pendant ~3 secondes (Saccades Haut/Bas, Gauche/Droite)
+		local startTime = os.time()
+		while (os.time() - startTime) < 3 do
+			hrp.CFrame = initialCFrame * CFrame.new(0, 1, 0) -- Petit saut
+			task.wait(0.08)
+			hrp.CFrame = initialCFrame * CFrame.new(0, 0, 0) -- Sol
+			task.wait(0.08)
+			hrp.CFrame = initialCFrame * CFrame.new(1, 0, 0) -- Côté
+			task.wait(0.08)
+			hrp.CFrame = initialCFrame * CFrame.new(0, 0, 0) -- Sol
+			task.wait(0.08)
+		end
 		
-		-- 2. Attente de 2 secondes comme demandé
-		task.wait(2)
+		-- 3. Figé sur place (Sol)
+		hrp.CFrame = initialCFrame
+		task.wait(0.5)
+
+		-- 4. Le TP Brutal final de validation (Petit décalage < 1m)
+		-- On décale juste d'un demi-mètre sur le côté (X)
+		hrp.CFrame = initialCFrame * CFrame.new(0.5, 0, 0)
 		
-		-- 3. TP brutal final pour valider la position
-		hrp.CFrame = CFrame.new(target + Vector3.new(0, 3, 0))
-		
+		task.wait(0.2)
 		hrp.Anchored = false
 		btn.Text = "ARRIVÉ !"
-		btn.Active = true
 		task.wait(2)
 		btn.Text = "TP -> Base Staff"
+		btn.Active = true
 	else
 		btn.Text = "Introuvable"
 		task.wait(2)
