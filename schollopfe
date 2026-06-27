@@ -525,7 +525,7 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚪 ONGLET : TP BASE STAFF (VERSION TRAJECTOIRE DÉCALÉE)
+-- 🚪 ONGLET : TP BASE STAFF (VERSION SÉCURISÉE)
 
 tpbassPage:ClearAllChildren()
 
@@ -544,8 +544,16 @@ btn.Parent = tpbassPage
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
 btn.MouseButton1Click:Connect(function()
-    local char = LocalPlayer.Character
-    if not char then return end
+    -- SÉCURITÉ : On vérifie que LocalPlayer existe bien avant de faire quoi que ce soit
+    local player = game:GetService("Players").LocalPlayer
+    if not player then return end
+    
+    local char = player.Character
+    if not char then 
+        warn("Personnage non trouvé, patiente une seconde...")
+        return 
+    end
+    
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
@@ -565,7 +573,6 @@ btn.MouseButton1Click:Connect(function()
         
         local basePos = targetObj.Position
         
-        -- Fonction de mouvement fluide sans retour au centre
         local function glideTo(goalPos)
             local startCFrame = hrp.CFrame
             local goalCFrame = CFrame.new(goalPos)
@@ -576,19 +583,15 @@ btn.MouseButton1Click:Connect(function()
             end
         end
 
-        -- Séquence : Trajectoire qui reste décalée, sans jamais revenir au milieu
-        -- 1. Monte et décale à droite
+        -- Trajectoire décalée sans retour au milieu
         glideTo(basePos + Vector3.new(4, 5, 4))
-        -- 2. Descend un peu mais reste sur le côté
         glideTo(basePos + Vector3.new(6, 2, 0))
-        -- 3. Glisse encore plus loin, jamais au centre
         glideTo(basePos + Vector3.new(8, 2, -4))
         
-        task.wait(3) -- Temps de figage sur le côté
+        task.wait(3) 
 
-        -- 4. Le "Boum !" : TP brutal de moins d'1 mètre pour valider
-        -- On se décale juste d'un petit coup sec depuis la position actuelle
-        hrp.CFrame = hrp.CFrame * CFrame.new(0.5, 0, 0)
+        -- TP brutal final ( validation serveur )
+        hrp.CFrame = CFrame.new(basePos + Vector3.new(0, 2.5, 0)) * CFrame.new(0.5, 0, 0)
         
         hrp.CanCollide = true
         hrp.Anchored = false
