@@ -412,21 +412,36 @@ local function buildUI()
 	end)
 
 	local telemetryConn
-	createPlayerToggle("📍 Clic Téléport (Maintien Écran)", function(enabled)
-		if enabled then
-			telemetryConn = UserInputService.InputBegan:Connect(function(input, processed)
-				if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-					local mouse = Player:GetMouse()
-					local root = getRoot()
-					if root and mouse.Hit then
-						root.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3, 0))
-					end
-				end
-			end)
-		else
-			if telemetryConn then telemetryConn:Disconnect() end
-		end
-	end)
+CreatePlayerToggle("📍 Clic Téléport (Anti-Rollback)", function(enabled)
+    if enabled then
+        telemetryConn = UserInputService.InputBegan:Connect(function(input, processed)
+            if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                local mouse = Player:GetMouse()
+                local root = getRoot()
+                
+                if root and mouse.Hit then
+                    -- Calcul de la destination cible
+                    local destination = mouse.Hit.Position + Vector3.new(0, 3, 0)
+                    
+                    -- Méthode "Brut" : On force la position instantanément
+                    -- On désactive temporairement la vélocité pour éviter les calculs d'inertie du serveur
+                    root.Velocity = Vector3.new(0, 0, 0)
+                    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    root.CFrame = CFrame.new(destination)
+                    
+                    -- Petite astuce : forcer un signal de mise à jour au serveur
+                    task.wait()
+                    root.CFrame = CFrame.new(destination)
+                end
+            end
+        end)
+    else
+        if telemetryConn then 
+            telemetryConn:Disconnect() 
+            telemetryConn = nil
+        end
+    end
+end)
 
 --------------------------------------------------
 -- FREECAM SYSTEM (COMPLET)
