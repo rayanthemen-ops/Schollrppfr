@@ -561,7 +561,7 @@ btn.MouseButton1Click:Connect(function()
         local positions = {
             targetBase + Vector3.new(4, 5, 4),
             targetBase + Vector3.new(6, 2, 0),
-            targetBase + Vector3.new(0, 2.5, 0)
+            targetBase + Vector3.new(0, 2.5, 0),
             targetBase + Vector3.new(-10, 5, 0)
         }
 
