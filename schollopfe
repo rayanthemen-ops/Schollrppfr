@@ -562,9 +562,10 @@ btn.MouseButton1Click:Connect(function()
             targetBase + Vector3.new(4, 5, 4),
             targetBase + Vector3.new(6, 2, 0),
             targetBase + Vector3.new(0, 2.5, 0)
+            targetBase + Vector3.new(-10, 5, 0)
         }
 
-        for i = 1, 3 do
+        for i = 1, 4 do
             hrp.CFrame = CFrame.new(positions[i])
             progressBar.Size = UDim2.new(stages[i], 0, 1, 0)
             task.wait(1) -- Exactement 1 seconde par étape
