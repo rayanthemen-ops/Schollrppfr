@@ -411,8 +411,7 @@ local function buildUI()
 		end
 	end)
 
-	local telemetryConn
-
+ 
 local GuiService = game:GetService("GuiService")
 local telemetryConn
 
