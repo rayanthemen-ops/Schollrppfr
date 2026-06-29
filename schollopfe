@@ -412,24 +412,35 @@ local function buildUI()
 	end)
 
 	local telemetryConn
+
+local GuiService = game:GetService("GuiService")
+local telemetryConn
+
 CreatePlayerToggle("📍 Clic Téléport (Anti-Rollback)", function(enabled)
     if enabled then
         telemetryConn = UserInputService.InputBegan:Connect(function(input, processed)
+            -- 1. Vérification si on clique avec le bouton gauche ou tactile
             if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                
+                -- 2. Vérification pour ne pas cliquer à travers l'interface (TON PANEL)
+                local mousePos = UserInputService:GetMouseLocation()
+                local guiObjects = GuiService:GetGuiObjectsAtPosition(mousePos.X, mousePos.Y)
+                
+                -- Si on clique sur un élément de l'interface (ton hub), on annule le TP
+                if #guiObjects > 0 then
+                    return 
+                end
+
                 local mouse = Player:GetMouse()
                 local root = getRoot()
                 
                 if root and mouse.Hit then
-                    -- Calcul de la destination cible
                     local destination = mouse.Hit.Position + Vector3.new(0, 3, 0)
                     
-                    -- Méthode "Brut" : On force la position instantanément
-                    -- On désactive temporairement la vélocité pour éviter les calculs d'inertie du serveur
                     root.Velocity = Vector3.new(0, 0, 0)
                     root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                     root.CFrame = CFrame.new(destination)
                     
-                    -- Petite astuce : forcer un signal de mise à jour au serveur
                     task.wait()
                     root.CFrame = CFrame.new(destination)
                 end
