@@ -270,9 +270,9 @@ local function buildUI()
 	--------------------------------------------------
 	local homePage = createPage("Home")
 	local playerPage = createPage("Player")
-	local evasionPage = createPage("Evasion") -- Nouvel onglet dédié !
+	local TrolPage = createPage("Trol")
 	local tpbassPage = createPage("tpbass") 
-	local visualsPage = createPage("Visuals")
+	local visualsPage = createPage("ESP")
 	local themesPage = createPage("Themes")
 	local settingsPage = createPage("Settings")
 	local aboutPage = createPage("About")
@@ -292,7 +292,7 @@ local function buildUI()
 
 	addSimpleText(homePage, "🌌 Bienvenue dans SF HUB \n\nVos préférences et votre thème favori sont désormais sauvegardés automatiquement.")
 	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nSauvegarde Cloud/Locale active (JSON).\nOptimisé pour l'exécution fluide.")
-	addSimpleText(tpbassPage,"🚧 ARRIVE BIENTOT.")
+	addSimpleText(tpbassPage,"🚧 tp Bass patch encours de repartition ")
 
 	--------------------------------------------------
 	-- CONFIGURATION DE L'ONGLET PLAYER
@@ -834,9 +834,9 @@ end)
 
 	createTab("Home","🏠 Home")
 	createTab("Player","👤 Player")
-	createTab("Evasion", "🚪 Évasion")
+createTab("Trol","😂Trol")
 	createTab("tpbass", "🛥️ Tpbass")
-	createTab("Visuals", "👁️ Visuals")
+	createTab("Visuals", "👁️ ESP")
 	createTab("Themes","🎨 Themes")
 	createTab("Settings","⚙️ Settings")
 	createTab("About","ℹ️ About")
