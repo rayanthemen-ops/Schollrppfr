@@ -971,7 +971,7 @@ local VALID_KEY = p1 .. p2
 	local dCorner = Instance.new("UICorner", discordBtn)
 
 	discordBtn.MouseButton1Click:Connect(function()
-		setclipboard("TON_LIEN_DISCORD_ICI") -- REMPLACE PAR TON LIEN
+		setclipboard("TON_LIEN_DISCORD_ICI") -- LIEN DIDI ARRIVE BIENTÔT DESO 
 		discordBtn.Text = "Lien copié !"
 		task.wait(2)
 		discordBtn.Text = "Discord (Obtenir une clé)"
