@@ -371,12 +371,12 @@ local function buildUI()
 		end)
 	end
 
-	createPlayerOption("⚡ Vitesse (WalkSpeed)", 16, function(val)
+	createPlayerOption(" Vitesse (WalkSpeed)", 16, function(val)
 		local hum = getHum()
 		if hum then hum.WalkSpeed = val end
 	end)
 
-	createPlayerOption("🦘 Saut (JumpPower)", 50, function(val)
+	createPlayerOption(" Saut (JumpPower)", 50, function(val)
 		local hum = getHum()
 		if hum then 
 			hum.UseJumpPower = true
@@ -385,7 +385,7 @@ local function buildUI()
 	end)
 
 	local infJumpConn
-	createPlayerToggle("🚀 Saut Infini", function(enabled)
+	createPlayerToggle(" Saut Infini", function(enabled)
 		if enabled then
 			infJumpConn = UserInputService.JumpRequest:Connect(function()
 				local hum = getHum()
@@ -397,7 +397,7 @@ local function buildUI()
 	end)
 
 	local noclipConn
-	createPlayerToggle("👻 Noclip (Murs)", function(enabled)
+	createPlayerToggle(" Noclip (Murs)", function(enabled)
 		if enabled then
 			noclipConn = RunService.Stepped:Connect(function()
 				if Player.Character then
