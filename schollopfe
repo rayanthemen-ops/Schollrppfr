@@ -550,37 +550,42 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        -- 1. Figer le joueur pour éviter tout mouvement parasite
+        -- 1. Sécuriser les références
+        local hrp = game:GetService("Players").LocalPlayer.Character and game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        
+        -- 2. Figer le joueur
         hrp.Anchored = true
         hrp.CanCollide = false
         
         local targetBase = targetObj.Position
         
-        -- Définition des 2 positions précises :
-        -- pos1 : Position "décalée" dans la base (ex: 5 studs à côté)
-        -- pos2 : Position "exacte" dans la base
+        -- 3. TP en 2 temps
         local pos1 = targetBase + Vector3.new(5, 2, 5)  
         local pos2 = targetBase + Vector3.new(0, 2, 0)
         
-        -- PREMIER TP BRUT (Position décalée)
+        -- TP 1
         hrp.CFrame = CFrame.new(pos1)
         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        task.wait(0.2) -- Temps très court pour le serveur
+        task.wait(0.2)
         
-        -- DEUXIÈME TP BRUT (Position exacte)
+        -- TP 2
         hrp.CFrame = CFrame.new(pos2)
         hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
         
-        -- 2. Verrouillage / Blocage pendant 3 secondes
-        -- Le joueur est toujours Anchored = true, donc il est figé ici
+        -- 4. Attente sécurisée (on vérifie que le personnage existe toujours)
         task.wait(3)
         
-        -- 3. Libération
-        hrp.CanCollide = true
-        hrp.Anchored = false
-        screenGui:Destroy()
+        -- 5. Libération
+        if hrp then
+            hrp.Anchored = false
+            hrp.CanCollide = true
+        end
+        
+        -- Nettoyage de l'interface
+        if screenGui then screenGui:Destroy() end
     else
-        screenGui:Destroy()
+        if screenGui then screenGui:Destroy() end
     end
 
 	--------------------------------------------------
