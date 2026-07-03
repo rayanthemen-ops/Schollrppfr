@@ -536,7 +536,7 @@ btn.MouseButton1Click:Connect(function()
     
     local barBackground = Instance.new("Frame", frame)
     barBackground.Size = UDim2.new(0.4, 0, 0, 15)
-    barBackground.Position = UDim2.new(0.3, 0, 0.5, 0)
+    barBackground.Position = UDim2.new(0.3, 0, 0.8, 0)
     barBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     
     local progressBar = Instance.new("Frame", barBackground)
