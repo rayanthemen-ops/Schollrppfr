@@ -550,42 +550,35 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        -- 1. Sécuriser les références
-        local hrp = game:GetService("Players").LocalPlayer.Character and game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        
-        -- 2. Figer le joueur
+        -- 1. Figer le joueur pour préparer le terrain
         hrp.Anchored = true
         hrp.CanCollide = false
+        task.wait(1) -- Petit temps de préparation avant le saut
         
         local targetBase = targetObj.Position
         
-        -- 3. TP en 2 temps
-        local pos1 = targetBase + Vector3.new(5, 2, 5)  
-        local pos2 = targetBase + Vector3.new(0, 2, 0)
+        -- Définition de tes 2 positions de TP brut (à côté de la base)
+        local pos1 = targetBase + Vector3.new(0, 5, 0)   -- Arrivée en hauteur au-dessus de la base
+        local pos2 = targetBase + Vector3.new(10, 2, 10) -- Arrivée sur le côté, à côté de la base
         
-        -- TP 1
+        -- PREMIER TP BRUT
         hrp.CFrame = CFrame.new(pos1)
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        task.wait(0.2)
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) -- Annule toute inertie
+        task.wait(0.2) -- Micro-pause pour que le serveur valide le premier point
         
-        -- TP 2
+        -- DEUXIÈME TP BRUT
         hrp.CFrame = CFrame.new(pos2)
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) -- Annule toute inertie encore une fois
         
-        -- 4. Attente sécurisée (on vérifie que le personnage existe toujours)
+        -- 2. Verrouillage final (le blocage de 3 secondes)
         task.wait(3)
         
-        -- 5. Libération
-        if hrp then
-            hrp.Anchored = false
-            hrp.CanCollide = true
-        end
-        
-        -- Nettoyage de l'interface
-        if screenGui then screenGui:Destroy() end
+        -- 3. Libération
+        hrp.CanCollide = true
+        hrp.Anchored = false
+        screenGui:Destroy()
     else
-        if screenGui then screenGui:Destroy() end
+        screenGui:Destroy()
     end
 
 	--------------------------------------------------
