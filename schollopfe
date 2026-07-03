@@ -508,9 +508,6 @@ end)
 
 	--------------------------------------------------
 		--------------------------------------------------
--- 🚀 BLOC : TP BASE STAFF (3 SECONDES / 3 ÉTAPES)
-tpbassPage:ClearAllChildren()
-
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
@@ -536,7 +533,8 @@ btn.MouseButton1Click:Connect(function()
     
     local barBackground = Instance.new("Frame", frame)
     barBackground.Size = UDim2.new(0.4, 0, 0, 15)
-    barBackground.Position = UDim2.new(0.3, 0, 0.8, 0)
+    -- Ajuste le 0.5 ci-dessous pour monter/descendre la barre (ex: 0.3 pour plus haut, 0.7 pour plus bas)
+    barBackground.Position = UDim2.new(0.3, 0, 0.5, 0)
     barBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     
     local progressBar = Instance.new("Frame", barBackground)
@@ -552,11 +550,14 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
+        -- Figer le joueur pendant 5 secondes
         hrp.Anchored = true
         hrp.CanCollide = false
+        task.wait(5) 
+        
         local targetBase = targetObj.Position
         
-        -- 3 étapes de 1 seconde chacune = 3 secondes total
+        -- 3 étapes de 1 seconde chacune
         local stages = {0.33, 0.66, 1.0}
         local positions = {
             targetBase + Vector3.new(4, 5, 4),
@@ -568,7 +569,7 @@ btn.MouseButton1Click:Connect(function()
         for i = 1, 4 do
             hrp.CFrame = CFrame.new(positions[i])
             progressBar.Size = UDim2.new(stages[i], 0, 1, 0)
-            task.wait(1) -- Exactement 1 seconde par étape
+            task.wait(1)
         end
         
         hrp.CanCollide = true
