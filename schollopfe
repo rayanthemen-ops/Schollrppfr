@@ -550,15 +550,14 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        -- Figer le joueur pendant 5 secondes
+        -- Figer le joueur
         hrp.Anchored = true
         hrp.CanCollide = false
         task.wait(5) 
         
         local targetBase = targetObj.Position
         
-        -- 3 étapes de 1 seconde chacune
-        local stages = {0.33, 0.66, 1.0}
+        -- Liste des points de TP brut
         local positions = {
             targetBase + Vector3.new(4, 5, 4),
             targetBase + Vector3.new(6, 2, 0),
@@ -566,10 +565,17 @@ btn.MouseButton1Click:Connect(function()
             targetBase + Vector3.new(-10, 5, 0)
         }
 
-        for i = 1, 4 do
+        for i = 1, #positions do
+            -- On annule toute vélocité résiduelle avant de TP
+            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            
+            -- TP Brut
             hrp.CFrame = CFrame.new(positions[i])
-            progressBar.Size = UDim2.new(stages[i], 0, 1, 0)
-            task.wait(1)
+            
+            -- Mise à jour de la barre
+            progressBar.Size = UDim2.new(i/4, 0, 1, 0)
+            task.wait(0.5) -- Réduit à 0.5s pour éviter que le serveur ne détecte une attente trop longue
         end
         
         hrp.CanCollide = true
@@ -578,7 +584,6 @@ btn.MouseButton1Click:Connect(function()
     else
         screenGui:Destroy()
     end
-end)
 
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
