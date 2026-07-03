@@ -114,3 +114,99 @@ close.MouseButton1Click:Connect(function()
 	gui:Destroy()
 	clearAllMarkers()
 end)
+
+-- If staffOnlyEnabled but role string does not suggest staff, skip
+if staffOnlyEnabled then
+	local r = tostring(data.role or ""):lower()
+	if not (string.find(r, "staff") or string.find(r, "admin") or string.find(r, "mod") or string.find(r, "dev")) then
+		return
+	end
+end
+
+-- Create Highlight
+local hl = Instance.new("Highlight")
+hl.Name = "SF_ESP_Highlight"
+hl.Adornee = player.Character
+hl.FillTransparency = 0.65
+hl.OutlineTransparency = 0.2
+hl.Parent = workspace
+
+-- Colors: staff = gold, other = cyan / based on role color
+local isProbablyStaff = false
+local rr = tostring(data.role or ""):lower()
+if string.find(rr, "staff") or string.find(rr, "admin") or string.find(rr, "mod") then isProbablyStaff = true end
+
+if isProbablyStaff then
+	hl.FillColor = Color3.fromRGB(255,200,50)
+	hl.OutlineColor = Color3.fromRGB(255,200,50)
+else
+	hl.FillColor = Color3.fromRGB(0,160,255)
+	hl.OutlineColor = Color3.fromRGB(0,160,255)
+end
+
+-- Create BillboardGui
+local bgui = Instance.new("BillboardGui")
+bgui.Name = "SF_ESP_Tag"
+bgui.Adornee = hrp
+bgui.AlwaysOnTop = true
+bgui.Size = UDim2.new(0, 220, 0, 64)
+bgui.ExtentsOffset = Vector3.new(0, 3, 0)
+bgui.Parent = workspace
+
+local frame = Instance.new("Frame", bgui)
+frame.Size = UDim2.new(1,0,1,0)
+frame.BackgroundTransparency = 0.45
+frame.BackgroundColor3 = Color3.fromRGB(8,8,8)
+frame.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -8, 0, 22)
+title.Position = UDim2.new(0, 4, 0, 4)
+title.BackgroundTransparency = 1
+title.Text = tostring(data.displayName or data.name)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.TextColor3 = Color3.fromRGB(240,240,240)
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local subtitle = Instance.new("TextLabel", frame)
+subtitle.Size = UDim2.new(1, -8, 0, 18)
+subtitle.Position = UDim2.new(0, 4, 0, 26)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = tostring(data.role or "Joueur")
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 12
+subtitle.TextColor3 = isProbablyStaff and Color3.fromRGB(255,200,50) or Color3.fromRGB(160,220,255)
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local distanceLabel = Instance.new("TextLabel", frame)
+distanceLabel.Size = UDim2.new(0, 70, 0, 18)
+distanceLabel.Position = UDim2.new(1, -74, 0, 22)
+distanceLabel.BackgroundTransparency = 1
+distanceLabel.Text = ""
+distanceLabel.Font = Enum.Font.Gotham
+distanceLabel.TextSize = 12
+distanceLabel.TextColor3 = Color3.fromRGB(220,220,220)
+distanceLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+-- Update connection
+local conn
+conn = RunService.RenderStepped:Connect(function()
+	if not player or not player.Character or not player.Character.Parent then
+		conn:Disconnect()
+		clearMarker(data.userId)
+		return
+	end
+	local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	local targetRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if myRoot and targetRoot then
+		local dist = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
+		distanceLabel.Text = ("📍 %dm"):format(dist)
+	end
+	-- If server sent health and requester is staff, append health
+	if data.health and lastServerResponse.isStaff then
+		subtitle.Text = tostring(data.role or "Joueur") .. "  |  ❤ " .. math.floor(data.health)
+	end
+end)
+
+markers[data.userId] = { gui = bgui, highlight = hl, conn = conn }
