@@ -625,7 +625,6 @@ end)
 	local trolCorner = Instance.new("UICorner"
 	TrolCorner.Parent = TrolBtn
 
-end
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
 	--------------------------------------------------
