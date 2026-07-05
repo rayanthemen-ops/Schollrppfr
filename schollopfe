@@ -504,17 +504,16 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
         
         camera.CameraType = Enum.CameraType.Custom
     end
-end)
 
-	--------------------------------------------------
-		--------------------------------------------------
-local btn = Instance.new("TextButton")
+-- 🚀 BLOC FINAL : TP BASE STAFF (EFFET "SAUT" VISUEL + THÈME VIOLET)
+tpbassPage:ClearAllChildren()
+
+local btn = Instance.new("TextButton", tpbassPage)
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
-btn.Parent = tpbassPage
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
 btn.MouseButton1Click:Connect(function()
@@ -522,25 +521,29 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- Création du chargement Full Noir
+    -- Interface (Noir & Violet)
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-    screenGui.IgnoreGuiInset = true 
-    
+    screenGui.IgnoreGuiInset = true
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1.5, 0, 1.5, 0)
-    frame.Position = UDim2.new(-0.25, 0, -0.25, 0) 
+    frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     
-    local barBackground = Instance.new("Frame", frame)
-    barBackground.Size = UDim2.new(0.4, 0, 0, 15)
-    -- Ajuste le 0.5 ci-dessous pour monter/descendre la barre (ex: 0.3 pour plus haut, 0.7 pour plus bas)
-    barBackground.Position = UDim2.new(0.3, 0, 0.5, 0)
-    barBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    local title = Instance.new("TextLabel", frame)
+    title.Text = "SF HUB\nTP BASE"
+    title.TextColor3 = Color3.fromRGB(186, 85, 211)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 60
+    title.Position = UDim2.new(0, 0, 0.2, 0)
+    title.Size = UDim2.new(1, 0, 0.2, 0)
+    title.BackgroundTransparency = 1
     
-    local progressBar = Instance.new("Frame", barBackground)
-    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    local progressBar = Instance.new("Frame", frame)
+    progressBar.Size = UDim2.new(0, 0, 0, 15)
+    progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
-    
+
+    -- TP CIBLE
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -550,29 +553,18 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        -- Figer le joueur pendant 5 secondes
-        hrp.Anchored = true
-        hrp.CanCollide = false
-        task.wait(5) 
+        local basePos = targetObj.Position + Vector3.new(0, 3.5, 0)
         
-        local targetBase = targetObj.Position
+        -- Séquence de "Sauts" (Effet comme dans image_4.png)
+        local offsets = {Vector3.new(0, 0, 0), Vector3.new(4, 0, 4), Vector3.new(-4, 0, -4)}
         
-        -- 3 étapes de 1 seconde chacune
-        local stages = {0.33, 0.66, 1.0}
-        local positions = {
-            targetBase + Vector3.new(4, 5, 4),
-            targetBase + Vector3.new(6, 2, 0),
-            targetBase + Vector3.new(0, 2.5, 0),
-            targetBase + Vector3.new(-10, 5, 0)
-        }
-
-        for i = 1, 4 do
-            hrp.CFrame = CFrame.new(positions[i])
-            progressBar.Size = UDim2.new(stages[i], 0, 1, 0)
-            task.wait(1)
+        for i = 1, 3 do
+            hrp.Anchored = true
+            hrp.CFrame = CFrame.new(basePos + offsets[i])
+            progressBar.Size = UDim2.new(0.4 * (i/3), 0, 0, 15)
+            task.wait(0.5) -- Le "saut" visuel est rapide
         end
         
-        hrp.CanCollide = true
         hrp.Anchored = false
         screenGui:Destroy()
     else
