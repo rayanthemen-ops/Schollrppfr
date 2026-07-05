@@ -417,16 +417,28 @@ local function buildUI()
 --------------------------------------------------
 -- FREECAM SYSTEM (FINAL & OPTIMISÉ)
 --------------------------------------------------
+-- 🚀 BLOC FINAL : FREECAM STABLE (AVEC DÉPENDANCES ET CORRECTIFS)
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
+
+-- Définition des fonctions utilitaires manquantes
+local function getHum()
+    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+end
+local function getRoot()
+    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+end
+
+-- Variables
 local freecamActive = false
 local freecamConn = nil
 local camSpeed = 1.5
 local yaw = 0
 local pitch = 0
-
-createPlayerOption("🚀 Vitesse Freecam", 1.5, function(val)
-    camSpeed = val
-end)
 
 local function initFreecamAngles()
     local _, y, _ = camera.CFrame:ToEulerAnglesYXZ()
@@ -437,10 +449,9 @@ end
 local function updateFreecam(dt)
     if not freecamActive then return end
     
-    -- FORCER LE STREAMING (Chargement de zone lointaine)
-    -- On le fait uniquement si la position change beaucoup pour ne pas saturer le réseau
+    -- FORCER LE STREAMING
     if workspace.StreamingEnabled then
-        Player:RequestStreamAroundAsync(camera.CFrame.Position)
+        LocalPlayer:RequestStreamAroundAsync(camera.CFrame.Position)
     end
     
     -- 1. Rotation
@@ -463,8 +474,7 @@ local function updateFreecam(dt)
     end
 end
 
-
--- MODIFICATION DU TOGGLE
+-- Toggle de la Freecam
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local root = getRoot()
@@ -472,11 +482,11 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     
     if enabled then
         initFreecamAngles()
-        -- Désactive les contrôles de base de Roblox
-        Controls:Disable() 
+        
+        -- Si tu n'as pas de module 'Controls', commente ces deux lignes
+        -- Controls:Disable() 
         
         camera.CameraType = Enum.CameraType.Scriptable
-        camera.CameraSubject = nil
         
         if root then 
             root.Anchored = true 
@@ -487,8 +497,7 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
         
         freecamConn = RunService.RenderStepped:Connect(updateFreecam)
     else
-        -- Réactive les contrôles de base
-        Controls:Enable()
+        -- Controls:Enable()
         
         if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
         
@@ -504,6 +513,7 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
         
         camera.CameraType = Enum.CameraType.Custom
     end
+end)
 
 -- 🚀 BLOC FINAL : TP BASE STAFF (EFFET "SAUT" VISUEL + THÈME VIOLET)
 tpbassPage:ClearAllChildren()
