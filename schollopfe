@@ -527,36 +527,30 @@ btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
--- Action du bouton
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
     local char = plr.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChild("Humanoid")
     
-    if not hrp then return end
+    if not hrp or not hum then return end
 
-    -- Création de l'interface de chargement
+    -- Interface de chargement
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
-    
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1.5, 0, 1.5, 0)
     frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     
     local title = Instance.new("TextLabel", frame)
-    title.Text = "SF HUB\nTP BASE"
+    title.Text = "STABILISATION..."
     title.TextColor3 = Color3.fromRGB(186, 85, 211)
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 60
-    title.Position = UDim2.new(0, 0, 0.2, 0)
+    title.TextSize = 50
+    title.Position = UDim2.new(0, 0, 0.4, 0)
     title.Size = UDim2.new(1, 0, 0.2, 0)
     title.BackgroundTransparency = 1
-    
-    local progressBar = Instance.new("Frame", frame)
-    progressBar.Size = UDim2.new(0.5, 0, 0, 15)
-    progressBar.Position = UDim2.new(0.25, 0, 0.6, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
 
     -- Recherche de la base
     local targetObj = nil
@@ -570,21 +564,28 @@ btn.MouseButton1Click:Connect(function()
     if targetObj then
         local finalPos = targetObj.Position + Vector3.new(0, 5, 0)
         
-        -- Annulation de la physique pour éviter le rollback
-        hrp.Velocity = Vector3.new(0, 0, 0)
-        hrp.RotVelocity = Vector3.new(0, 0, 0)
+        -- Blocage du joueur
+        hum.PlatformStand = true 
+        hrp.Anchored = true
         
-        -- Déplacement sécurisé
-        char:PivotTo(CFrame.new(finalPos))
+        -- Boucle de 6 secondes avec mouvements saccadés pour confirmer la position
+        local startTime = tick()
+        while tick() - startTime < 6 do
+            -- Micro-décalages aléatoires pour tromper l'anti-cheat
+            hrp.CFrame = CFrame.new(finalPos) + Vector3.new(
+                math.random(-1, 1) * 0.05, 
+                0, 
+                math.random(-1, 1) * 0.05
+            )
+            task.wait(0.1) 
+        end
         
-        -- Petite pause pour valider la position côté serveur
-        task.wait(0.2)
-        
-        -- Nettoyage final de la vélocité après le TP
+        -- Rétablissement du contrôle
+        hrp.Anchored = false
+        hum.PlatformStand = false
         hrp.Velocity = Vector3.new(0, 0, 0)
     end
 
-    -- Suppression de l'interface
     screenGui:Destroy()
 end)
 
