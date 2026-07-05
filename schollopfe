@@ -516,16 +516,32 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 end)
 
 -- Nettoyage de l'interface précédente
+-- 1. Nettoyage
 tpbassPage:ClearAllChildren()
 
--- Création du bouton
-local btn = Instance.new("TextButton", tpbassPage)
+-- 2. RE-CRÉATION DU LAYOUT (Indispensable après un ClearAllChildren)
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 10)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.Parent = tpbassPage
+
+local padding = Instance.new("UIPadding")
+padding.PaddingTop = UDim.new(0, 12)
+padding.Parent = tpbassPage
+
+-- 3. Création du bouton
+local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
+btn.Parent = tpbassPage -- C'est le Parent qui le lie au Layout
+
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+-- ... (le reste de ton code avec le MouseButton1Click)
+
 
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
