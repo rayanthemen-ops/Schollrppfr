@@ -605,6 +605,27 @@ btn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
+	local TrolPage_Layout = Instance.new(UIListLayout)
+	TrolPage_Layout.Padding = UDim.new(0, 10)
+	TrolPage_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	TrolPage_Layout.Parent = TrolPage
+
+	local TrolPage_Padding = Instance.new("UIPadding")
+	TrolPage_Padding.PaddingTop = UIDim.new(0, 12)
+	TrolPage_Padding.Parent = TrolPage
+
+	local TrolBtn = Instance.new("TextButton")
+	TrolBtn.Size = UDim2.new(0.9, 0, 0, 36)
+	TrolBtn.Texte = "🫆 Logs ticket :OFF"
+	TrolBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+	TrolBtn.TextColor3 = theme.Text
+	TrolBtn.Font = Enum.Font.GothamBold
+	TrolBtn.TexteSize = 13
+	TrolBtn.Parent = TrolPage
+	local trolCorner = Instance.new("UICorner"
+	TrolCorner.Parent = TrolBtn
+
+end
 	--------------------------------------------------
 	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
 	--------------------------------------------------
