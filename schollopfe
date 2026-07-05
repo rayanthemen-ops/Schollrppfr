@@ -552,7 +552,7 @@ btn.MouseButton1Click:Connect(function()
     progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
 
-    -- TP CIBLE
+    -- TP CIBLE (Recherche de la base)
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -562,19 +562,21 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        local basePos = targetObj.Position + Vector3.new(0, 3.5, 0)
+        -- Point final (position de la base)
+        local finalPos = targetObj.Position + Vector3.new(0, 3.5, 0)
         
-        -- Séquence de "Sauts" (Effet comme dans image_4.png)
-        local offsets = {Vector3.new(0, 0, 0), Vector3.new(4, 0, 4), Vector3.new(-4, 0, -4)}
+        -- Arrivée temporaire très proche (décalage de 2 unités)
+        local intermediatePos = finalPos + Vector3.new(2, 0, 2)
         
-        for i = 1, 3 do
-            hrp.Anchored = true
-            hrp.CFrame = CFrame.new(basePos + offsets[i])
-            progressBar.Size = UDim2.new(0.4 * (i/3), 0, 0, 15)
-            task.wait(0.5) -- Le "saut" visuel est rapide
+        local sequence = {intermediatePos, finalPos}
+        
+        -- Exécution de la séquence en 2 étapes
+        for i, pos in ipairs(sequence) do
+            hrp.CFrame = CFrame.new(pos)
+            progressBar.Size = UDim2.new(0.5 * i, 0, 0, 15)
+            task.wait(0.1) -- Temps court pour tromper l'anti-rollback
         end
         
-        hrp.Anchored = false
         screenGui:Destroy()
     else
         screenGui:Destroy()
