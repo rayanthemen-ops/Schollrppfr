@@ -844,7 +844,7 @@ end)
 
 	createTab("Home","🏠 Home")
 	createTab("Player","👤 Player")
-createTab("Trol","😂Trol")
+	createTab("Trol","😂Trol")
 	createTab("tpbass", "🛥️ Tpbass")
 	createTab("Visuals", "👁️ ESP")
 	createTab("Themes","🎨 Themes")
