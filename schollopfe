@@ -738,7 +738,7 @@ trolCorner.Parent = TrolBtn
 
 				if isStaff then
 					displayRole = "🛡️ STAFF [" .. (staffRole or "Admin") .. "]"
-					boxColor = Color3.fromRGB(255, 215, 0)
+					boxColor = Color3.fromRGB(128, 128, 128)
 				else
 					local role, rColor = detectRole(targetPlayer)
 					displayRole = role
