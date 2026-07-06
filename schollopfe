@@ -808,8 +808,8 @@ trolCorner.Parent = TrolBtn
                 end
                 label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, role, distance)
             end
-        end
-    end)
+        end)
+    end
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
 		end
