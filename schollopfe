@@ -801,6 +801,7 @@ if myRoot and targetRoot then
         label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, role, distance)
     end
 end
+		end)
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
 		end
