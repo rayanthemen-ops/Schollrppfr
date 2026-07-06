@@ -799,8 +799,7 @@ Local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRoo
                 label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, role, distance)
             end
         end
-    end) -- Ferme le RenderStepped
-end 
+    end)
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
 		end
