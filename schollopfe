@@ -777,12 +777,19 @@ trolCorner.Parent = TrolBtn
 						connection:Disconnect()
 						return
 					end
-Local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+
+        local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
         local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 
         if myRoot and targetRoot then
             local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-            local isStaff, staffRole = checkIsStaff(targetPlayer)
+            
+            -- Sécurité : on vérifie que les fonctions existent avant de les appeler
+            local isStaff = false
+            local staffRole = ""
+            if type(checkIsStaff) == "function" then
+                isStaff, staffRole = checkIsStaff(targetPlayer)
+            end
             
             local displayName = targetPlayer.Name
 
@@ -795,7 +802,10 @@ Local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRoo
                 label.Text = string.format("Niveau: %s\n%s\n🛡️ %s\nRank: %s\nLvlRank: %s\n📍 [%d m]", 
                     niveau, displayName, staffRole, rank, lvlRank, distance)
             else
-                local role, _ = detectRole(targetPlayer) 
+                local role = "Joueur"
+                if type(detectRole) == "function" then
+                    role = detectRole(targetPlayer)
+                end
                 label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, role, distance)
             end
         end
