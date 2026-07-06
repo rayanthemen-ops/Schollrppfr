@@ -781,8 +781,22 @@ local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRoo
 local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 					if myRoot and targetRoot then
 						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-						label.Text = string.format(" %s\n %s\n [%d m]", displayName, displayRole, distance)
-					end
+						local isStaff, staffRole = checkIsStaff(targetPlayer)
+
+if isStaff then
+    -- Récupération des données spécifiques du Staff
+    local stats = targetPlayer:FindFirstChild("leaderstats")
+    local niveau = stats and stats:FindFirstChild("Niveau") and stats.Niveau.Value or "N/A"
+    local rank = targetPlayer:FindFirstChild("Rank") and targetPlayer.Rank.Value or "Joueur"
+    local lvlRank = targetPlayer:FindFirstChild("LvlRank") and targetPlayer.LvlRank.Value or "0"
+
+    -- Affichage formaté pour le Staff
+    label.Text = string.format("Niveau: %s\n%s\n🛡️ %s\nRank: %s\nLvlRank: %s\n📍 [%d m]", 
+        niveau, displayName, staffRole, rank, lvlRank, distance)
+else
+    -- Affichage standard pour les autres
+    label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
+			end
 				end)
 			end
 
