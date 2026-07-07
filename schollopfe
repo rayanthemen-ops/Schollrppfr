@@ -784,7 +784,7 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 					if myRoot and targetRoot then
 						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
 						
-label.Text = string.format("%s\n%s\n[%d m] %s", displayName, displayRole, distance, displayRank)
+label.Text = string.format("%s\n%s\n[%d m] ", displayName, displayRole, distance, displayRank)
 
 					end
 				end)
