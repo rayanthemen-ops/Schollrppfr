@@ -778,8 +778,9 @@ trolCorner.Parent = TrolBtn
 						return
 					end
 
-local myRoot = getRoot(Player.Character)
-					local targetRoot = getRoot(character)
+local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
+
 					if myRoot and targetRoot then
 						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
 						
