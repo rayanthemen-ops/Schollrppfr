@@ -519,7 +519,7 @@ end)
 -- 1. Nettoyage
 tpbassPage:ClearAllChildren()
 
--- 2. RE-CRÉATION DU LAYOUT (Indispensable après un ClearAllChildren)
+-- 2. RE-CRÉATION DU LAYOUT
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 10)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -536,39 +536,27 @@ btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
-btn.Parent = tpbassPage -- C'est le Parent qui le lie au Layout
-
+btn.Parent = tpbassPage
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
--- ... (le reste de ton code avec le MouseButton1Click)
-
-
+-- 4. Logique du bouton
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
     local char = plr.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChild("Humanoid")
+    if not char then return end
     
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
     if not hrp or not hum then return end
 
     -- Interface de chargement
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
     local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(1.5, 0, 1.5, 0)
-    frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.new(0, 0, 0)
     
-    local title = Instance.new("TextLabel", frame)
-    title.Text = "STABILISATION..."
-    title.TextColor3 = Color3.fromRGB(186, 85, 211)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 50
-    title.Position = UDim2.new(0, 0, 0.4, 0)
-    title.Size = UDim2.new(1, 0, 0.2, 0)
-    title.BackgroundTransparency = 1
-
-    -- Recherche de la base
+    -- Recherche de la cible
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -580,26 +568,23 @@ btn.MouseButton1Click:Connect(function()
     if targetObj then
         local finalPos = targetObj.Position + Vector3.new(0, 5, 0)
         
-        -- Blocage du joueur
-        hum.PlatformStand = true 
+        -- Préparation : Stopper la physique pour éviter les conflits
         hrp.Anchored = true
+        hum.PlatformStand = true 
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        hrp.AssemblyAngularVelocity = Vector3.zero
+        hrp.CanCollide = false
         
-        -- Boucle de 6 secondes avec mouvements saccadés pour confirmer la position
-        local startTime = tick()
-        while tick() - startTime < 6 do
-            -- Micro-décalages aléatoires pour tromper l'anti-cheat
-            hrp.CFrame = CFrame.new(finalPos) + Vector3.new(
-                math.random(-1, 1) * 0.07, 
-                0, 
-                math.random(-1, 1) * 0.05
-            )
-            task.wait(0.1) 
-        end
+        -- Téléportation stable
+        char:PivotTo(CFrame.new(finalPos))
         
-        -- Rétablissement du contrôle
+        -- Attente courte pour laisser le moteur gérer la réplication
+        task.wait(0.5) 
+        
+        -- Rétablissement
+        hrp.CanCollide = true
         hrp.Anchored = false
         hum.PlatformStand = false
-        hrp.Velocity = Vector3.new(0, 0, 0)
     end
 
     screenGui:Destroy()
