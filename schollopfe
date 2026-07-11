@@ -475,9 +475,11 @@ end
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local char = LocalPlayer.Character
-    local hum = getHum()
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
     
     if enabled then
+        -- Mettre à jour la référence caméra au cas où
+        camera = workspace.CurrentCamera 
         initFreecamAngles()
         targetPosition = camera.CFrame.Position
         cameraRelay.CFrame = camera.CFrame
@@ -507,6 +509,7 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
         if hum then hum.PlatformStand = false end
     end
 end)
+
 
 -- 1. RÉFÉRENCEMENT ET NETTOYAGE
 -- 1. RÉFÉRENCEMENT SÉCURISÉ
