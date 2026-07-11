@@ -515,8 +515,10 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     end
 end)
 
--- Nettoyage de l'interface précédente
--- 1. Nettoyage
+-- 1. RÉFÉRENCEMENT ET NETTOYAGE
+-- Assure-toi que ce chemin correspond bien à l'endroit où se trouve ton Frame dans ton GUI
+local tpbassPage = script.Parent:WaitForChild("TpbassPage") 
+
 tpbassPage:ClearAllChildren()
 
 -- 2. RE-CRÉATION DU LAYOUT
@@ -529,17 +531,21 @@ local padding = Instance.new("UIPadding")
 padding.PaddingTop = UDim.new(0, 12)
 padding.Parent = tpbassPage
 
--- 3. Création du bouton
+-- 3. CRÉATION DU BOUTON
 local btn = Instance.new("TextButton")
+btn.Name = "TPButton"
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
 btn.Parent = tpbassPage
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
--- 4. Logique du bouton
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 6)
+corner.Parent = btn
+
+-- 4. LOGIQUE DU BOUTON
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
     local char = plr.Character
@@ -555,6 +561,7 @@ btn.MouseButton1Click:Connect(function()
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.new(0, 0, 0)
+    frame.BackgroundTransparency = 0.5 -- Un peu plus propre
     
     -- Recherche de la cible
     local targetObj = nil
@@ -568,23 +575,22 @@ btn.MouseButton1Click:Connect(function()
     if targetObj then
         local finalPos = targetObj.Position + Vector3.new(0, 5, 0)
         
-        -- Préparation : Stopper la physique pour éviter les conflits
+        -- Préparation
         hrp.Anchored = true
         hum.PlatformStand = true 
-        hrp.AssemblyLinearVelocity = Vector3.zero
-        hrp.AssemblyAngularVelocity = Vector3.zero
         hrp.CanCollide = false
         
-        -- Téléportation stable
+        -- Téléportation
         char:PivotTo(CFrame.new(finalPos))
         
-        -- Attente courte pour laisser le moteur gérer la réplication
         task.wait(0.5) 
         
         -- Rétablissement
         hrp.CanCollide = true
         hrp.Anchored = false
         hum.PlatformStand = false
+    else
+        warn("Base Staff introuvable.")
     end
 
     screenGui:Destroy()
