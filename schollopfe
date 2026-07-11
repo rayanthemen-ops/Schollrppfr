@@ -516,79 +516,89 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 end)
 
 -- 1. RÉFÉRENCEMENT ET NETTOYAGE
--- 1. RÉFÉRENCEMENT ET CRÉATION DU CONTENEUR
-local tpbassPage = script.Parent:WaitForChild("TpbassPage")
+-- 1. RÉFÉRENCEMENT SÉCURISÉ
+local parentObj = script.Parent -- Ajuste si nécessaire
+local tpbassPage = parentObj:FindFirstChild("TpbassPage")
 
--- On crée une zone spécifique pour ne pas toucher au reste de ton interface (le gros panel)
-local zoneBoutons = tpbassPage:FindFirstChild("ZoneBoutons") or Instance.new("Frame")
-zoneBoutons.Name = "ZoneBoutons"
-zoneBoutons.Size = UDim2.new(1, 0, 1, 0)
-zoneBoutons.BackgroundTransparency = 1
-zoneBoutons.Parent = tpbassPage
+if tpbassPage then
+    -- Au lieu de ClearAllChildren() qui détruit tout, 
+    -- on ne détruit que ce qu'on a créé précédemment pour éviter les erreurs.
+    local oldZone = tpbassPage:FindFirstChild("ZoneBoutons")
+    if oldZone then oldZone:Destroy() end
 
--- On ne vide que cette zone, pas toute la page
-zoneBoutons:ClearAllChildren()
+    -- Création d'un conteneur dédié pour tes boutons
+    local zoneBoutons = Instance.new("Frame")
+    zoneBoutons.Name = "ZoneBoutons"
+    zoneBoutons.Size = UDim2.new(1, 0, 1, 0)
+    zoneBoutons.BackgroundTransparency = 1
+    zoneBoutons.Parent = tpbassPage
 
--- 2. RE-CRÉATION DU LAYOUT (dans la zone dédiée)
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 10)
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.Parent = zoneBoutons
+    -- 2. LAYOUT DANS LA ZONE DÉDIÉE
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 10)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.Parent = zoneBoutons
 
-local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0, 12)
-padding.Parent = zoneBoutons
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 12)
+    padding.Parent = zoneBoutons
 
--- 3. CRÉATION DU BOUTON
-local btn = Instance.new("TextButton")
-btn.Name = "TPButton"
-btn.Size = UDim2.new(0.9, 0, 0, 35)
-btn.Text = "TP -> Base Staff"
-btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-btn.TextColor3 = Color3.new(1, 1, 1)
-btn.Font = Enum.Font.GothamBold
-btn.Parent = zoneBoutons
+    -- 3. CRÉATION DU BOUTON
+    local btn = Instance.new("TextButton")
+    btn.Name = "TPButton"
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.Text = "TP -> Base Staff"
+    btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = zoneBoutons
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 6)
-corner.Parent = btn
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
--- 4. LOGIQUE DU BOUTON
-btn.MouseButton1Click:Connect(function()
-    local plr = game:GetService("Players").LocalPlayer
-    local char = plr.Character
-    if not char then return end
-    
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local hum = char:FindFirstChild("Humanoid")
-    if not hrp or not hum then return end
+    -- 4. LOGIQUE DU BOUTON
+    btn.MouseButton1Click:Connect(function()
+        local plr = game:GetService("Players").LocalPlayer
+        local char = plr.Character
+        if not char then return end
+        
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+        if not hrp or not hum then return end
 
-    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-    screenGui.IgnoreGuiInset = true
-    local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundColor3 = Color3.new(0, 0, 0)
-    
-    local targetObj = nil
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-            targetObj = obj
-            break
+        -- Interface de chargement simple
+        local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+        screenGui.IgnoreGuiInset = true
+        local frame = Instance.new("Frame", screenGui)
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BackgroundColor3 = Color3.new(0, 0, 0)
+        
+        -- Recherche de la cible
+        local targetObj = nil
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+                targetObj = obj
+                break
+            end
         end
-    end
 
-    if targetObj then
-        hrp.Anchored = true
-        hum.PlatformStand = true 
-        hrp.CanCollide = false
-        char:PivotTo(CFrame.new(targetObj.Position + Vector3.new(0, 5, 0)))
-        task.wait(0.5) 
-        hrp.CanCollide = true
-        hrp.Anchored = false
-        hum.PlatformStand = false
-    end
-    screenGui:Destroy()
-end)
+        if targetObj then
+            hrp.Anchored = true
+            hum.PlatformStand = true 
+            hrp.CanCollide = false
+            char:PivotTo(CFrame.new(targetObj.Position + Vector3.new(0, 5, 0)))
+            task.wait(0.5) 
+            hrp.CanCollide = true
+            hrp.Anchored = false
+            hum.PlatformStand = false
+        end
+        screenGui:Destroy()
+    end)
+else
+    warn("Erreur : TpbassPage est introuvable au chargement.")
+end
+
 
 local TrolPage_Layout = Instance.new("UIListLayout") 
 TrolPage_Layout.Padding = UDim.new(0, 10)
