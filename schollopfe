@@ -868,7 +868,7 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 	createTab("Trol"," Trol")
 	createTab("tpbass", " Tpbass")
 	createTab("ESP", " ESP")
-	createTab("thème"," theme")
+	createTab("Theme"," Theme")
 	createTab("Settings","⚙️ Settings")
 	createTab("About"," About")
 
