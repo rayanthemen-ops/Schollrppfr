@@ -541,29 +541,37 @@ padding.Parent = tpbassPage
 -- ... (reste de ton code MouseButton1Click)
 
 btn.MouseButton1Click:Connect(function()
+btn.MouseButton1Click:Connect(function()
+    print("Bouton cliqué !")
     local plr = game:GetService("Players").LocalPlayer
-    local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    -- 1. Création interface
-    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+    local playerGui = plr:WaitForChild("PlayerGui")
+    
+    local screenGui = Instance.new("ScreenGui", playerGui)
     screenGui.IgnoreGuiInset = true
+    print("ScreenGui créé")
 
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     frame.BackgroundTransparency = 0
-    frame.Parent = screenGui
+    print("Fond créé")
+
+    -- Utilisation d'une couleur fixe pour tester (violet)
+    local couleurTest = Color3.fromRGB(186, 85, 211)
 
     local title = Instance.new("TextLabel", frame)
-    title.Text = "SF HUB\nTP BASE STAFF"
-    title.TextColor3 = _G.ThemeColor
+    title.Text = "SF HUB"
+    title.TextColor3 = couleurTest
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
     title.Size = UDim2.new(1, 0, 0.2, 0)
     title.Position = UDim2.new(0, 0, 0.4, 0)
     title.BackgroundTransparency = 1
-    title.Parent = frame
+    print("Texte créé")
+    
+    -- Si tu vois "Texte créé" dans la console F9 mais rien à l'écran, 
+    -- c'est que le texte est caché derrière un autre élément ou qu'il a une mauvaise position.
+end)
 
     local dots = Instance.new("TextLabel", frame)
     dots.Text = ". . ."
