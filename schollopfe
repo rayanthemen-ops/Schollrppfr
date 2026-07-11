@@ -763,7 +763,9 @@ connection = RunService.RenderStepped:Connect(function()
 
     local dist = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
     label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, dist)
-end)
+ end
+   end)
+  end
 
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
