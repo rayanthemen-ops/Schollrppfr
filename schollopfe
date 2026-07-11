@@ -474,7 +474,6 @@ local function updateFreecam(dt)
 end
 
 
--- Toggle de la Freecam
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local root = getRoot()
@@ -483,35 +482,36 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     if enabled then
         initFreecamAngles()
         
-        -- Si tu n'as pas de module 'Controls', commente ces deux lignes
-        -- Controls:Disable() 
-        
+        -- RADICAL : On détache totalement la caméra du personnage
         camera.CameraType = Enum.CameraType.Scriptable
         
         if root then 
             root.Anchored = true 
-            root.CanCollide = false 
+            root.Transparency = 1 -- Optionnel : rend le perso invisible
         end
         
-        if hum then hum.PlatformStand = true end
+        -- On force le Humanoid à arrêter de calculer des directions
+        if hum then 
+            hum.PlatformStand = true 
+            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+        end
         
         freecamConn = RunService.RenderStepped:Connect(updateFreecam)
     else
-        -- Controls:Enable()
-        
         if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
         
         if root then 
             root.Anchored = false 
-            root.CanCollide = true 
+            root.Transparency = 0 
         end
         
         if hum then 
             hum.PlatformStand = false 
-            camera.CameraSubject = hum
+            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
         end
         
         camera.CameraType = Enum.CameraType.Custom
+        camera.CameraSubject = hum
     end
 end)
 
