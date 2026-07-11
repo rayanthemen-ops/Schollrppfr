@@ -753,19 +753,23 @@ trolCorner.Parent = TrolBtn
 
 local connection
 connection = RunService.RenderStepped:Connect(function()
-    local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-    local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
-
-    if not myRoot or not targetRoot then
-        if not character.Parent then connection:Disconnect() end
+    if not character or not character.Parent then
+        label:Destroy()
+        connection:Disconnect()
         return
     end
 
-    local dist = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-    label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, dist)
- end
-   end)
-  end
+    local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    local targetRoot = character:FindFirstChild("HumanoidRootPart")
+
+    if myRoot and targetRoot then
+        local dist = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
+        label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, dist)
+        label.Visible = true
+    else
+        label.Visible = false
+    end
+end)
 
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
