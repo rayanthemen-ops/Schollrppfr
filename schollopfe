@@ -611,8 +611,8 @@ task.spawn(function()
     
     task.wait(1)
     screenGui:Destroy()
+   end)
 end)
-
 
 
 local TrolPage_Layout = Instance.new("UIListLayout") 
