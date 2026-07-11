@@ -30,7 +30,7 @@ gui.Parent = PlayerGui
 --------------------------------------------------
 -- 🎨 PALETTE DE COULEURS & CONFIG STATE
 --------------------------------------------------
-local theme = {
+local Theme = {
 	Bg = Color3.fromRGB(11, 12, 16),       
 	Panel = Color3.fromRGB(18, 19, 26),    
 	Stroke = Color3.fromRGB(35, 38, 50),   
