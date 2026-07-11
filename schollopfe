@@ -515,14 +515,30 @@ end)
 -- 1. RÉFÉRENCEMENT SÉCURISÉ
 -- 🚀 BLOC FINAL : TP BASE STAFF (EFFET "SAUT" VISUEL + THÈME VIOLET)
 tpbassPage:ClearAllChildren()
+-- 1. CONFIGURATION DU LAYOUT (À FAIRE UNE SEULE FOIS DANS TA PAGE)
+tpbassPage:ClearAllChildren()
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 10) -- Espace entre les boutons
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Aligne au milieu
+layout.Parent = tpbassPage
 
-local btn = Instance.new("TextButton", tpbassPage)
-btn.Size = UDim2.new(0.9, 0, 0, 35)
-btn.Text = "TP -> Base Staff"
+-- 2. CRÉATION DU BOUTON
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9, 0, 0, 35) -- Largeur 90%, Hauteur 35
+btn.Text = "TP Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
+btn.Parent = tpbassPage -- Parenté après la configuration
+
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+-- 3. AJOUT D'UN PADDING POUR NE PAS QU'IL SOIT COLLÉ TOUT EN HAUT
+local padding = Instance.new("UIPadding")
+padding.PaddingTop = UDim.new(0, 10)
+padding.Parent = tpbassPage
+
+-- ... (reste de ton code MouseButton1Click)
 
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
