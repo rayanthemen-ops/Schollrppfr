@@ -752,24 +752,28 @@ trolCorner.Parent = TrolBtn
 				label.Parent = bgui
 
 local connection
-connection = RunService.RenderStepped:Connect(function()
-    if not character or not character.Parent then
-        label:Destroy()
-        connection:Disconnect()
-        return
-    end
+				connection = RunService.RenderStepped:Connect(function()
+					if not character.Parent or not Player.Character then
+						connection:Disconnect()
+						return
+					end
+					-- On récupère directement les HumanoidRootPart de manière sécurisée
+local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 
-    local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-    local targetRoot = character:FindFirstChild("HumanoidRootPart")
+-- Debug pour voir si l'un des deux est manquant
+if not myRoot or not targetRoot then
+    print("Debug - Erreur: Impossible de trouver HumanoidRootPart")
+    return
+end
 
-    if myRoot and targetRoot then
-        local dist = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-        label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, dist)
-        label.Visible = true
-    else
-        label.Visible = false
-    end
-end)
+-- Calcul de la distance une fois qu'on est sûr que les deux existent
+local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
+label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
+
+					end
+				end)
+			end
 
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
