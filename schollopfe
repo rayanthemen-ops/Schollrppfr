@@ -421,7 +421,12 @@ local function buildUI()
 -- 🚀 BLOC COMPLET : FREECAM STABLE & INTÉGRÉ
 --------------------------------------------------
 
--- 1. LOGIQUE DE BASE (À placer en haut de ton script, avec les services)
+-- VARIABLES FREECAM GLOBALES
+local camera = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+
 local cameraRelay = Instance.new("Part")
 cameraRelay.Name = "CamRelay"
 cameraRelay.Transparency = 1
