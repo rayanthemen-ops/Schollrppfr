@@ -541,49 +541,44 @@ padding.Parent = tpbassPage
 -- ... (reste de ton code MouseButton1Click)
 
 btn.MouseButton1Click:Connect(function()
-btn.MouseButton1Click:Connect(function()
-    print("Bouton cliqué !")
     local plr = game:GetService("Players").LocalPlayer
-    local playerGui = plr:WaitForChild("PlayerGui")
-    
-    local screenGui = Instance.new("ScreenGui", playerGui)
+    local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    -- 1. CREATION DE L'INTERFACE
+    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
-    print("ScreenGui créé")
 
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    frame.BackgroundTransparency = 0
-    print("Fond créé")
-
-    -- Utilisation d'une couleur fixe pour tester (violet)
-    local couleurTest = Color3.fromRGB(186, 85, 211)
+    frame.BackgroundTransparency = 0 -- Écran bien noir
+    
+    -- SÉCURITÉ COULEUR : Si le thème n'est pas chargé, on force une couleur (orange)
+    local themeColor = _G.ThemeColor
+    if typeof(themeColor) ~= "Color3" then
+        themeColor = Color3.fromRGB(255, 165, 0) -- Change par la couleur que tu veux par défaut
+    end
 
     local title = Instance.new("TextLabel", frame)
-    title.Text = "SF HUB"
-    title.TextColor3 = couleurTest
+    title.Text = "SF HUB\nTP BASE STAFF"
+    title.TextColor3 = themeColor
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
     title.Size = UDim2.new(1, 0, 0.2, 0)
     title.Position = UDim2.new(0, 0, 0.4, 0)
     title.BackgroundTransparency = 1
-    print("Texte créé")
     
-    -- Si tu vois "Texte créé" dans la console F9 mais rien à l'écran, 
-    -- c'est que le texte est caché derrière un autre élément ou qu'il a une mauvaise position.
-end)
-
     local dots = Instance.new("TextLabel", frame)
     dots.Text = ". . ."
-    dots.TextColor3 = _G.ThemeColor
+    dots.TextColor3 = themeColor
     dots.Font = Enum.Font.GothamBold
     dots.TextSize = 40
     dots.Size = UDim2.new(1, 0, 0.1, 0)
     dots.Position = UDim2.new(0, 0, 0.55, 0)
     dots.BackgroundTransparency = 1
-    dots.Parent = frame
 
-    -- 2. Animation des points (DANS le bouton)
+    -- 2. ANIMATION DES POINTS
     task.spawn(function()
         while screenGui.Parent do
             dots.Text = ". . ." ; task.wait(0.3)
@@ -592,7 +587,7 @@ end)
         end
     end)
 
-    -- 3. TP (DANS le bouton)
+    -- 3. TÉLÉPORTATION ET NETTOYAGE
     task.spawn(function()
         local targetObj = nil
         for _, obj in pairs(workspace:GetDescendants()) do
@@ -602,31 +597,35 @@ end)
             end
         end
 
-        if hrp then
-            -- 1. On désactive les dégâts de chute temporairement
+        if targetObj and hrp then
+            local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
             local humanoid = plr.Character:FindFirstChild("Humanoid")
+            
+            -- On désactive les dégâts de chute
             if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
 
-            -- 2. Téléportation
+            -- TP
             hrp.Anchored = true
             hrp.CFrame = CFrame.new(targetPos)
-            task.wait(0.5) -- Temps de chargement visuel
+            task.wait(1) -- Laisse l'écran noir 1 seconde pour l'effet de chargement
             
-            -- 3. On désancre et on applique une force légère pour atterrir
+            -- Chute contrôlée
             hrp.Anchored = false
-            -- On passe de -100 (trop violent) à -20 (vitesse naturelle de marche/petite chute)
             hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
             
-            -- 4. On réactive les états physiques après un court instant
+            -- On réactive la physique normale après impact
             task.wait(0.5)
             if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
+        else
+            -- Si la plateforme n'est pas trouvée, on attend quand même 1 seconde pour fermer l'interface
+            task.wait(1)
         end
-
         
-        task.wait(1)
+        -- FIN : On détruit l'écran noir pour revoir le jeu
         screenGui:Destroy()
     end)
-end) -- FIN DU BOUTON
+end)
+
 
 
 
