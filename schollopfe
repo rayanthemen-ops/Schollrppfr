@@ -419,26 +419,23 @@ local function buildUI()
 --------------------------------------------------
 -- 🚀 BLOC FINAL : FREECAM STABLE (AVEC DÉPENDANCES ET CORRECTIFS)
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local camera = workspace.CurrentCamera
+--------------------------------------------------
+-- 🚀 BLOC FINAL : FREECAM STABLE (ANTI-AIMANT & FURTIF)
+--------------------------------------------------
+local cameraRelay = Instance.new("Part")
+cameraRelay.Name = "CamRelay"
+cameraRelay.Transparency = 1
+cameraRelay.Anchored = true
+cameraRelay.CanCollide = false
+cameraRelay.Size = Vector3.new(1, 1, 1)
+cameraRelay.Parent = workspace
 
--- Définition des fonctions utilitaires manquantes
-local function getHum()
-    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
-end
-local function getRoot()
-    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-end
-
--- Variables
 local freecamActive = false
 local freecamConn = nil
 local camSpeed = 1.5
 local yaw = 0
 local pitch = 0
+local targetCFrame = camera.CFrame
 
 local function initFreecamAngles()
     local _, y, _ = camera.CFrame:ToEulerAnglesYXZ()
@@ -449,7 +446,7 @@ end
 local function updateFreecam(dt)
     if not freecamActive then return end
     
-    -- 1. Rotation (avec la souris)
+    -- 1. Rotation
     local delta = UserInputService:GetMouseDelta()
     if delta.Magnitude > 0 then
         yaw = yaw - (delta.X * 0.005)
@@ -457,61 +454,58 @@ local function updateFreecam(dt)
     end
     local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
     
-    -- 2. Déplacement (avec Z, Q, S, D)
+    -- 2. Mouvement (Clavier & Mobile supporté via le joystick si le perso est débloqué)
     local move = Vector3.new(0, 0, 0)
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + Vector3.new(0, 0, -1) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then move = move + Vector3.new(0, 0, -1) end
     if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move + Vector3.new(0, 0, 1) end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move + Vector3.new(-1, 0, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then move = move + Vector3.new(-1, 0, 0) end
     if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + Vector3.new(1, 0, 0) end
     
     if move.Magnitude > 0 then
-        move = move.Unit * (camSpeed * 60 * dt)
-        camera.CFrame = camera.CFrame * CFrame.new(move)
+        targetCFrame = targetCFrame * CFrame.new(move.Unit * (camSpeed * 20 * dt))
     end
     
-    -- On applique la rotation à la caméra pour regarder autour
-    camera.CFrame = CFrame.new(camera.CFrame.Position) * rotation
+    -- 3. Application fluide (Lerp) pour éviter de déclencher l'Anti-Cheat
+    cameraRelay.CFrame = cameraRelay.CFrame:Lerp(targetCFrame * rotation, 0.3)
+    camera.CFrame = cameraRelay.CFrame
 end
-
 
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
-    local root = getRoot()
+    local char = LocalPlayer.Character
     local hum = getHum()
     
     if enabled then
         initFreecamAngles()
+        targetCFrame = camera.CFrame
+        cameraRelay.CFrame = camera.CFrame
         
-        -- RADICAL : On détache totalement la caméra du personnage
+        -- Désactivation de la liaison caméra/perso
         camera.CameraType = Enum.CameraType.Scriptable
+        camera.CameraSubject = nil
         
-        if root then 
-            root.Anchored = true 
-            root.Transparency = 1 -- Optionnel : rend le perso invisible
+        -- Furtivité : on rend le perso invisible localement sans ancrer (évite l'anti-cheat)
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.LocalTransparencyModifier = 1 end
+            end
         end
-        
-        -- On force le Humanoid à arrêter de calculer des directions
-        if hum then 
-            hum.PlatformStand = true 
-            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-        end
+        if hum then hum.PlatformStand = true end
         
         freecamConn = RunService.RenderStepped:Connect(updateFreecam)
     else
         if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
         
-        if root then 
-            root.Anchored = false 
-            root.Transparency = 0 
-        end
-        
-        if hum then 
-            hum.PlatformStand = false 
-            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
-        end
-        
+        -- Retour à la normale
         camera.CameraType = Enum.CameraType.Custom
         camera.CameraSubject = hum
+        
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.LocalTransparencyModifier = 0 end
+            end
+        end
+        if hum then hum.PlatformStand = false end
     end
 end)
 
