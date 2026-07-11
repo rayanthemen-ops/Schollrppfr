@@ -417,10 +417,11 @@ local function buildUI()
 --------------------------------------------------
 -- FREECAM SYSTEM (FINAL & OPTIMISÉ)
 --------------------------------------------------
--- 🚀 BLOC FINAL : FREECAM STABLE (AVEC DÉPENDANCES ET 
 --------------------------------------------------
--- 🚀 BLOC FINAL : FREECAM STABLE (ORIENTATION CAMÉRA)
+-- 🚀 BLOC COMPLET : FREECAM STABLE & INTÉGRÉ
 --------------------------------------------------
+
+-- 1. LOGIQUE DE BASE (À placer en haut de ton script, avec les services)
 local cameraRelay = Instance.new("Part")
 cameraRelay.Name = "CamRelay"
 cameraRelay.Transparency = 1
@@ -432,9 +433,8 @@ cameraRelay.Parent = workspace
 local freecamActive = false
 local freecamConn = nil
 local camSpeed = 1.5
-local yaw = 0
-local pitch = 0
-local targetPosition = camera.CFrame.Position
+local yaw, pitch = 0, 0
+local targetPosition = Vector3.new(0,0,0)
 
 local function initFreecamAngles()
     local _, y, _ = camera.CFrame:ToEulerAnglesYXZ()
@@ -445,7 +445,6 @@ end
 local function updateFreecam(dt)
     if not freecamActive then return end
     
-    -- 1. Rotation (Souris ou Drag)
     local delta = UserInputService:GetMouseDelta()
     if delta.Magnitude > 0 then
         yaw = yaw - (delta.X * 0.005)
@@ -453,27 +452,21 @@ local function updateFreecam(dt)
     end
     local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
     
-    -- 2. Mouvement relatif à l'orientation de la caméra
     local move = Vector3.new(0, 0, 0)
-    
-    -- Clavier (ZQSD)
     if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.Z) then move = move + Vector3.new(0, 0, -1) end
     if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move + Vector3.new(0, 0, 1) end
     if UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then move = move + Vector3.new(-1, 0, 0) end
     if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + Vector3.new(1, 0, 0) end
     
-    -- 3. Application du déplacement
     if move.Magnitude > 0 then
-        -- On transforme le mouvement local en mouvement orienté selon la rotation
-        local worldMove = rotation:VectorToWorldSpace(move.Unit)
-        targetPosition = targetPosition + (worldMove * (camSpeed * 20 * dt))
+        targetPosition = targetPosition + (rotation:VectorToWorldSpace(move.Unit) * (camSpeed * 20 * dt))
     end
     
-    -- 4. Application finale fluide
     cameraRelay.CFrame = CFrame.new(cameraRelay.CFrame.Position):Lerp(CFrame.new(targetPosition), 0.3) * rotation
     camera.CFrame = cameraRelay.CFrame
 end
 
+-- 2. INTÉGRATION PANEL (À mettre dans ta fonction buildUI)
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
     freecamActive = enabled
     local char = LocalPlayer.Character
@@ -487,7 +480,6 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
         camera.CameraType = Enum.CameraType.Scriptable
         camera.CameraSubject = nil
         
-        -- Furtivité : Invisibilité locale
         if char then
             for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then part.LocalTransparencyModifier = 1 end
