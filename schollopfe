@@ -760,17 +760,10 @@ local connection
 					-- On récupère directement les HumanoidRootPart de manière sécurisée
 local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
 local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
-
--- Debug pour voir si l'un des deux est manquant
-if not myRoot or not targetRoot then
-    print("Debug - Erreur: Impossible de trouver HumanoidRootPart")
-    return
-end
-
--- Calcul de la distance une fois qu'on est sûr que les deux existent
-local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
-
+					
+					if myRoot and targetRoot then
+						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
+						label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
 					end
 				end)
 			end
