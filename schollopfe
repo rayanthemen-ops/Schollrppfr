@@ -872,7 +872,7 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 	createTab("Settings","⚙️ Settings")
 	createTab("About"," About")
 
-	show("Home")
+	show("bienvenu")
 
 	--------------------------------------------------
 	-- GESTION INTERFACE (OUVERTURE/FERMETURE)
