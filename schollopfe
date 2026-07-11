@@ -545,19 +545,18 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- 1. Interface (Fond noir opaque et couleur dynamique)
+    -- 1. Création interface
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
 
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    frame.BackgroundTransparency = 0 -- 0 = totalement opaque (pas transparent)
+    frame.BackgroundTransparency = 0
     frame.Parent = screenGui
 
     local title = Instance.new("TextLabel", frame)
     title.Text = "SF HUB\nTP BASE STAFF"
-    -- On force l'utilisation de _G.ThemeColor
     title.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
@@ -568,7 +567,6 @@ btn.MouseButton1Click:Connect(function()
 
     local dots = Instance.new("TextLabel", frame)
     dots.Text = ". . ."
-    -- On utilise la même variable pour les points
     dots.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
     dots.Font = Enum.Font.GothamBold
     dots.TextSize = 40
@@ -577,51 +575,39 @@ btn.MouseButton1Click:Connect(function()
     dots.BackgroundTransparency = 1
     dots.Parent = frame
 
-    -- ... (reste du code task.spawn pour l'animation et le TP)
-    -- N'oublie pas de laisser le end) à la toute fin
-
-
-
-task.spawn(function()
-    while screenGui.Parent do
-        dots.Text = ". . ." ; task.wait(0.3)
-        dots.Text = ". . . ." ; task.wait(0.3)
-        dots.Text = ". . . . ." ; task.wait(0.3)
-end
-end)
-
--- 2. Le TP avec sécurité (on force la position au sol)
-task.spawn(function()
-    local targetObj = nil
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-            targetObj = obj
-            break
+    -- 2. Animation des points (DANS le bouton)
+    task.spawn(function()
+        while screenGui.Parent do
+            dots.Text = ". . ." ; task.wait(0.3)
+            dots.Text = ". . . ." ; task.wait(0.3)
+            dots.Text = ". . . . ." ; task.wait(0.3)
         end
-    end
+    end)
 
-    if targetObj then
-        -- On définit la position cible
-        local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
-        
-        -- On déplace le personnage
-        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
+    -- 3. TP (DANS le bouton)
+    task.spawn(function()
+        local targetObj = nil
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+                targetObj = obj
+                break
+            end
+        end
+
+        if targetObj then
+            local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
             hrp.Anchored = true
             hrp.CFrame = CFrame.new(targetPos)
             task.wait(0.5)
-            
-            -- ON FORCE LA DESCENTE : on désactive l'ancrage pour que la gravité prenne le relais
             hrp.Anchored = false
-            -- On donne un petit coup de pouce (facultatif)
             hrp.Velocity = Vector3.new(0, -50, 0) 
         end
-    end
-    
-    task.wait(1)
-    screenGui:Destroy()
-   end)
-end)
+        
+        task.wait(1)
+        screenGui:Destroy()
+    end)
+end) -- FIN DU BOUTON
+
 
 
 local TrolPage_Layout = Instance.new("UIListLayout") 
