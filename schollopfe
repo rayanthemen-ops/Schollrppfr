@@ -36,7 +36,7 @@ local Theme = {
 	Stroke = Color3.fromRGB(35, 38, 50),   
 	Text = Color3.fromRGB(240, 243, 250),  
 	Accent = Color3.fromRGB(0, 180, 255), 
-	Green = Color3.fromRGB(0, 220, 140)    
+	Green = Color3.fromRGB(0, 220, 140), 
 	neige = Color3.fromRGB(255, 250, 250)
 }
 
