@@ -516,20 +516,28 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 end)
 
 -- 1. RÉFÉRENCEMENT ET NETTOYAGE
--- Assure-toi que ce chemin correspond bien à l'endroit où se trouve ton Frame dans ton GUI
-local tpbassPage = script.Parent:WaitForChild("TpbassPage") 
+-- 1. RÉFÉRENCEMENT ET CRÉATION DU CONTENEUR
+local tpbassPage = script.Parent:WaitForChild("TpbassPage")
 
-tpbassPage:ClearAllChildren()
+-- On crée une zone spécifique pour ne pas toucher au reste de ton interface (le gros panel)
+local zoneBoutons = tpbassPage:FindFirstChild("ZoneBoutons") or Instance.new("Frame")
+zoneBoutons.Name = "ZoneBoutons"
+zoneBoutons.Size = UDim2.new(1, 0, 1, 0)
+zoneBoutons.BackgroundTransparency = 1
+zoneBoutons.Parent = tpbassPage
 
--- 2. RE-CRÉATION DU LAYOUT
+-- On ne vide que cette zone, pas toute la page
+zoneBoutons:ClearAllChildren()
+
+-- 2. RE-CRÉATION DU LAYOUT (dans la zone dédiée)
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 10)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.Parent = tpbassPage
+layout.Parent = zoneBoutons
 
 local padding = Instance.new("UIPadding")
 padding.PaddingTop = UDim.new(0, 12)
-padding.Parent = tpbassPage
+padding.Parent = zoneBoutons
 
 -- 3. CRÉATION DU BOUTON
 local btn = Instance.new("TextButton")
@@ -539,7 +547,7 @@ btn.Text = "TP -> Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
-btn.Parent = tpbassPage
+btn.Parent = zoneBoutons
 
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 6)
@@ -555,15 +563,12 @@ btn.MouseButton1Click:Connect(function()
     local hum = char:FindFirstChild("Humanoid")
     if not hrp or not hum then return end
 
-    -- Interface de chargement
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
     local frame = Instance.new("Frame", screenGui)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.new(0, 0, 0)
-    frame.BackgroundTransparency = 0.5 -- Un peu plus propre
     
-    -- Recherche de la cible
     local targetObj = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -573,26 +578,15 @@ btn.MouseButton1Click:Connect(function()
     end
 
     if targetObj then
-        local finalPos = targetObj.Position + Vector3.new(0, 5, 0)
-        
-        -- Préparation
         hrp.Anchored = true
         hum.PlatformStand = true 
         hrp.CanCollide = false
-        
-        -- Téléportation
-        char:PivotTo(CFrame.new(finalPos))
-        
+        char:PivotTo(CFrame.new(targetObj.Position + Vector3.new(0, 5, 0)))
         task.wait(0.5) 
-        
-        -- Rétablissement
         hrp.CanCollide = true
         hrp.Anchored = false
         hum.PlatformStand = false
-    else
-        warn("Base Staff introuvable.")
     end
-
     screenGui:Destroy()
 end)
 
