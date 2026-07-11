@@ -449,12 +449,7 @@ end
 local function updateFreecam(dt)
     if not freecamActive then return end
     
-    -- FORCER LE STREAMING
-    if workspace.StreamingEnabled then
-        LocalPlayer:RequestStreamAroundAsync(camera.CFrame.Position)
-    end
-    
-    -- 1. Rotation
+    -- 1. Rotation (avec la souris)
     local delta = UserInputService:GetMouseDelta()
     if delta.Magnitude > 0 then
         yaw = yaw - (delta.X * 0.005)
@@ -462,17 +457,22 @@ local function updateFreecam(dt)
     end
     local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
     
-    -- 2. Déplacement
-    local hum = getHum()
-    local moveDir = (hum and hum.MoveDirection) or Vector3.new(0,0,0)
+    -- 2. Déplacement (avec Z, Q, S, D)
+    local move = Vector3.new(0, 0, 0)
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + Vector3.new(0, 0, -1) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move + Vector3.new(0, 0, 1) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move + Vector3.new(-1, 0, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + Vector3.new(1, 0, 0) end
     
-    if moveDir.Magnitude > 0 then
-        local move = (rotation * CFrame.new(moveDir * (camSpeed * 60 * dt))).Position
-        camera.CFrame = CFrame.new(camera.CFrame.Position + move) * rotation
-    else
-        camera.CFrame = CFrame.new(camera.CFrame.Position) * rotation
+    if move.Magnitude > 0 then
+        move = move.Unit * (camSpeed * 60 * dt)
+        camera.CFrame = camera.CFrame * CFrame.new(move)
     end
+    
+    -- On applique la rotation à la caméra pour regarder autour
+    camera.CFrame = CFrame.new(camera.CFrame.Position) * rotation
 end
+
 
 -- Toggle de la Freecam
 createPlayerToggle("🎥 Bypass Freecam", function(enabled)
