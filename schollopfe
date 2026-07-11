@@ -861,11 +861,15 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 		saveConfig() 
 	end)
 
-	local tLayout = Instance.new("UIListLayout")
-	tLayout.Padding = UDim.new(0, 8)
-	tLayout.FillDirection = Enum.FillDirection.Horizontal
-	tLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	tLayout.Parent = ThemePage
+local tLayout = Instance.new("UIListLayout")
+tLayout.Padding = UDim.new(0, 5) -- Un peu plus serré
+tLayout.FillDirection = Enum.FillDirection.Horizontal
+tLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Centre tout le bloc
+tLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+tLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tLayout.Wraps = true -- Force le retour à la ligne si ça dépasse
+tLayout.Parent = ThemePage
+
 
 	local tPadding = Instance.new("UIPadding")
 	tPadding.PaddingTop = UDim.new(0, 30)
