@@ -545,6 +545,33 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
+    -- 1. Trouver l'objet cible
+    local targetObj = nil
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+            targetObj = obj
+            break
+        end
+    end
+
+    if targetObj then
+        -- 2. DÉTECTION PRÉCISE DU SOL (Raycast)
+        -- On lance un rayon vers le bas depuis le centre de l'objet pour trouver la surface réelle
+        local rayOrigin = targetObj.Position + Vector3.new(0, 50, 0)
+        local rayDirection = Vector3.new(0, -100, 0)
+        local raycastResult = workspace:Raycast(rayOrigin, rayDirection)
+        
+        local spawnHeight = raycastResult and raycastResult.Position.Y or targetObj.Position.Y
+        local finalPos = Vector3.new(targetObj.Position.X, spawnHeight + 3.5, targetObj.Position.Z)
+
+        -- 3. Exécution du TP
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(finalPos)
+        task.wait(0.2)
+        hrp.Anchored = false
+    end
+end)
+
     -- Interface (Noir & Violet)
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
