@@ -545,40 +545,49 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
--- Création du ScreenGui et de son contenu (fond noir + points)
--- 1. Ton ScreenGui (l'interface)
-local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
-screenGui.IgnoreGuiInset = true
+    -- 1. Interface (Fond noir opaque et couleur dynamique)
+    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+    screenGui.IgnoreGuiInset = true
 
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(1, 0, 1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BackgroundTransparency = 0.3
+    local frame = Instance.new("Frame", screenGui)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0 -- 0 = totalement opaque (pas transparent)
+    frame.Parent = screenGui
 
-local title = Instance.new("TextLabel", frame)
-title.Text = "SF HUB\nTP BASE STAFF"
-title.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 50
-title.Size = UDim2.new(1, 0, 0.2, 0)
-title.Position = UDim2.new(0, 0, 0.4, 0)
-title.BackgroundTransparency = 1
+    local title = Instance.new("TextLabel", frame)
+    title.Text = "SF HUB\nTP BASE STAFF"
+    -- On force l'utilisation de _G.ThemeColor
+    title.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 50
+    title.Size = UDim2.new(1, 0, 0.2, 0)
+    title.Position = UDim2.new(0, 0, 0.4, 0)
+    title.BackgroundTransparency = 1
+    title.Parent = frame
 
-local dots = Instance.new("TextLabel", frame)
-dots.Text = ". . ."
-dots.TextColor3 = _G.TextColor or Color3.fromRGB(186, 85, 211)
-dots.Font = Enum.Font.GothamBold
-dots.TextSize = 40
-dots.Size = UDim2.new(1, 0, 0.1, 0)
-dots.Position = UDim2.new(0, 0, 0.55, 0)
-dots.BackgroundTransparency = 1
+    local dots = Instance.new("TextLabel", frame)
+    dots.Text = ". . ."
+    -- On utilise la même variable pour les points
+    dots.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
+    dots.Font = Enum.Font.GothamBold
+    dots.TextSize = 40
+    dots.Size = UDim2.new(1, 0, 0.1, 0)
+    dots.Position = UDim2.new(0, 0, 0.55, 0)
+    dots.BackgroundTransparency = 1
+    dots.Parent = frame
+
+    -- ... (reste du code task.spawn pour l'animation et le TP)
+    -- N'oublie pas de laisser le end) à la toute fin
+end)
+
 
 task.spawn(function()
     while screenGui.Parent do
         dots.Text = ". . ." ; task.wait(0.3)
         dots.Text = ". . . ." ; task.wait(0.3)
         dots.Text = ". . . . ." ; task.wait(0.3)
-    end
+end
 end)
 
 -- 2. Le TP avec sécurité (on force la position au sol)
