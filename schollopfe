@@ -594,14 +594,26 @@ btn.MouseButton1Click:Connect(function()
             end
         end
 
-        if targetObj then
-            local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
+        if hrp then
+            -- 1. On désactive les dégâts de chute temporairement
+            local humanoid = plr.Character:FindFirstChild("Humanoid")
+            if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
+
+            -- 2. Téléportation
             hrp.Anchored = true
             hrp.CFrame = CFrame.new(targetPos)
-            task.wait(0.5)
+            task.wait(0.5) -- Temps de chargement visuel
+            
+            -- 3. On désancre et on applique une force légère pour atterrir
             hrp.Anchored = false
-            hrp.Velocity = Vector3.new(0, -50, 0) 
+            -- On passe de -100 (trop violent) à -20 (vitesse naturelle de marche/petite chute)
+            hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
+            
+            -- 4. On réactive les états physiques après un court instant
+            task.wait(0.5)
+            if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
         end
+
         
         task.wait(1)
         screenGui:Destroy()
