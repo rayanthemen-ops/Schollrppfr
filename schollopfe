@@ -758,13 +758,11 @@ trolCorner.Parent = TrolBtn
 						return
 					end
 
-local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
-
+local myRoot = getRoot(Player.Character)
+					local targetRoot = getRoot(character)
 					if myRoot and targetRoot then
 						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-						Label.Text = string.format("%s\n%s\n%s\n[%d m]", displayName, displayRole, displayRank, distance)
-
+						label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
 					end
 				end)
 			end
