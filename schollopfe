@@ -554,10 +554,10 @@ btn.MouseButton1Click:Connect(function()
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     frame.BackgroundTransparency = 0 -- Écran bien noir
     
-    -- SÉCURITÉ COULEUR : Si le thème n'est pas chargé, on force une couleur (orange)
+    -- SÉCURITÉ COULEUR : Si le thème n'est pas chargé  (orange)
     local themeColor = _G.ThemeColor
     if typeof(themeColor) ~= "Color3" then
-        themeColor = Color3.fromRGB(255, 165, 0) -- Change par la couleur que tu veux par défaut
+        themeColor = Color3.fromRGB(139, 0, 139) 
     end
 
     local title = Instance.new("TextLabel", frame)
