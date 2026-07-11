@@ -545,27 +545,49 @@ btn.MouseButton1Click:Connect(function()
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- Interface (Noir & Violet)
-    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-    screenGui.IgnoreGuiInset = true
-    local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(1.5, 0, 1.5, 0)
-    frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    
-    local title = Instance.new("TextLabel", frame)
-    title.Text = "SF HUB\nTP BASE"
-    title.TextColor3 = Color3.fromRGB(186, 85, 211)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 60
-    title.Position = UDim2.new(0, 0, 0.2, 0)
-    title.Size = UDim2.new(1, 0, 0.2, 0)
-    title.BackgroundTransparency = 1
-    
-    local progressBar = Instance.new("Frame", frame)
-    progressBar.Size = UDim2.new(0, 0, 0, 15)
-    progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
+-- Création du ScreenGui et de son contenu (fond noir + points)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LoadingGui"
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BackgroundTransparency = 0.2
+
+local title = Instance.new("TextLabel", frame)
+title.Text = "SF HUB\nTP BASE STAFF"
+title.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 50
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.Position = UDim2.new(0, 0, 0.4, 0)
+title.BackgroundTransparency = 1
+
+local dots = Instance.new("TextLabel", frame)
+dots.Text = ". . ."
+dots.TextColor3 = _G.ThemeColor or Color3.fromRGB(186, 85, 211)
+dots.Font = Enum.Font.GothamBold
+dots.TextSize = 40
+dots.Size = UDim2.new(1, 0, 0.1, 0)
+dots.Position = UDim2.new(0, 0, 0.55, 0)
+dots.BackgroundTransparency = 1
+
+-- Animation des points
+task.spawn(function()
+    while screenGui.Parent do
+        dots.Text = ". . ."
+        task.wait(0.4)
+        dots.Text = ". . . ."
+        task.wait(0.4)
+        dots.Text = ". . . . ."
+        task.wait(0.4)
+    end
+end)
+
+-- Pour supprimer l'interface, il suffira de faire : screenGui:Destroy()
+
 
     -- TP CIBLE
     local targetObj = nil
