@@ -30,7 +30,7 @@ gui.Parent = PlayerGui
 --------------------------------------------------
 -- 🎨 PALETTE DE COULEURS & CONFIG STATE
 --------------------------------------------------
-local Theme = {
+local personalisable = {
 	Bg = Color3.fromRGB(11, 12, 16),       
 	Panel = Color3.fromRGB(18, 19, 26),    
 	Stroke = Color3.fromRGB(35, 38, 50),   
@@ -268,12 +268,12 @@ local function buildUI()
 	--------------------------------------------------
 	-- GENERATION DES PAGES
 	--------------------------------------------------
-	local homePage = createPage("Home")
+	local bienvenuPage = createPage("bienvenu")
 	local playerPage = createPage("Player")
 	local TrolPage = createPage("Trol")
 	local tpbassPage = createPage("tpbass") 
 	local visualsPage = createPage("ESP")
-	local themesPage = createPage("Themes")
+	local personalisablePage = createPage("personalisable")
 	local settingsPage = createPage("Settings")
 	local aboutPage = createPage("About")
 
@@ -621,7 +621,7 @@ trolCorner.Parent = TrolBtn
 
 	local espBtn = Instance.new("TextButton")
 	espBtn.Size = UDim2.new(0.9, 0, 0, 36)
-	espBtn.Text = "👤 Player ESP: OFF"
+	espBtn.Text = " Player ESP: OFF"
 	espBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 	espBtn.TextColor3 = Theme.Text
 	espBtn.Font = Enum.Font.GothamBold
@@ -632,7 +632,7 @@ trolCorner.Parent = TrolBtn
 
 	local staffEspBtn = Instance.new("TextButton")
 	staffEspBtn.Size = UDim2.new(0.9, 0, 0, 36)
-	staffEspBtn.Text = "🛡️ Staff ESP Only: OFF"
+	staffEspBtn.Text = " Staff ESP Only: OFF"
 	staffEspBtn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 	staffEspBtn.TextColor3 = Theme.Text
 	staffEspBtn.Font = Enum.Font.GothamBold
@@ -717,7 +717,7 @@ trolCorner.Parent = TrolBtn
 				local boxColor = Color3.fromRGB(0, 180, 255)
 
 				if isStaff then
-					displayRole = "🛡️ STAFF [" .. (staffRole or "Admin") .. "]"
+					displayRole = " STAFF [" .. (staffRole or "Admin") .. "]"
 					boxColor = Color3.fromRGB(128, 128, 128)
 				else
 					local role, rColor = detectRole(targetPlayer)
@@ -763,7 +763,7 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 					
 					if myRoot and targetRoot then
 						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-						label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
+						label.Text = string.format(" %s\n %s\n [%d m]", displayName, displayRole, distance)
 					end
 				end)
 			end
@@ -775,14 +775,14 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 
 	espBtn.MouseButton1Click:Connect(function()
 		espEnabled = not espEnabled
-		espBtn.Text = espEnabled and "👤 Player ESP: ON" or "👤 Player ESP: OFF"
+		espBtn.Text = espEnabled and " Player ESP: ON" or " Player ESP: OFF"
 		espBtn.BackgroundColor3 = espEnabled and Theme.Green or Color3.fromRGB(26, 29, 38)
 		updateESP()
 	end)
 
 	staffEspBtn.MouseButton1Click:Connect(function()
 		staffEspEnabled = not staffEspEnabled
-		staffEspBtn.Text = staffEspEnabled and "🛡️ Staff ESP Only: ON" or "🛡️ Staff ESP Only: OFF"
+		staffEspBtn.Text = staffEspEnabled and " Staff ESP Only: ON" or " Staff ESP Only: OFF"
 		staffEspBtn.BackgroundColor3 = staffEspEnabled and Color3.fromRGB(240, 173, 78) or Color3.fromRGB(26, 29, 38)
 		updateESP()
 	end)
@@ -863,14 +863,14 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 		Buttons[name] = b
 	end
 
-	createTab("Home","🏠 Home")
-	createTab("Player","👤 Player")
-	createTab("Trol","😂Trol")
-	createTab("tpbass", "🛥️ Tpbass")
-	createTab("ESP", "👁️ ESP")
-	createTab("Themes","🎨 Themes")
+	createTab("bienvenu"," bienvenu")
+	createTab("Player"," Player")
+	createTab("Trol"," Trol")
+	createTab("tpbass", " Tpbass")
+	createTab("ESP", " ESP")
+	createTab("personalisable"," personalisable")
 	createTab("Settings","⚙️ Settings")
-	createTab("About","ℹ️ About")
+	createTab("About"," About")
 
 	show("Home")
 
