@@ -820,11 +820,11 @@ local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 	tLayout.Padding = UDim.new(0, 8)
 	tLayout.FillDirection = Enum.FillDirection.Horizontal
 	tLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	tLayout.Parent = themesPage
+	tLayout.Parent = ThemesPage
 
 	local tPadding = Instance.new("UIPadding")
 	tPadding.PaddingTop = UDim.new(0, 30)
-	tPadding.Parent = themesPage
+	tPadding.Parent = ThemesPage
 
 	local function addThemeBtn(color)
 		local b = Instance.new("TextButton")
