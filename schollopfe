@@ -273,7 +273,7 @@ local function buildUI()
 	local TrolPage = createPage("Trol")
 	local tpbassPage = createPage("tpbass") 
 	local visualsPage = createPage("ESP")
-	local themePage = createPage("theme")
+	local ThemePage = createPage("Theme")
 	local settingsPage = createPage("Settings")
 	local aboutPage = createPage("About")
 
