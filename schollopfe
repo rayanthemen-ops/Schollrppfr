@@ -579,7 +579,7 @@ btn.MouseButton1Click:Connect(function()
 
     -- ... (reste du code task.spawn pour l'animation et le TP)
     -- N'oublie pas de laisser le end) à la toute fin
-end)
+
 
 
 task.spawn(function()
