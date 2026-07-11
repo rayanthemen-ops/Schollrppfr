@@ -751,21 +751,20 @@ trolCorner.Parent = TrolBtn
 				label.TextStrokeColor3 = Color3.new(0,0,0)
 				label.Parent = bgui
 
-				local connection
-				connection = RunService.RenderStepped:Connect(function()
-					if not character.Parent or not Player.Character then
-						connection:Disconnect()
-						return
-					end
+local connection
+connection = RunService.RenderStepped:Connect(function()
+    local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    local targetRoot = character and character:FindFirstChild("HumanoidRootPart")
 
-local myRoot = getRoot(Player.Character)
-					local targetRoot = getRoot(character)
-					if myRoot and targetRoot then
-						local distance = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
-						label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, distance)
-					end
-				end)
-			end
+    if not myRoot or not targetRoot then
+        if not character.Parent then connection:Disconnect() end
+        return
+    end
+
+    local dist = math.floor((myRoot.Position - targetRoot.Position).Magnitude)
+    label.Text = string.format("👤 %s\n🏷️ %s\n📍 [%d m]", displayName, displayRole, dist)
+end)
+
 
 			if targetPlayer.Character then task.spawn(setupCharacterESP, targetPlayer.Character) end
 		end
