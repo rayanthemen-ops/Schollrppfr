@@ -517,87 +517,72 @@ end)
 
 -- 1. RÉFÉRENCEMENT ET NETTOYAGE
 -- 1. RÉFÉRENCEMENT SÉCURISÉ
-local parentObj = script.Parent -- Ajuste si nécessaire
-local tpbassPage = parentObj:FindFirstChild("TpbassPage")
+-- 🚀 BLOC FINAL : TP BASE STAFF (EFFET "SAUT" VISUEL + THÈME VIOLET)
+tpbassPage:ClearAllChildren()
 
-if tpbassPage then
-    -- Au lieu de ClearAllChildren() qui détruit tout, 
-    -- on ne détruit que ce qu'on a créé précédemment pour éviter les erreurs.
-    local oldZone = tpbassPage:FindFirstChild("ZoneBoutons")
-    if oldZone then oldZone:Destroy() end
+local btn = Instance.new("TextButton", tpbassPage)
+btn.Size = UDim2.new(0.9, 0, 0, 35)
+btn.Text = "TP -> Base Staff"
+btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
+btn.TextColor3 = Color3.new(1, 1, 1)
+btn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
-    -- Création d'un conteneur dédié pour tes boutons
-    local zoneBoutons = Instance.new("Frame")
-    zoneBoutons.Name = "ZoneBoutons"
-    zoneBoutons.Size = UDim2.new(1, 0, 1, 0)
-    zoneBoutons.BackgroundTransparency = 1
-    zoneBoutons.Parent = tpbassPage
+btn.MouseButton1Click:Connect(function()
+    local plr = game:GetService("Players").LocalPlayer
+    local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    -- 2. LAYOUT DANS LA ZONE DÉDIÉE
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 10)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.Parent = zoneBoutons
+    -- Interface (Noir & Violet)
+    local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+    screenGui.IgnoreGuiInset = true
+    local frame = Instance.new("Frame", screenGui)
+    frame.Size = UDim2.new(1.5, 0, 1.5, 0)
+    frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    
+    local title = Instance.new("TextLabel", frame)
+    title.Text = "SF HUB\nTP BASE"
+    title.TextColor3 = Color3.fromRGB(186, 85, 211)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 60
+    title.Position = UDim2.new(0, 0, 0.2, 0)
+    title.Size = UDim2.new(1, 0, 0.2, 0)
+    title.BackgroundTransparency = 1
+    
+    local progressBar = Instance.new("Frame", frame)
+    progressBar.Size = UDim2.new(0, 0, 0, 15)
+    progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
 
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 12)
-    padding.Parent = zoneBoutons
-
-    -- 3. CRÉATION DU BOUTON
-    local btn = Instance.new("TextButton")
-    btn.Name = "TPButton"
-    btn.Size = UDim2.new(0.9, 0, 0, 35)
-    btn.Text = "TP -> Base Staff"
-    btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamBold
-    btn.Parent = zoneBoutons
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-
-    -- 4. LOGIQUE DU BOUTON
-    btn.MouseButton1Click:Connect(function()
-        local plr = game:GetService("Players").LocalPlayer
-        local char = plr.Character
-        if not char then return end
-        
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChild("Humanoid")
-        if not hrp or not hum then return end
-
-        -- Interface de chargement simple
-        local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-        screenGui.IgnoreGuiInset = true
-        local frame = Instance.new("Frame", screenGui)
-        frame.Size = UDim2.new(1, 0, 1, 0)
-        frame.BackgroundColor3 = Color3.new(0, 0, 0)
-        
-        -- Recherche de la cible
-        local targetObj = nil
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-                targetObj = obj
-                break
-            end
+    -- TP CIBLE
+    local targetObj = nil
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+            targetObj = obj
+            break
         end
+    end
 
-        if targetObj then
+    if targetObj then
+        local basePos = targetObj.Position + Vector3.new(0, 3.5, 0)
+        
+        -- Séquence de "Sauts" (Effet comme dans image_4.png)
+        local offsets = {Vector3.new(0, 0, 0), Vector3.new(4, 0, 4), Vector3.new(-4, 0, -4)}
+        
+        for i = 1, 3 do
             hrp.Anchored = true
-            hum.PlatformStand = true 
-            hrp.CanCollide = false
-            char:PivotTo(CFrame.new(targetObj.Position + Vector3.new(0, 5, 0)))
-            task.wait(0.5) 
-            hrp.CanCollide = true
-            hrp.Anchored = false
-            hum.PlatformStand = false
+            hrp.CFrame = CFrame.new(basePos + offsets[i])
+            progressBar.Size = UDim2.new(0.4 * (i/3), 0, 0, 15)
+            task.wait(0.5) -- Le "saut" visuel est rapide
         end
+        
+        hrp.Anchored = false
         screenGui:Destroy()
-    end)
-else
-    warn("Erreur : TpbassPage est introuvable au chargement.")
-end
+    else
+        screenGui:Destroy()
+    end
+end)
 
 
 local TrolPage_Layout = Instance.new("UIListLayout") 
