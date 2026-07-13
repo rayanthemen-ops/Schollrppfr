@@ -9,7 +9,7 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 --------------------------------------------------
--- CLEAN UI & LIGHTING
+--  UI et LIGHTING
 --------------------------------------------------
 local oldGui = PlayerGui:FindFirstChild("SF_HUB")
 if oldGui then oldGui:Destroy() end
@@ -28,7 +28,7 @@ gui.DisplayOrder = 999
 gui.Parent = PlayerGui
 
 --------------------------------------------------
--- 🎨 PALETTE DE COULEURS & CONFIG STATE
+-- couleur et configuration 
 --------------------------------------------------
 local Theme = {
 	Bg = Color3.fromRGB(11, 12, 16),       
@@ -82,7 +82,7 @@ local function applyTheme(color)
 end
 
 --------------------------------------------------
--- BLUR SYSTEM
+-- BLUR 
 --------------------------------------------------
 local blur = Instance.new("BlurEffect")
 blur.Name = "SF_Blur"
@@ -96,7 +96,7 @@ local function blurToggle(state)
 end
 
 --------------------------------------------------
--- SYSTEME DE DRAG
+--  DE DRAG
 --------------------------------------------------
 local function makeDraggable(dragFrame, moveFrame)
 	local dragging, dragInput, dragStart, startPos
@@ -200,18 +200,16 @@ local function buildUI()
 	closeCorner.CornerRadius = UDim.new(0, 6)
 	closeCorner.Parent = close
 
+
 	--------------------------------------------------
-	-- SIDEBAR
+	-- SIDEBAR a configurer dans le futur faut que je pense 
 	--------------------------------------------------
-	--------------------------------------------------
-	-- SIDEBAR (Modifiée pour le défilement)
-	--------------------------------------------------
-	local side = Instance.new("ScrollingFrame") -- On passe de Frame à ScrollingFrame
+	local side = Instance.new("ScrollingFrame")
 	side.Size = UDim2.new(0, 130, 1, -42)
 	side.Position = UDim2.new(0, 0, 0, 42)
 	side.BackgroundColor3 = Theme.Panel
 	side.BorderSizePixel = 0
-	side.ScrollBarThickness = 4 -- Barre de défilement fine
+	side.ScrollBarThickness = 4 
 	side.Parent = frame
 	
 	local sideCorner = Instance.new("UICorner")
@@ -219,7 +217,7 @@ local function buildUI()
 	sideCorner.Parent = side
 
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 10) -- Ton espace entre les boutons (pixels)
+	layout.Padding = UDim.new(0, 10) 
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.Parent = side
 	
@@ -267,7 +265,7 @@ local function buildUI()
 	end
 
 	--------------------------------------------------
-	-- GENERATION DES PAGES
+	-- les PAGES princial
 	--------------------------------------------------
 	local bienvenuPage = createPage("bienvenu")
 	local playerPage = createPage("Player")
@@ -292,8 +290,8 @@ local function buildUI()
 	end
 
 	addSimpleText(bienvenuPage, "🌌 Bienvenue dans SF HUB \n\nVos préférences et votre thème favori sont désormais sauvegardés automatiquement.")
-	addSimpleText(aboutPage, "ℹ️ SF HUB V6\nSauvegarde Cloud/Locale active (JSON).\nOptimisé pour l'exécution fluide.")
-	addSimpleText(tpbassPage,"🚧 tp Bass patch encours de repartition ")
+	addSimpleText(aboutPage, "ℹ️ SF HUB une nouvelle sauvegarde de couleurs .")
+
 
 	--------------------------------------------------
 	-- CONFIGURATION DE L'ONGLET PLAYER
@@ -412,17 +410,11 @@ local function buildUI()
 		end
 	end)
 
---------------------------------------------------
--- FREECAM SYSTEM (COMPLET)
---------------------------------------------------
---------------------------------------------------
--- FREECAM SYSTEM (FINAL & OPTIMISÉ)
---------------------------------------------------
---------------------------------------------------
--- 🚀 BLOC COMPLET : FREECAM STABLE & INTÉGRÉ
---------------------------------------------------
 
--- VARIABLES FREECAM GLOBALES
+
+------frecam------
+
+
 local camera = workspace.CurrentCamera
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -472,8 +464,8 @@ local function updateFreecam(dt)
     camera.CFrame = cameraRelay.CFrame
 end
 
--- 2. INTÉGRATION PANEL (À mettre dans ta fonction buildUI)
-createPlayerToggle("🎥 Bypass Freecam", function(enabled)
+
+createPlayerToggle("Freecam", function(enabled)
     freecamActive = enabled
     local char = LocalPlayer.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -512,41 +504,34 @@ createPlayerToggle("🎥 Bypass Freecam", function(enabled)
 end)
 
 
--- 1. RÉFÉRENCEMENT ET NETTOYAGE
--- 1. RÉFÉRENCEMENT SÉCURISÉ
--- 🚀 BLOC FINAL : TP BASE STAFF (EFFET "SAUT" VISUEL + THÈME VIOLET)
+
+-- tp Bass.
 tpbassPage:ClearAllChildren()
--- 1. CONFIGURATION DU LAYOUT (À FAIRE UNE SEULE FOIS DANS TA PAGE)
 tpbassPage:ClearAllChildren()
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 10) -- Espace entre les boutons
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Aligne au milieu
 layout.Parent = tpbassPage
 
--- 2. CRÉATION DU BOUTON
 local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9, 0, 0, 35) -- Largeur 90%, Hauteur 35
+btn.Size = UDim2.new(0.9, 0, 0, 35) 
 btn.Text = "TP Base Staff"
 btn.BackgroundColor3 = Color3.fromRGB(26, 29, 38)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
-btn.Parent = tpbassPage -- Parenté après la configuration
+btn.Parent = tpbassPage 
 
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
--- 3. AJOUT D'UN PADDING POUR NE PAS QU'IL SOIT COLLÉ TOUT EN HAUT
 local padding = Instance.new("UIPadding")
 padding.PaddingTop = UDim.new(0, 10)
 padding.Parent = tpbassPage
-
--- ... (reste de ton code MouseButton1Click)
 
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
     local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- 1. CREATION DE L'INTERFACE
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
 
@@ -554,8 +539,7 @@ btn.MouseButton1Click:Connect(function()
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     frame.BackgroundTransparency = 0 -- Écran bien noir
-    
-    -- SÉCURITÉ COULEUR : Si le thème n'est pas chargé  (orange)
+
     local themeColor = _G.ThemeColor
     if typeof(themeColor) ~= "Color3" then
         themeColor = Color3.fromRGB(139, 0, 139) 
@@ -569,7 +553,7 @@ btn.MouseButton1Click:Connect(function()
     title.Size = UDim2.new(1, 0, 0.2, 0)
     title.Position = UDim2.new(0, 0, 0.4, 0)
     title.BackgroundTransparency = 1
-    
+
     local dots = Instance.new("TextLabel", frame)
     dots.Text = ". . ."
     dots.TextColor3 = themeColor
@@ -579,51 +563,41 @@ btn.MouseButton1Click:Connect(function()
     dots.Position = UDim2.new(0, 0, 0.55, 0)
     dots.BackgroundTransparency = 1
 
-    -- 2. ANIMATION DES POINTS
-    task.spawn(function()
-        while screenGui.Parent do
-            dots.Text = ". . ." ; task.wait(0.3)
-            dots.Text = ". . . ." ; task.wait(0.3)
-            dots.Text = ". . . . ." ; task.wait(0.3)
+task.spawn(function()
+while screenGui.Parent do
+dots.Text = ". . ." ; task.wait(0.3)
+dots.Text = ". . . " ; task.wait(0.3)
+dots.Text = ". . . " ; task.wait(0.3)
         end
     end)
 
-    -- 3. TÉLÉPORTATION ET NETTOYAGE
-    task.spawn(function()
-        local targetObj = nil
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-                targetObj = obj
-                break
-            end
-        end
+task.spawn(function()
+local targetObj = nil
+for _, obj in pairs(workspace:GetDescendants()) do
+if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+targetObj = obj
+break
+     end
+  end
 
-        if targetObj and hrp then
-            local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
-            local humanoid = plr.Character:FindFirstChild("Humanoid")
-            
-            -- On désactive les dégâts de chute
-            if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
+if targetObj and hrp then
+local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
+local humanoid = plr.Character:FindFirstChild("Humanoid")
+if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
 
-            -- TP
-            hrp.Anchored = true
-            hrp.CFrame = CFrame.new(targetPos)
-            task.wait(1) -- Laisse l'écran noir 1 seconde pour l'effet de chargement
-            
-            -- Chute contrôlée
-            hrp.Anchored = false
-            hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
-            
-            -- On réactive la physique normale après impact
-            task.wait(0.5)
-            if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
-        else
-            -- Si la plateforme n'est pas trouvée, on attend quand même 1 seconde pour fermer l'interface
-            task.wait(1)
-        end
-        
-        -- FIN : On détruit l'écran noir pour revoir le jeu
-        screenGui:Destroy()
+hrp.Anchored = true
+hrp.CFrame = CFrame.new(targetPos)
+task.wait(1) 
+
+hrp.Anchored = false
+hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
+task.wait(0.5)
+if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
+else
+
+task.wait(1)
+end
+screenGui:Destroy()
     end)
 end)
 
@@ -653,7 +627,7 @@ trolCorner.Parent = TrolBtn
 
 
 	--------------------------------------------------
-	-- 👁️ DOUBLE SYSTEME ESP (PLAYER ESP VS STAFF ESP)
+	Esp
 	--------------------------------------------------
 	local visualsPage_Layout = Instance.new("UIListLayout")
 	visualsPage_Layout.Padding = UDim.new(0, 10)
