@@ -585,32 +585,39 @@ task.spawn(function()
         end
     end
 
-    if targetObj and hrp then
+    if targetObj then
         local targetPos = targetObj.Position + Vector3.new(0, 5, 0)
 
-        -- On bloque temporairement le joueur
+        -- Empêche les dégâts de chute pendant le TP
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+
         humanoid.PlatformStand = true
 
-        -- On enlève toute vitesse de chute
         hrp.AssemblyLinearVelocity = Vector3.zero
         hrp.AssemblyAngularVelocity = Vector3.zero
 
-        -- Téléportation
         hrp.Anchored = true
         hrp.CFrame = CFrame.new(targetPos)
 
         task.wait(0.5)
 
-        -- On remet proprement la physique
         hrp.AssemblyLinearVelocity = Vector3.zero
         hrp.AssemblyAngularVelocity = Vector3.zero
+
         hrp.Anchored = false
 
         humanoid.PlatformStand = false
-        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+
+        task.wait(0.5)
+
+        -- Réactive la physique normale
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
 
     else
-        warn("Impossible de trouver la cible.")
+        warn("Impossible de trouver la base")
         task.wait(1)
     end
 
