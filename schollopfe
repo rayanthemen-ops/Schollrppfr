@@ -575,6 +575,7 @@ task.spawn(function()
     print("Début du TP...")
     local success, err = pcall(function()
         local targetObj = nil
+
         for _, obj in pairs(workspace:GetDescendants()) do
             -- On cherche en bas (Y < -50)
             if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
@@ -585,25 +586,27 @@ task.spawn(function()
 
         if targetObj and hrp then
             print("Cible trouvée : " .. targetObj.Name)
+
             local targetPos = targetObj.Position + Vector3.new(0, 5, 0)
             local humanoid = plr.Character:FindFirstChild("Humanoid")
-            
+
             -- Activation du mode physique pour éviter les dégâts
-            if humanoid then 
+            if humanoid then
                 humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-                humanoid.PlatformStand = true 
+                humanoid.PlatformStand = true
             end
 
             hrp.Anchored = true
             hrp.CFrame = CFrame.new(targetPos)
-            task.wait(0.8) -- On attend un peu plus pour laisser le moteur charger
-            
+            task.wait(0.8)
+
             hrp.Anchored = false
-            
-            if humanoid then 
+
+            if humanoid then
                 humanoid.PlatformStand = false
                 humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
+
             print("TP réussi.")
         else
             warn("Impossible de trouver la cible.")
@@ -613,9 +616,10 @@ task.spawn(function()
     if not success then
         warn("Erreur dans le script : " .. tostring(err))
     end
-    
-    if screenGui then screenGui:Destroy() end
-end)
+
+    if screenGui then
+        screenGui:Destroy()
+    end
 end)
 
 
