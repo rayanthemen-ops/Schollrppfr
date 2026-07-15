@@ -620,7 +620,7 @@ task.spawn(function()
     local gui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("tonGui")
     if gui then gui:Destroy() end
 end)
-
+end)
 
 
 
