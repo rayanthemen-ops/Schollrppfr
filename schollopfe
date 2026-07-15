@@ -565,41 +565,62 @@ btn.MouseButton1Click:Connect(function()
 
 task.spawn(function()
 while screenGui.Parent do
-dots.Text = ". . ." ; task.wait(0.3)
-dots.Text = ". . . " ; task.wait(0.3)
+dots.Text = ". " ; task.wait(0.3)
+dots.Text = ". .  " ; task.wait(0.3)
 dots.Text = ". . . " ; task.wait(0.3)
         end
     end)
 
 task.spawn(function()
-local targetObj = nil
-for _, obj in pairs(workspace:GetDescendants()) do
-if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-targetObj = obj
-break
-     end
-  end
+    -- On utilise une fonction protégée pour éviter que le script ne bloque tout le thread
+    local success, err = pcall(function()
+        local character = game.Players.LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        
+        if not hrp or not humanoid then error("Personnage non trouvé") end
 
-if targetObj and hrp then
-local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
-local humanoid = plr.Character:FindFirstChild("Humanoid")
-if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
+        -- 1. Scan optimisé : on s'arrête dès qu'on trouve, pas besoin de tout scanner
+        local targetObj = nil
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            -- Ton critère de recherche corrigé
+            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+                targetObj = obj
+                break
+            end
+        end
 
-hrp.Anchored = true
-hrp.CFrame = CFrame.new(targetPos)
-task.wait(1) 
+        if not targetObj then error("Cible introuvable") end
 
-hrp.Anchored = false
-hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
-task.wait(0.5)
-if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
-else
+        -- 2. Zone critique sécurisée
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        hrp.Anchored = true
+        
+        -- Déplacement
+        hrp.CFrame = CFrame.new(targetObj.Position + Vector3.new(0, 3.5, 0))
+        task.wait(1) 
 
-task.wait(1)
-end
-screenGui:Destroy()
+        -- 3. Libération garantie
+        hrp.Anchored = false
+        hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
+        task.wait(0.5)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
     end)
+
+    -- SI ÇA PLANTE : Le "Rollback interne" automatique
+    if not success then
+        warn("Erreur détectée, remise en sécurité : " .. tostring(err))
+        -- On s'assure que le joueur n'est pas coincé en l'air ou ancré
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+        end
+    end
+
+    -- Nettoyage final
+    local gui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("tonGui")
+    if gui then gui:Destroy() end
 end)
+
 
 
 
