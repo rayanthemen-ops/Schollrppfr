@@ -572,33 +572,46 @@ dots.Text = ". . . " ; task.wait(0.3)
     end)
 
 task.spawn(function()
-local targetObj = nil
-for _, obj in pairs(workspace:GetDescendants()) do
-if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-targetObj = obj
-break
-     end
-  end
+    local targetObj = nil
 
-if targetObj and hrp then
-local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
-local humanoid = plr.Character:FindFirstChild("Humanoid")
-if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+            targetObj = obj
+            break
+        end
+    end
 
-hrp.Anchored = true
-hrp.CFrame = CFrame.new(targetPos)
-task.wait(1) 
+    if targetObj and hrp then
+        local humanoid = plr.Character:FindFirstChild("Humanoid")
+        local targetPos = targetObj.Position + Vector3.new(0, 5, 0)
 
-hrp.Anchored = false
-hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
-task.wait(0.5)
-if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
-else
+        if humanoid then
+            humanoid.PlatformStand = true
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        end
 
-task.wait(1)
-end
-screenGui:Destroy()
-    end)
+        hrp.Anchored = true
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        hrp.AssemblyAngularVelocity = Vector3.zero
+        hrp.CFrame = CFrame.new(targetPos)
+
+        task.wait(1)
+
+        hrp.Anchored = false
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        hrp.AssemblyAngularVelocity = Vector3.zero
+
+        if humanoid then
+            humanoid.PlatformStand = false
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+    else
+        task.wait(1)
+    end
+
+    if screenGui then
+        screenGui:Destroy()
+    end
 end)
 
 
@@ -626,9 +639,10 @@ local trolCorner = Instance.new("UICorner")
 trolCorner.Parent = TrolBtn
 
 
-	--------------------------------------------------
-	Esp
-	--------------------------------------------------
+--------------------------------------------------
+-- ESP
+--------------------------------------------------
+
 	local visualsPage_Layout = Instance.new("UIListLayout")
 	visualsPage_Layout.Padding = UDim.new(0, 10)
 	visualsPage_Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
