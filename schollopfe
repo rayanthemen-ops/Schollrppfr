@@ -623,7 +623,7 @@ task.spawn(function()
     local gui = player.PlayerGui:FindFirstChild("LoadingGui") -- Assure-toi que le nom correspond
     if gui then gui:Destroy() end
 end)
-
+end)
 
 
 
