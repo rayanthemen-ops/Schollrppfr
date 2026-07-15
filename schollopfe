@@ -572,18 +572,19 @@ dots.Text = ". . . " ; task.wait(0.3)
     end)
 
 task.spawn(function()
-    -- On utilise une fonction protégée pour éviter que le script ne bloque tout le thread
+    local player = game.Players.LocalPlayer
     local success, err = pcall(function()
-        local character = game.Players.LocalPlayer.Character
-        local hrp = character and character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character and character:FindFirstChild("Humanoid")
+        -- On attend le caractère si nécessaire
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart", 2)
+        local humanoid = character:WaitForChild("Humanoid", 2)
         
         if not hrp or not humanoid then error("Personnage non trouvé") end
 
-        -- 1. Scan optimisé : on s'arrête dès qu'on trouve, pas besoin de tout scanner
+        -- 1. Scan optimisé : on cherche dans un dossier spécifique si possible (ex: workspace.Bases)
+        -- Si tu n'as pas de dossier, on garde ta boucle mais en utilisant ipairs (plus rapide)
         local targetObj = nil
         for _, obj in ipairs(workspace:GetDescendants()) do
-            -- Ton critère de recherche corrigé
             if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
                 targetObj = obj
                 break
@@ -592,35 +593,37 @@ task.spawn(function()
 
         if not targetObj then error("Cible introuvable") end
 
-        -- 2. Zone critique sécurisée
+        -- 2. Désactivation des états de dégâts
         humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
         hrp.Anchored = true
         
-        -- Déplacement
-        hrp.CFrame = CFrame.new(targetObj.Position + Vector3.new(0, 3.5, 0))
+        -- TP au Pivot de l'objet (plus précis)
+        hrp.CFrame = targetObj:GetPivot() * CFrame.new(0, 3.5, 0)
+        
         task.wait(1) 
 
-        -- 3. Libération garantie
+        -- 3. Libération sécurisée
         hrp.Anchored = false
         hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
         task.wait(0.5)
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+        
+        -- Vérification que le perso est toujours vivant avant de réactiver
+        if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
     end)
 
-    -- SI ÇA PLANTE : Le "Rollback interne" automatique
     if not success then
-        warn("Erreur détectée, remise en sécurité : " .. tostring(err))
-        -- On s'assure que le joueur n'est pas coincé en l'air ou ancré
-        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
+        warn("Erreur TP : " .. tostring(err))
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.Anchored = false
         end
     end
 
-    -- Nettoyage final
-    local gui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("tonGui")
+    -- Nettoyage propre
+    local gui = player.PlayerGui:FindFirstChild("LoadingGui") -- Assure-toi que le nom correspond
     if gui then gui:Destroy() end
 end)
-end)
+
 
 
 
