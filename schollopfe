@@ -571,45 +571,34 @@ dots.Text = ". . . " ; task.wait(0.3)
         end
     end)
 
-task.spawn(function()
-    local targetObj = nil
-    -- Scan pour la plateforme en bas de map
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-            targetObj = obj
-            break
-        end
-    end
+local targetObj = nil
+for _, obj in pairs(workspace:GetDescendants()) do
+if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+targetObj = obj
+break
+     end
+  end
 
-    if targetObj then
-        local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
-        
-        -- Préparation : on désactive la physique de chute pour éviter les conflits
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        
-        -- Déplacement en Tween rapide pour simuler un mouvement naturel et éviter le rollback
-        hrp.Anchored = true
-        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Linear)
-        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
-        
-        tween:Play()
-        tween.Completed:Wait()
-        
-        hrp.Anchored = false
-        -- Petite impulsion verticale pour stabiliser sur la plateforme
-        hrp.AssemblyLinearVelocity = Vector3.new(0, -5, 0)
-        
-        task.wait(0.5)
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-    end
-    
-    -- Nettoyage de l'interface
-    if screenGui then
-        screenGui:Destroy()
-    end
- end)
+if targetObj and hrp then
+local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
+local humanoid = plr.Character:FindFirstChild("Humanoid")
+if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
+
+hrp.Anchored = true
+hrp.CFrame = CFrame.new(targetPos)
+task.wait(1) 
+
+hrp.Anchored = false
+hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
+task.wait(0.5)
+if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
+else
+
+task.wait(1)
+end
+screenGui:Destroy()
+    end)
+end)
 
 
 
