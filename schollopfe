@@ -547,7 +547,7 @@ btn.MouseButton1Click:Connect(function()
 
     local title = Instance.new("TextLabel", frame)
     title.Text = "SF HUB\nTP BASE STAFF"
-    title.TextColor3 = themeColor
+    title.TextColor3 = Theme.bg
     title.Font = Enum.Font.GothamBold
     title.TextSize = 50
     title.Size = UDim2.new(1, 0, 0.2, 0)
@@ -556,7 +556,7 @@ btn.MouseButton1Click:Connect(function()
 
     local dots = Instance.new("TextLabel", frame)
     dots.Text = ". . ."
-    dots.TextColor3 = themeColor
+    dots.TextColor3 = Theme.bg
     dots.Font = Enum.Font.GothamBold
     dots.TextSize = 40
     dots.Size = UDim2.new(1, 0, 0.1, 0)
