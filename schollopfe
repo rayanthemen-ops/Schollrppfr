@@ -572,6 +572,8 @@ dots.Text = ". . . " ; task.wait(0.3)
     end)
 
 task.spawn(function()
+    local plr = game:GetService("Players").LocalPlayer
+
     local character = plr.Character or plr.CharacterAdded:Wait()
     local hrp = character:WaitForChild("HumanoidRootPart")
     local humanoid = character:WaitForChild("Humanoid")
