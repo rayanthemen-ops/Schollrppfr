@@ -611,7 +611,7 @@ task.spawn(function()
 
     if screenGui then
         screenGui:Destroy()
-    end
+    end)
 end)
 
 
