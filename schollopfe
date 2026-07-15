@@ -572,14 +572,8 @@ dots.Text = ". . . " ; task.wait(0.3)
     end)
 
 task.spawn(function()
-    local plr = game:GetService("Players").LocalPlayer
-
-    local character = plr.Character or plr.CharacterAdded:Wait()
-    local hrp = character:WaitForChild("HumanoidRootPart")
-    local humanoid = character:WaitForChild("Humanoid")
-
     local targetObj = nil
-
+    -- Scan pour la plateforme en bas de map
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
             targetObj = obj
@@ -588,46 +582,34 @@ task.spawn(function()
     end
 
     if targetObj then
-        local targetPos = targetObj.Position + Vector3.new(0, 5, 0)
-
-        -- Empêche les dégâts de chute pendant le TP
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+        local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
+        
+        -- Préparation : on désactive la physique de chute pour éviter les conflits
         humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-
-        humanoid.PlatformStand = true
-
-        hrp.AssemblyLinearVelocity = Vector3.zero
-        hrp.AssemblyAngularVelocity = Vector3.zero
-
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        
+        -- Déplacement en Tween rapide pour simuler un mouvement naturel et éviter le rollback
         hrp.Anchored = true
-        hrp.CFrame = CFrame.new(targetPos)
-
-        task.wait(0.5)
-
-        hrp.AssemblyLinearVelocity = Vector3.zero
-        hrp.AssemblyAngularVelocity = Vector3.zero
-
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
+        
+        tween:Play()
+        tween.Completed:Wait()
+        
         hrp.Anchored = false
-
-        humanoid.PlatformStand = false
-        humanoid:ChangeState(Enum.HumanoidStateType.Landed)
-
+        -- Petite impulsion verticale pour stabiliser sur la plateforme
+        hrp.AssemblyLinearVelocity = Vector3.new(0, -5, 0)
+        
         task.wait(0.5)
-
-        -- Réactive la physique normale
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
         humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
-
-    else
-        warn("Impossible de trouver la base")
-        task.wait(1)
     end
-
+    
+    -- Nettoyage de l'interface
     if screenGui then
         screenGui:Destroy()
-    end)
-end)
-
+    end
+ end)
 
 
 
