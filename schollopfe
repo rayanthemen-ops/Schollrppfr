@@ -572,37 +572,49 @@ dots.Text = ". . . " ; task.wait(0.3)
     end)
 
 task.spawn(function()
-    local targetObj = nil
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-            targetObj = obj
-            break
-        end
-    end
-
-    if targetObj and hrp then
-        local targetPos = targetObj.Position + Vector3.new(0, 5, 0) -- Hauteur augmentée
-        local humanoid = plr.Character:FindFirstChild("Humanoid")
-        
-        if humanoid then 
-            humanoid:ChangeState(Enum.HumanoidStateType.Physics) -- Désactive les comportements normaux
-            humanoid.PlatformStand = true -- Empêche les chutes ou mouvements parasites
+    print("Début du TP...")
+    local success, err = pcall(function()
+        local targetObj = nil
+        for _, obj in pairs(workspace:GetDescendants()) do
+            -- On cherche en bas (Y < -50)
+            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+                targetObj = obj
+                break
+            end
         end
 
-        hrp.Anchored = true
-        hrp.CFrame = CFrame.new(targetPos)
-        task.wait(0.5) -- Temps de chargement du sol/map
-        
-        hrp.Anchored = false
-        
-        if humanoid then 
-            humanoid.PlatformStand = false
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        if targetObj and hrp then
+            print("Cible trouvée : " .. targetObj.Name)
+            local targetPos = targetObj.Position + Vector3.new(0, 5, 0)
+            local humanoid = plr.Character:FindFirstChild("Humanoid")
+            
+            -- Activation du mode physique pour éviter les dégâts
+            if humanoid then 
+                humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+                humanoid.PlatformStand = true 
+            end
+
+            hrp.Anchored = true
+            hrp.CFrame = CFrame.new(targetPos)
+            task.wait(0.8) -- On attend un peu plus pour laisser le moteur charger
+            
+            hrp.Anchored = false
+            
+            if humanoid then 
+                humanoid.PlatformStand = false
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+            print("TP réussi.")
+        else
+            warn("Impossible de trouver la cible.")
         end
-    else
-        task.wait(1)
+    end)
+
+    if not success then
+        warn("Erreur dans le script : " .. tostring(err))
     end
-    screenGui:Destroy()
+    
+    if screenGui then screenGui:Destroy() end
 end)
 end)
 
