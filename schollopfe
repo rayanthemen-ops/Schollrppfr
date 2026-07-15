@@ -500,7 +500,7 @@ createPlayerToggle("Freecam", function(enabled)
             end
         end
         if hum then hum.PlatformStand = false end
-    end)
+    end
 end)
 
 
@@ -611,7 +611,7 @@ task.spawn(function()
 
     if screenGui then
         screenGui:Destroy()
-    end
+    end)
 end)
 
 
