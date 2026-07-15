@@ -572,33 +572,51 @@ dots.Text = ". . . " ; task.wait(0.3)
     end)
 
 task.spawn(function()
-local targetObj = nil
-for _, obj in pairs(workspace:GetDescendants()) do
-if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-targetObj = obj
-break
-     end
-  end
+    local character = plr.Character or plr.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
 
-if targetObj and hrp then
-local targetPos = targetObj.Position + Vector3.new(0, 3.5, 0)
-local humanoid = plr.Character:FindFirstChild("Humanoid")
-if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) end
+    local targetObj = nil
 
-hrp.Anchored = true
-hrp.CFrame = CFrame.new(targetPos)
-task.wait(1) 
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+            targetObj = obj
+            break
+        end
+    end
 
-hrp.Anchored = false
-hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
-task.wait(0.5)
-if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
-else
+    if targetObj and hrp then
+        local targetPos = targetObj.Position + Vector3.new(0, 5, 0)
 
-task.wait(1)
-end
-screenGui:Destroy()
-    end)
+        -- On bloque temporairement le joueur
+        humanoid.PlatformStand = true
+
+        -- On enlève toute vitesse de chute
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        hrp.AssemblyAngularVelocity = Vector3.zero
+
+        -- Téléportation
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(targetPos)
+
+        task.wait(0.5)
+
+        -- On remet proprement la physique
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        hrp.AssemblyAngularVelocity = Vector3.zero
+        hrp.Anchored = false
+
+        humanoid.PlatformStand = false
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+    else
+        warn("Impossible de trouver la cible.")
+        task.wait(1)
+    end
+
+    if screenGui then
+        screenGui:Destroy()
+    end
 end)
 
 
