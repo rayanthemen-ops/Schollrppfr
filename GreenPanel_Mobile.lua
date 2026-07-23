@@ -1,8 +1,4 @@
--- ==========================================================
--- SF_HUB / PRIME V2 - Version Complète Corrigée & Unifiée
--- ==========================================================
-
-local CoreGui = game:GetService("CoreGui")
+-- Services requis
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -10,29 +6,14 @@ local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
 local Camera = Workspace.CurrentCamera
 
--- Sécurité anti-plantage au chargement
-if not game:IsLoaded() then
-	game.Loaded:Wait()
-end
-
 local localPlayer = Players.LocalPlayer
-if not localPlayer then
-	Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
-	localPlayer = Players.LocalPlayer
-end
 
--- Cible d'affichage sécurisée (CoreGui prioritaire pour éviter les suppressions)
-local protectGui = protectgui or (syn and syn.protect_gui)
-local parentTarget = CoreGui
-if not pcall(function() local test = Instance.new("ScreenGui"); test.Parent = CoreGui; test:Destroy() end) then
-	parentTarget = localPlayer:WaitForChild("PlayerGui", 10)
-end
+-- Attente sécurisée du PlayerGui pour éviter les échecs au lancement
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 
-if not parentTarget then return end
-
--- Nettoyage des anciennes instances pour éviter les doublons
-if parentTarget:FindFirstChild("UltraModernPanel") then
-	parentTarget.UltraModernPanel:Destroy()
+-- Nettoyage si le script relance
+if playerGui:FindFirstChild("UltraModernPanel") then
+	playerGui.UltraModernPanel:Destroy()
 end
 
 if Workspace:FindFirstChild("ESPFolder") then
@@ -43,12 +24,7 @@ end
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UltraModernPanel"
 screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-if protectGui then
-	protectGui(screenGui)
-end
-screenGui.Parent = parentTarget
+screenGui.Parent = playerGui
 
 -- Folder ESP
 local espFolder = Instance.new("Folder")
@@ -235,7 +211,7 @@ sidePadding.Parent = sidebar
 local brand = Instance.new("TextLabel")
 brand.Size = UDim2.new(1, 0, 0, 40)
 brand.BackgroundTransparency = 1
-brand.Text = "⚡ SF_HUB V2"
+brand.Text = "⚡ PRIME V2"
 brand.TextColor3 = Color3.fromRGB(255, 255, 255)
 brand.TextSize = 18
 brand.Font = Enum.Font.GothamBold
@@ -413,7 +389,7 @@ RunService.RenderStepped:Connect(function()
 	statsLabel.Text = string.format("FPS : %d | Ping : %d ms", fpsCounter, pingVal)
 end)
 
--- Widget Chance d'être Meurtrier (MM2)
+-- Widget Chance d'être Meurtrier (MM2) avec Bouton Activer / Refuser
 local chanceCard = Instance.new("Frame")
 chanceCard.Size = UDim2.new(1, 0, 0, 110)
 chanceCard.BackgroundColor3 = Color3.fromRGB(20, 24, 36)
@@ -706,7 +682,7 @@ local mobileGui = Instance.new("ScreenGui")
 mobileGui.Name = "FreecamMobileOverlay"
 mobileGui.ResetOnSpawn = false
 mobileGui.Enabled = false
-mobileGui.Parent = screenGui
+mobileGui.Parent = playerGui
 
 local upMobileBtn = Instance.new("TextButton")
 upMobileBtn.Size = UDim2.new(0, 60, 0, 60)
@@ -785,8 +761,9 @@ freecamBtn.MouseButton1Click:Connect(function()
 	toggleFreecam(not freecamEnabled)
 end)
 
--- --- SYSTÈME AUTO-FARM INTELLIGENT ---
+-- --- SYSTÈME AUTO-FARM INTELLIGENT (MAX LIMIT & RELANCE NEW GAME) ---
 local autoFarmEnabled = false
+local isAutoFarmActive = false
 
 local autofarmBtn = Instance.new("TextButton")
 autofarmBtn.Size = UDim2.new(1, 0, 0, 50)
@@ -825,19 +802,19 @@ local function findNearestCoin()
 	return nearest
 end
 
+-- Fonction pour détecter si le joueur a atteint sa limite max de pièces (ex: 10/10 ou texte de limite)
 local function hasReachedMaxCoins()
 	local reached = false
 	pcall(function()
-		local playerGuiRef = localPlayer:FindFirstChild("PlayerGui")
-		if playerGuiRef then
-			for _, descendant in ipairs(playerGuiRef:GetDescendants()) do
-				if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
-					local text = descendant.Text:lower()
-					if text:find("/10") or text:find("/15") or text:find("max") or text:find("plein") then
-						for current, max in text:gmatch("(%d+)/(%d+)") do
-							if tonumber(current) and tonumber(max) and tonumber(current) >= tonumber(max) then
-								reached = true
-							end
+		for _, descendant in ipairs(playerGui:GetDescendants()) do
+			if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
+				local text = descendant.Text:lower()
+				-- Recherche de formats courants de type "10/10", "max", "plein"
+				if text:find("/10") or text:find("/15") or text:find("max") or text:find("plein") then
+					-- S'il y a un nombre égal ou supérieur au max détecté
+					for current, max in text:gmatch("(%d+)/(%d+)") do
+						if tonumber(current) and tonumber(max) and tonumber(current) >= tonumber(max) then
+							reached = true
 						end
 					end
 				end
@@ -859,12 +836,15 @@ autofarmBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
+-- Boucle principale d'Auto-Farm intelligent avec pause 0.2s et gestion des parties
 task.spawn(function()
 	while true do
 		if autoFarmEnabled then
+			-- Vérifie si le joueur a atteint la limite de pièces
 			if hasReachedMaxCoins() then
 				autofarmBtn.Text = "   Auto-Farm : Limite Max Atteinte (En pause)"
 				autofarmBtn.TextColor3 = Color3.fromRGB(255, 180, 50)
+				-- Attend le début d'une nouvelle partie (disparition de la limite ou reset des pièces)
 				repeat
 					task.wait(2)
 				end until not autoFarmEnabled or not hasReachedMaxCoins()
@@ -882,6 +862,7 @@ task.spawn(function()
 				local coin = findNearestCoin()
 				
 				if coin and coin.Parent then
+					-- Active le noclip automatiquement pendant le farm
 					for _, part in ipairs(char:GetDescendants()) do
 						if part:IsA("BasePart") then
 							part.CanCollide = false
@@ -890,8 +871,9 @@ task.spawn(function()
 					
 					humanoid.PlatformStand = true
 					
+					-- Déplacement fluide style Fly vers la pièce
 					local targetCF = coin.CFrame + Vector3.new(0, 0.5, 0)
-					local speed = 85
+					local speed = 85 -- Vitesse de vol fluide
 					
 					while autoFarmEnabled and coin and coin.Parent do
 						local currentPos = rootPart.Position
@@ -909,6 +891,7 @@ task.spawn(function()
 						rootPart.AssemblyAngularVelocity = Vector3.zero
 					end
 					
+					-- Arrivé sur la pièce : pause exacte et précise de 0.2 seconde demandée
 					if coin and coin.Parent then
 						rootPart.CFrame = targetCF
 					end
@@ -925,6 +908,32 @@ task.spawn(function()
 	end
 end)
 
+-- Détection automatique du début d'une nouvelle game pour relancer / nettoyer si besoin
+local lastCoinCount = 0
+task.spawn(function()
+	while true do
+		task.wait(5)
+		if autoFarmEnabled then
+			pcall(function()
+				local currentCoins = 0
+				for _, obj in ipairs(Workspace:GetDescendants()) do
+					if obj:IsA("BasePart") and (obj.Name:lower() == "coin" or obj.Name:lower():find("coin")) then
+						currentCoins = currentCoins + 1
+					end
+				end
+				-- Si de nouvelles pièces réapparaissent massivement, c'est qu'un nouveau round commence
+				if currentCoins > 3 and lastCoinCount == 0 and not hasReachedMaxCoins() then
+					-- Relance propre du statut si bloqué
+					autofarmBtn.Text = "   Auto-Farm Intelligent (Coins) : ON"
+					autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+				end
+				lastCoinCount = currentCoins
+			end)
+		end
+	end
+end)
+
+-- Fonctions utilitaires pour trouver le Murderer ou le Sheriff
 local function findPlayerByRole(targetRole)
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= localPlayer then
@@ -952,7 +961,7 @@ local function findPlayerByRole(targetRole)
 	return nil
 end
 
--- --- CIBLES TORNADO ---
+-- --- FONCTIONS DE CIBLE TORNADO ---
 local targetMurderTornado = false
 local targetSheriffTornado = false
 
@@ -1066,11 +1075,12 @@ local function createMapTpButton(mapName, targetPosOffset, order)
 		playKeyboardSound()
 		local char = localPlayer.Character
 		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		
 		local rootPart = char.HumanoidRootPart
 		
 		local foundPart = nil
 		for _, obj in ipairs(Workspace:GetDescendants()) do
-			if obj:IsA("BasePart") and (obj.Name:lower():find("spawn") or obj.Name:lower():find("lobby") or obj.Name:lower():find("floor")) then
+			if obj:IsA("BasePart") and (obj.Name:lower():find("spawn") or obj.Name:lower():find("lobby") or obj.Name:lower():find("floor") or obj.Name:lower():find("part")) then
 				if obj.Position.Y > -10 and obj.Position.Y < 500 then
 					foundPart = obj
 					break
@@ -1089,7 +1099,106 @@ end
 createMapTpButton("Centre de la Map Active", Vector3.new(0, 5, 0), 5)
 createMapTpButton("Plateforme en Hauteur (Roof)", Vector3.new(0, 45, 0), 6)
 
--- Thèmes & Fonds d'écran
+local tpSpawnBtn = Instance.new("TextButton")
+tpSpawnBtn.Size = UDim2.new(1, 0, 0, 50)
+tpSpawnBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
+tpSpawnBtn.Text = "   TP sur le Spawn de la Map"
+tpSpawnBtn.TextColor3 = Color3.fromRGB(255, 220, 100)
+tpSpawnBtn.TextSize = 14
+tpSpawnBtn.Font = Enum.Font.GothamSemibold
+tpSpawnBtn.TextXAlignment = Enum.TextXAlignment.Left
+tpSpawnBtn.LayoutOrder = 7
+tpSpawnBtn.Parent = pages.AutoFarm
+
+local tpSpawnCorner = Instance.new("UICorner")
+tpSpawnCorner.CornerRadius = UDim.new(0, 14)
+tpSpawnCorner.Parent = tpSpawnBtn
+
+tpSpawnBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	local char = localPlayer.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+	
+	local targetCF = CFrame.new(0, 10, 0)
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if (obj:IsA("SpawnLocation") or obj.Name:lower():find("spawn")) and obj:IsA("BasePart") then
+			targetCF = obj.CFrame + Vector3.new(0, 4, 0)
+			break
+		end
+	end
+	char.HumanoidRootPart.CFrame = targetCF
+end)
+
+-- --- SILENT AIM / AUTO-SHOOT MURDERER ---
+local silentAimEnabled = false
+
+local silentAimBtn = Instance.new("TextButton")
+silentAimBtn.Size = UDim2.new(1, 0, 0, 50)
+silentAimBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
+silentAimBtn.Text = "   Silent Aim (Tir Auto Murder) : OFF"
+silentAimBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+silentAimBtn.TextSize = 14
+silentAimBtn.Font = Enum.Font.GothamSemibold
+silentAimBtn.TextXAlignment = Enum.TextXAlignment.Left
+silentAimBtn.LayoutOrder = 8
+silentAimBtn.Parent = pages.AutoFarm
+
+local silentAimCorner = Instance.new("UICorner")
+silentAimCorner.CornerRadius = UDim.new(0, 14)
+silentAimCorner.Parent = silentAimBtn
+
+silentAimBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	silentAimEnabled = not silentAimEnabled
+	if silentAimEnabled then
+		silentAimBtn.Text = "   Silent Aim (Tir Auto Murder) : ON"
+		silentAimBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+	else
+		silentAimBtn.Text = "   Silent Aim (Tir Auto Murder) : OFF"
+		silentAimBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if not silentAimEnabled then return end
+	
+	local char = localPlayer.Character
+	local backpack = localPlayer:FindFirstChild("Backpack")
+	local gunTool = nil
+	
+	if char then
+		for _, item in ipairs(char:GetChildren()) do
+			if item:IsA("Tool") and (item.Name:lower() == "gun" or item.Name:lower() == "revolver" or item.Name:lower():find("pistolet")) then
+				gunTool = item
+				break
+			end
+		end
+	end
+	
+	if not gunTool and backpack then
+		for _, item in ipairs(backpack:GetChildren()) do
+			if item:IsA("Tool") and (item.Name:lower() == "gun" or item.Name:lower() == "revolver" or item.Name:lower():find("pistolet")) then
+				gunTool = item
+				break
+			end
+		end
+	end
+	
+	if not gunTool then return end
+	
+	local murderer = findPlayerByRole("Murderer")
+	if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
+		local mRoot = murderer.Character.HumanoidRootPart
+		
+		pcall(function()
+			if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or UserInputService.TouchEnabled then
+				Camera.CFrame = CFrame.new(Camera.CFrame.Position, mRoot.Position)
+			end
+		end)
+	end
+end)
+
+-- Thèmes
 local function createThemeOption(themeName, bgColor, order)
 	local card = Instance.new("TextButton")
 	card.Size = UDim2.new(1, 0, 0, 54)
@@ -1118,6 +1227,7 @@ createThemeOption("Néon Améthyste", Color3.fromRGB(22, 12, 30), 3)
 createThemeOption("Emerald Sombre", Color3.fromRGB(10, 22, 16), 4)
 createThemeOption("Obsidian Noir Pur", Color3.fromRGB(10, 10, 12), 5)
 
+-- Styles de Fond
 local function createBgStyleOption(styleName, modeKey, order)
 	local card = Instance.new("TextButton")
 	card.Size = UDim2.new(1, 0, 0, 54)
@@ -1147,6 +1257,32 @@ createBgStyleOption("Cristaux / Étoiles", "Stars", 4)
 -- Fermeture / Réouverture
 closeBtn.MouseButton1Click:Connect(function()
 	playKeyboardSound()
+	
+	for i = 1, 40 do
+		local bubble = Instance.new("Frame")
+		local size = math.random(15, 50)
+		bubble.Size = UDim2.new(0, size, 0, size)
+		bubble.Position = mainFrame.Position + UDim2.new(math.random(), -340, math.random(), -220)
+		bubble.BackgroundColor3 = Color3.fromRGB(math.random(100, 180), math.random(180, 255), 255)
+		bubble.BackgroundTransparency = 0.15
+		bubble.BorderSizePixel = 0
+		bubble.ZIndex = 25
+		bubble.Parent = screenGui
+		
+		local bCorner = Instance.new("UICorner")
+		bCorner.CornerRadius = UDim.new(1, 0)
+		bCorner.Parent = bubble
+		
+		local tw = TweenService:Create(bubble, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
+			Position = UDim2.new(0.5, 0, 0, 38),
+			Size = UDim2.new(0, 2, 0, 2),
+			BackgroundTransparency = 1,
+			Rotation = 540
+		})
+		tw:Play()
+		tw.Completed:Connect(function() bubble:Destroy() end)
+	end
+	
 	TweenService:Create(mainCorner, TweenInfo.new(0.3), { CornerRadius = UDim.new(1, 0) }):Play()
 	
 	local shrinkTween = TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
@@ -1157,6 +1293,7 @@ closeBtn.MouseButton1Click:Connect(function()
 	
 	shrinkTween.Completed:Connect(function()
 		mainFrame.Visible = false
+		
 		miniButton.Size = UDim2.new(0, 0, 0, 0)
 		miniButton.Visible = true
 		TweenService:Create(miniButton, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -1167,6 +1304,7 @@ end)
 
 miniButton.MouseButton1Click:Connect(function()
 	playKeyboardSound()
+	
 	local miniTween = TweenService:Create(miniButton, TweenInfo.new(0.15), {
 		Size = UDim2.new(0, 0, 0, 0)
 	})
@@ -1174,6 +1312,35 @@ miniButton.MouseButton1Click:Connect(function()
 	
 	miniTween.Completed:Connect(function()
 		miniButton.Visible = false
+		
+		for i = 1, 40 do
+			local bubble = Instance.new("Frame")
+			local size = math.random(15, 50)
+			bubble.Size = UDim2.new(0, 2, 0, 2)
+			bubble.Position = UDim2.new(0.5, 0, 0, 38)
+			bubble.BackgroundColor3 = Color3.fromRGB(math.random(100, 180), math.random(180, 255), 255)
+			bubble.BackgroundTransparency = 0.15
+			bubble.BorderSizePixel  = 0
+			bubble.ZIndex = 25
+			bubble.Parent = screenGui
+			
+			local bCorner = Instance.new("UICorner")
+			bCorner.CornerRadius = UDim.new(1, 0)
+			bCorner.Parent = bubble
+			
+			local targetPosX = 0.5 + (math.random() - 0.5) * 0.7
+			local targetPosY = 0.5 + (math.random() - 0.5) * 0.7
+			
+			local tw = TweenService:Create(bubble, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+				Position = UDim2.new(targetPosX, 0, targetPosY, 0),
+				Size = UDim2.new(0, size, 0, size),
+				BackgroundTransparency = 1,
+				Rotation = -540
+			})
+			tw:Play()
+			tw.Completed:Connect(function() bubble:Destroy() end)
+		end
+		
 		mainFrame.Size = UDim2.new(0, 0, 0, 0)
 		mainFrame.Position = UDim2.new(0.5, 0, 0, 38)
 		mainCorner.CornerRadius = UDim.new(1, 0)
@@ -1187,7 +1354,7 @@ miniButton.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- Animation initiale d'ouverture
+-- Animation initiale
 mainFrame.Size = UDim2.new(0, 0, 0, 0)
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainCorner.CornerRadius = UDim.new(1, 0)
