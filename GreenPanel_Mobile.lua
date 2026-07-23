@@ -7,8 +7,6 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = Workspace.CurrentCamera
 
 local localPlayer = Players.LocalPlayer
-
--- Attente sécurisée du PlayerGui pour éviter les échecs au lancement
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 
 -- Nettoyage si le script relance
@@ -17,7 +15,7 @@ if playerGui:FindFirstChild("UltraModernPanel") then
 end
 
 if Workspace:FindFirstChild("ESPFolder") then
-	Workspace.ESPFolder:Destroy()
+	Workspace:FindFirstChild("ESPFolder"):Destroy()
 end
 
 -- 1. Création de l'interface principale (ScreenGui)
@@ -31,7 +29,7 @@ local espFolder = Instance.new("Folder")
 espFolder.Name = "ESPFolder"
 espFolder.Parent = Workspace
 
--- Fonction son de clic sécurisée avec pcall
+-- Fonction son de clic sécurisée
 local function playKeyboardSound()
 	pcall(function()
 		local sound = Instance.new("Sound")
@@ -271,14 +269,14 @@ end
 
 createPageTitle("Accueil", pages.Home)
 createPageTitle("ESP & Outils", pages.ESP)
-createPageTitle("Auto-Farm & Cibles Tornado", pages.AutoFarm)
+createPageTitle("Auto-Farm & Cibles Vitesse", pages.AutoFarm)
 createPageTitle("Thèmes de Couleurs", pages.Themes)
 createPageTitle("Styles de Fond Arrière", pages.Backgrounds)
 
 local function createNavButton(name, targetPage, order)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, 0, 0, 44)
-	btn.BackgroundColor3 = Color3.fromRGB(22, 25, 38)
+	btn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
 	btn.BackgroundTransparency = 0.6
 	btn.Text = "   " .. name
 	btn.TextColor3 = Color3.fromRGB(170, 175, 195)
@@ -389,7 +387,7 @@ RunService.RenderStepped:Connect(function()
 	statsLabel.Text = string.format("FPS : %d | Ping : %d ms", fpsCounter, pingVal)
 end)
 
--- Widget Chance d'être Meurtrier (MM2) avec Bouton Activer / Refuser
+-- Widget Chance d'être Meurtrier (MM2)
 local chanceCard = Instance.new("Frame")
 chanceCard.Size = UDim2.new(1, 0, 0, 110)
 chanceCard.BackgroundColor3 = Color3.fromRGB(20, 24, 36)
@@ -619,12 +617,12 @@ Players.PlayerRemoving:Connect(function(plr)
 	removeESP(plr)
 end)
 
--- No Clip
+-- No Clip Global Manuel (Bouton ESP)
 local noClipEnabled = false
 local noclipBtn = Instance.new("TextButton")
 noclipBtn.Size = UDim2.new(1, 0, 0, 50)
 noclipBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
-noclipBtn.Text = "   No Clip : OFF"
+noclipBtn.Text = "   No Clip Manuel : OFF"
 noclipBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
 noclipBtn.TextSize = 14
 noclipBtn.Font = Enum.Font.GothamSemibold
@@ -640,10 +638,10 @@ noclipBtn.MouseButton1Click:Connect(function()
 	playKeyboardSound()
 	noClipEnabled = not noClipEnabled
 	if noClipEnabled then
-		noclipBtn.Text = "   No Clip : ON"
+		noclipBtn.Text = "   No Clip Manuel : ON"
 		noclipBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
 	else
-		noclipBtn.Text = "   No Clip : OFF"
+		noclipBtn.Text = "   No Clip Manuel : OFF"
 		noclipBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
 	end
 end)
@@ -761,14 +759,13 @@ freecamBtn.MouseButton1Click:Connect(function()
 	toggleFreecam(not freecamEnabled)
 end)
 
--- --- SYSTÈME AUTO-FARM INTELLIGENT (MAX LIMIT & RELANCE NEW GAME) ---
-local autoFarmEnabled = false
-local isAutoFarmActive = false
+-- --- SYSTÈME AUTO-FARM INTELLIGENT (AVEC NO-CLIP FORCÉ EN DÉPLACEMENT) ---
+local autoFarmEnabled = false 
 
 local autofarmBtn = Instance.new("TextButton")
 autofarmBtn.Size = UDim2.new(1, 0, 0, 50)
 autofarmBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
-autofarmBtn.Text = "   Auto-Farm Intelligent (Coins) : OFF"
+autofarmBtn.Text = "   Auto-Farm Coins Intelligent : OFF"
 autofarmBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
 autofarmBtn.TextSize = 14
 autofarmBtn.Font = Enum.Font.GothamSemibold
@@ -780,6 +777,18 @@ local autofarmCorner = Instance.new("UICorner")
 autofarmCorner.CornerRadius = UDim.new(0, 14)
 autofarmCorner.Parent = autofarmBtn
 
+autofarmBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	autoFarmEnabled = not autoFarmEnabled
+	if autoFarmEnabled then
+		autofarmBtn.Text = "   Auto-Farm : Actif (Recherche...)"
+		autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+	else
+		autofarmBtn.Text = "   Auto-Farm Coins Intelligent : OFF"
+		autofarmBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+	end
+end)
+
 local function findNearestCoin()
 	local nearest = nil
 	local shortestDist = math.huge
@@ -790,11 +799,13 @@ local function findNearestCoin()
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if obj:IsA("BasePart") then
 			local nameLower = obj.Name:lower()
-			if nameLower == "coin" or nameLower == "coins" or nameLower:find("coin") or nameLower:find("piece") or nameLower:find("pièce") or nameLower:find("money") then
-				local dist = (obj.Position - rootPos).Magnitude
-				if dist < shortestDist then
-					shortestDist = dist
-					nearest = obj
+			if nameLower == "coin" or nameLower == "coins" or nameLower:find("coin") or nameLower:find("piece") or nameLower:find("pièce") then
+				if obj.Position.Y > -5 and obj.Position.Y < 300 then
+					local dist = (obj.Position - rootPos).Magnitude
+					if dist < shortestDist then
+						shortestDist = dist
+						nearest = obj
+					end
 				end
 			end
 		end
@@ -802,138 +813,63 @@ local function findNearestCoin()
 	return nearest
 end
 
--- Fonction pour détecter si le joueur a atteint sa limite max de pièces (ex: 10/10 ou texte de limite)
-local function hasReachedMaxCoins()
-	local reached = false
-	pcall(function()
-		for _, descendant in ipairs(playerGui:GetDescendants()) do
-			if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
-				local text = descendant.Text:lower()
-				-- Recherche de formats courants de type "10/10", "max", "plein"
-				if text:find("/10") or text:find("/15") or text:find("max") or text:find("plein") then
-					-- S'il y a un nombre égal ou supérieur au max détecté
-					for current, max in text:gmatch("(%d+)/(%d+)") do
-						if tonumber(current) and tonumber(max) and tonumber(current) >= tonumber(max) then
-							reached = true
-						end
-					end
-				end
-			end
-		end
-	end)
-	return reached
-end
-
-autofarmBtn.MouseButton1Click:Connect(function()
-	playKeyboardSound()
-	autoFarmEnabled = not autoFarmEnabled
-	if autoFarmEnabled then
-		autofarmBtn.Text = "   Auto-Farm Intelligent (Coins) : ON"
-		autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
-	else
-		autofarmBtn.Text = "   Auto-Farm Intelligent (Coins) : OFF"
-		autofarmBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
-	end
-end)
-
--- Boucle principale d'Auto-Farm intelligent avec pause 0.2s et gestion des parties
 task.spawn(function()
 	while true do
 		if autoFarmEnabled then
-			-- Vérifie si le joueur a atteint la limite de pièces
-			if hasReachedMaxCoins() then
-				autofarmBtn.Text = "   Auto-Farm : Limite Max Atteinte (En pause)"
-				autofarmBtn.TextColor3 = Color3.fromRGB(255, 180, 50)
-				-- Attend le début d'une nouvelle partie (disparition de la limite ou reset des pièces)
-				repeat
-					task.wait(2)
-				end until not autoFarmEnabled or not hasReachedMaxCoins()
-				
-				if autoFarmEnabled then
-					autofarmBtn.Text = "   Auto-Farm Intelligent (Coins) : ON"
-					autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
-				end
-			end
-
 			local char = localPlayer.Character
-			if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
-				local rootPart = char.HumanoidRootPart
-				local humanoid = char:FindFirstChildOfClass("Humanoid")
+			local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+			local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+			
+			if char and humanoid and rootPart then
 				local coin = findNearestCoin()
 				
 				if coin and coin.Parent then
-					-- Active le noclip automatiquement pendant le farm
-					for _, part in ipairs(char:GetDescendants()) do
-						if part:IsA("BasePart") then
-							part.CanCollide = false
-						end
-					end
+					-- S'il y a des pièces, on fonce à travers tout (No Clip actif)
+					autofarmBtn.Text = "   Auto-Farm : En train de ramasser !"
+					autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
 					
 					humanoid.PlatformStand = true
-					
-					-- Déplacement fluide style Fly vers la pièce
-					local targetCF = coin.CFrame + Vector3.new(0, 0.5, 0)
-					local speed = 85 -- Vitesse de vol fluide
+					local moveSpeed = 70 
 					
 					while autoFarmEnabled and coin and coin.Parent do
-						local currentPos = rootPart.Position
-						local targetPos = targetCF.Position
-						local distance = (currentPos - targetPos).Magnitude
-						
-						if distance < 2 then
-							break
+						-- Force le No Clip sur toutes les parties du personnage pendant qu'il bouge vers la pièce
+						for _, part in ipairs(char:GetDescendants()) do
+							if part:IsA("BasePart") then
+								part.CanCollide = false
+							end
 						end
 						
-						local dt = task.wait()
-						local nextPos = currentPos:Lerp(targetPos, math.clamp(speed * dt / distance, 0, 1))
-						rootPart.CFrame = CFrame.new(nextPos, targetPos)
+						local targetPos = Vector3.new(coin.Position.X, rootPart.Position.Y, coin.Position.Z)
+						local distance = (rootPart.Position - targetPos).Magnitude
+						
+						if distance < 1.0 then break end
+						
+						local dt = RunService.RenderStepped:Wait()
+						local currentPos = rootPart.Position
+						local nextPos = currentPos:Lerp(targetPos, math.clamp(moveSpeed * dt / distance, 0, 1))
+						
+						rootPart.CFrame = CFrame.new(nextPos, nextPos + Camera.CFrame.LookVector)
 						rootPart.AssemblyLinearVelocity = Vector3.zero
 						rootPart.AssemblyAngularVelocity = Vector3.zero
 					end
 					
-					-- Arrivé sur la pièce : pause exacte et précise de 0.2 seconde demandée
-					if coin and coin.Parent then
-						rootPart.CFrame = targetCF
-					end
-					rootPart.AssemblyLinearVelocity = Vector3.zero
-					rootPart.AssemblyAngularVelocity = Vector3.zero
-					
-					task.wait(0.2)
-					
 					humanoid.PlatformStand = false
+				else
+					-- S'il n'y a pas de pièces (lobby / fin de round), attente propre
+					autofarmBtn.Text = "   Auto-Farm : En attente de pièces..."
+					autofarmBtn.TextColor3 = Color3.fromRGB(255, 180, 50)
+					humanoid.PlatformStand = false
+					task.wait(0.5)
 				end
+			else
+				task.wait(0.5)
 			end
-		end
-		task.wait(0.05)
-	end
-end)
-
--- Détection automatique du début d'une nouvelle game pour relancer / nettoyer si besoin
-local lastCoinCount = 0
-task.spawn(function()
-	while true do
-		task.wait(5)
-		if autoFarmEnabled then
-			pcall(function()
-				local currentCoins = 0
-				for _, obj in ipairs(Workspace:GetDescendants()) do
-					if obj:IsA("BasePart") and (obj.Name:lower() == "coin" or obj.Name:lower():find("coin")) then
-						currentCoins = currentCoins + 1
-					end
-				end
-				-- Si de nouvelles pièces réapparaissent massivement, c'est qu'un nouveau round commence
-				if currentCoins > 3 and lastCoinCount == 0 and not hasReachedMaxCoins() then
-					-- Relance propre du statut si bloqué
-					autofarmBtn.Text = "   Auto-Farm Intelligent (Coins) : ON"
-					autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
-				end
-				lastCoinCount = currentCoins
-			end)
+		else
+			task.wait(0.2)
 		end
 	end
 end)
 
--- Fonctions utilitaires pour trouver le Murderer ou le Sheriff
 local function findPlayerByRole(targetRole)
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= localPlayer then
@@ -961,95 +897,97 @@ local function findPlayerByRole(targetRole)
 	return nil
 end
 
--- --- FONCTIONS DE CIBLE TORNADO ---
-local targetMurderTornado = false
-local targetSheriffTornado = false
+-- --- FONCTIONS DE CIBLE VITESSE ---
+local targetMurderSpeedAvoid = false
+local targetSheriffSpeedAvoid = false
 
-local tornadoMurderBtn = Instance.new("TextButton")
-tornadoMurderBtn.Size = UDim2.new(1, 0, 0, 50)
-tornadoMurderBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
-tornadoMurderBtn.Text = "   Target Murderer (Tornado Envol Cible) : OFF"
-tornadoMurderBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
-tornadoMurderBtn.TextSize = 14
-tornadoMurderBtn.Font = Enum.Font.GothamSemibold
-tornadoMurderBtn.TextXAlignment = Enum.TextXAlignment.Left
-tornadoMurderBtn.LayoutOrder = 3
-tornadoMurderBtn.Parent = pages.AutoFarm
+local avoidMurderBtn = Instance.new("TextButton")
+avoidMurderBtn.Size = UDim2.new(1, 0, 0, 50)
+avoidMurderBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
+avoidMurderBtn.Text = "   Esquive Rapide Meurtrier (Traversée Map) : OFF"
+avoidMurderBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
+avoidMurderBtn.TextSize = 14
+avoidMurderBtn.Font = Enum.Font.GothamSemibold
+avoidMurderBtn.TextXAlignment = Enum.TextXAlignment.Left
+avoidMurderBtn.LayoutOrder = 3
+avoidMurderBtn.Parent = pages.AutoFarm
 
-local tornadoMurderCorner = Instance.new("UICorner")
-tornadoMurderCorner.CornerRadius = UDim.new(0, 14)
-tornadoMurderCorner.Parent = tornadoMurderBtn
+local avoidMurderCorner = Instance.new("UICorner")
+avoidMurderCorner.CornerRadius = UDim.new(0, 14)
+avoidMurderCorner.Parent = avoidMurderBtn
 
-tornadoMurderBtn.MouseButton1Click:Connect(function()
+avoidMurderBtn.MouseButton1Click:Connect(function()
 	playKeyboardSound()
-	targetMurderTornado = not targetMurderTornado
-	if targetMurderTornado then
-		targetSheriffTornado = false
-		tornadoMurderBtn.Text = "   Target Murderer (Tornado Envol Cible) : ON"
-		tornadoMurderBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+	targetMurderSpeedAvoid = not targetMurderSpeedAvoid
+	if targetMurderSpeedAvoid then
+		targetSheriffSpeedAvoid = false
+		avoidMurderBtn.Text = "   Esquive Rapide Meurtrier (Traversée Map) : ON"
+		avoidMurderBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
 	else
-		tornadoMurderBtn.Text = "   Target Murderer (Tornado Envol Cible) : OFF"
-		tornadoMurderBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
+		avoidMurderBtn.Text = "   Esquive Rapide Meurtrier (Traversée Map) : OFF"
+		avoidMurderBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
 	end
 end)
 
-local tornadoSheriffBtn = Instance.new("TextButton")
-tornadoSheriffBtn.Size = UDim2.new(1, 0, 0, 50)
-tornadoSheriffBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
-tornadoSheriffBtn.Text = "   Target Sheriff (Tornado Envol Cible) : OFF"
-tornadoSheriffBtn.TextColor3 = Color3.fromRGB(50, 120, 255)
-tornadoSheriffBtn.TextSize = 14
-tornadoSheriffBtn.Font = Enum.Font.GothamSemibold
-tornadoSheriffBtn.TextXAlignment = Enum.TextXAlignment.Left
-tornadoSheriffBtn.LayoutOrder = 4
-tornadoSheriffBtn.Parent = pages.AutoFarm
+local avoidSheriffBtn = Instance.new("TextButton")
+avoidSheriffBtn.Size = UDim2.new(1, 0, 0, 50)
+avoidSheriffBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
+avoidSheriffBtn.Text = "   Esquive Rapide Sheriff (Traversée Map) : OFF"
+avoidSheriffBtn.TextColor3 = Color3.fromRGB(50, 120, 255)
+avoidSheriffBtn.TextSize = 14
+avoidSheriffBtn.Font = Enum.Font.GothamSemibold
+avoidSheriffBtn.TextXAlignment = Enum.TextXAlignment.Left
+avoidSheriffBtn.LayoutOrder = 4
+avoidSheriffBtn.Parent = pages.AutoFarm
 
-local tornadoSheriffCorner = Instance.new("UICorner")
-tornadoSheriffCorner.CornerRadius = UDim.new(0, 14)
-tornadoSheriffCorner.Parent = tornadoSheriffBtn
+local avoidSheriffCorner = Instance.new("UICorner")
+avoidSheriffCorner.CornerRadius = UDim.new(0, 14)
+avoidSheriffCorner.Parent = avoidSheriffBtn
 
-tornadoSheriffBtn.MouseButton1Click:Connect(function()
+avoidSheriffBtn.MouseButton1Click:Connect(function()
 	playKeyboardSound()
-	targetSheriffTornado = not targetSheriffTornado
-	if targetSheriffTornado then
-		targetMurderTornado = false
-		tornadoSheriffBtn.Text = "   Target Sheriff (Tornado Envol Cible) : ON"
-		tornadoSheriffBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+	targetSheriffSpeedAvoid = not targetSheriffSpeedAvoid
+	if targetSheriffSpeedAvoid then
+		targetMurderSpeedAvoid = false
+		avoidSheriffBtn.Text = "   Esquive Rapide Sheriff (Traversée Map) : ON"
+		avoidSheriffBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
 	else
-		tornadoSheriffBtn.Text = "   Target Sheriff (Tornado Envol Cible) : OFF"
-		tornadoSheriffBtn.TextColor3 = Color3.fromRGB(50, 120, 255)
+		avoidSheriffBtn.Text = "   Esquive Rapide Sheriff (Traversée Map) : OFF"
+		avoidSheriffBtn.TextColor3 = Color3.fromRGB(50, 120, 255)
 	end
 end)
 
 RunService.RenderStepped:Connect(function(dt)
 	local targetPlr = nil
-	if targetMurderTornado then
+	if targetMurderSpeedAvoid then
 		targetPlr = findPlayerByRole("Murderer")
-	elseif targetSheriffTornado then
+	elseif targetSheriffSpeedAvoid then
 		targetPlr = findPlayerByRole("Sheriff")
 	end
 	
 	if targetPlr and targetPlr.Character and targetPlr.Character:FindFirstChild("HumanoidRootPart") then
 		local tRoot = targetPlr.Character.HumanoidRootPart
-		local tHumanoid = targetPlr.Character:FindFirstChildOfClass("Humanoid")
-		
-		if tHumanoid then
-			tHumanoid.PlatformStand = true
-		end
-		
-		local speed = tick() * 35
-		local wanderRadius = 15
-		local wanderX = math.cos(tick() * 3) * wanderRadius
-		local wanderZ = math.sin(tick() * 3) * wanderRadius
-		
-		tRoot.CFrame = CFrame.new(tRoot.Position + Vector3.new(wanderX * dt * 5, 2, wanderZ * dt * 5)) * CFrame.Angles(0, speed, 0)
-		tRoot.AssemblyLinearVelocity = Vector3.new(math.random(-50, 50), 85, math.random(-50, 50))
-		tRoot.AssemblyAngularVelocity = Vector3.new(0, 75, 0)
-		
 		local char = localPlayer.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
-			char.HumanoidRootPart.CFrame = tRoot.CFrame * CFrame.new(0, 3, 5)
-			char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+			-- No Clip actif pendant l'esquive rapide
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
+			
+			local rootPart = char.HumanoidRootPart
+			local awayDirection = (rootPart.Position - tRoot.Position).Unit
+			if awayDirection.Magnitude == 0 then awayDirection = Vector3.new(1, 0, 0) end
+			
+			local strafePos = tRoot.Position + (Vector3.new(awayDirection.X, 0, awayDirection.Z).Unit * 35) + Vector3.new(math.sin(tick() * 10) * 15, 0, math.cos(tick() * 10) * 15)
+			
+			local currentPos = rootPart.Position
+			local targetFinal = Vector3.new(strafePos.X, currentPos.Y, strafePos.Z)
+			local nextPos = currentPos:Lerp(targetFinal, math.clamp(60 * dt, 0, 1))
+			
+			rootPart.CFrame = CFrame.new(nextPos, nextPos + Camera.CFrame.LookVector)
+			rootPart.AssemblyLinearVelocity = Vector3.zero
 		end
 	end
 end)
@@ -1096,8 +1034,8 @@ local function createMapTpButton(mapName, targetPosOffset, order)
 	end)
 end
 
-createMapTpButton("Centre de la Map Active", Vector3.new(0, 5, 0), 5)
-createMapTpButton("Plateforme en Hauteur (Roof)", Vector3.new(0, 45, 0), 6)
+createMapTpButton("Centre de la Map Active", Vector3.new(0, 3, 0), 5)
+createMapTpButton("Zone Latérale Sécurisée", Vector3.new(20, 3, 0), 6)
 
 local tpSpawnBtn = Instance.new("TextButton")
 tpSpawnBtn.Size = UDim2.new(1, 0, 0, 50)
@@ -1119,82 +1057,90 @@ tpSpawnBtn.MouseButton1Click:Connect(function()
 	local char = localPlayer.Character
 	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 	
-	local targetCF = CFrame.new(0, 10, 0)
+	local targetCF = CFrame.new(0, 5, 0)
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if (obj:IsA("SpawnLocation") or obj.Name:lower():find("spawn")) and obj:IsA("BasePart") then
-			targetCF = obj.CFrame + Vector3.new(0, 4, 0)
+			targetCF = obj.CFrame + Vector3.new(0, 3, 0)
 			break
 		end
 	end
 	char.HumanoidRootPart.CFrame = targetCF
 end)
 
--- --- SILENT AIM / AUTO-SHOOT MURDERER ---
-local silentAimEnabled = false
+-- --- ANGLAIS SHERIFF ---
+local anglaisSheriffEnabled = false
 
-local silentAimBtn = Instance.new("TextButton")
-silentAimBtn.Size = UDim2.new(1, 0, 0, 50)
-silentAimBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
-silentAimBtn.Text = "   Silent Aim (Tir Auto Murder) : OFF"
-silentAimBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
-silentAimBtn.TextSize = 14
-silentAimBtn.Font = Enum.Font.GothamSemibold
-silentAimBtn.TextXAlignment = Enum.TextXAlignment.Left
-silentAimBtn.LayoutOrder = 8
-silentAimBtn.Parent = pages.AutoFarm
+local anglaisSheriffBtn = Instance.new("TextButton")
+anglaisSheriffBtn.Size = UDim2.new(1, 0, 0, 50)
+anglaisSheriffBtn.BackgroundColor3 = Color3.fromRGB(22, 25, 36)
+anglaisSheriffBtn.Text = "   Anglais Sheriff (Auto Equip Arme Sheriff) : OFF"
+anglaisSheriffBtn.TextColor3 = Color3.fromRGB(50, 120, 255)
+anglaisSheriffBtn.TextSize = 14
+anglaisSheriffBtn.Font = Enum.Font.GothamSemibold
+anglaisSheriffBtn.TextXAlignment = Enum.TextXAlignment.Left
+anglaisSheriffBtn.LayoutOrder = 8
+anglaisSheriffBtn.Parent = pages.AutoFarm
 
-local silentAimCorner = Instance.new("UICorner")
-silentAimCorner.CornerRadius = UDim.new(0, 14)
-silentAimCorner.Parent = silentAimBtn
+local anglaisSheriffCorner = Instance.new("UICorner")
+anglaisSheriffCorner.CornerRadius = UDim.new(0, 14)
+anglaisSheriffCorner.Parent = anglaisSheriffBtn
 
-silentAimBtn.MouseButton1Click:Connect(function()
+anglaisSheriffBtn.MouseButton1Click:Connect(function()
 	playKeyboardSound()
-	silentAimEnabled = not silentAimEnabled
-	if silentAimEnabled then
-		silentAimBtn.Text = "   Silent Aim (Tir Auto Murder) : ON"
-		silentAimBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
+	anglaisSheriffEnabled = not anglaisSheriffEnabled
+	if anglaisSheriffEnabled then
+		anglaisSheriffBtn.Text = "   Anglais Sheriff (Auto Equip Arme Sheriff) : ON"
+		anglaisSheriffBtn.TextColor3 = Color3.fromRGB(80, 255, 80)
 	else
-		silentAimBtn.Text = "   Silent Aim (Tir Auto Murder) : OFF"
-		silentAimBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+		anglaisSheriffBtn.Text = "   Anglais Sheriff (Auto Equip Arme Sheriff) : OFF"
+		anglaisSheriffBtn.TextColor3 = Color3.fromRGB(50, 120, 255)
 	end
 end)
 
 RunService.RenderStepped:Connect(function()
-	if not silentAimEnabled then return end
+	if not anglaisSheriffEnabled then return end
 	
 	local char = localPlayer.Character
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
 	local backpack = localPlayer:FindFirstChild("Backpack")
-	local gunTool = nil
 	
-	if char then
-		for _, item in ipairs(char:GetChildren()) do
-			if item:IsA("Tool") and (item.Name:lower() == "gun" or item.Name:lower() == "revolver" or item.Name:lower():find("pistolet")) then
-				gunTool = item
+	if not char or not humanoid then return end
+	
+	local hasGunEquipped = false
+	for _, item in ipairs(char:GetChildren()) do
+		if item:IsA("Tool") then
+			local name = item.Name:lower()
+			if name == "gun" or name == "revolver" or name:find("pistolet") then
+				hasGunEquipped = true
 				break
 			end
 		end
 	end
 	
-	if not gunTool and backpack then
+	if not hasGunEquipped and backpack then
 		for _, item in ipairs(backpack:GetChildren()) do
-			if item:IsA("Tool") and (item.Name:lower() == "gun" or item.Name:lower() == "revolver" or item.Name:lower():find("pistolet")) then
-				gunTool = item
-				break
+			if item:IsA("Tool") then
+				local name = item.Name:lower()
+				if name == "gun" or name == "revolver" or name:find("pistolet") then
+					humanoid:EquipTool(item)
+					break
+				end
 			end
 		end
 	end
 	
-	if not gunTool then return end
-	
-	local murderer = findPlayerByRole("Murderer")
-	if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
-		local mRoot = murderer.Character.HumanoidRootPart
-		
-		pcall(function()
-			if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or UserInputService.TouchEnabled then
-				Camera.CFrame = CFrame.new(Camera.CFrame.Position, mRoot.Position)
+	if not hasGunEquipped and (not backpack or not backpack:FindFirstChild("Gun")) then
+		for _, obj in ipairs(Workspace:GetChildren()) do
+			if obj:IsA("Tool") then
+				local name = obj.Name:lower()
+				if name == "gun" or name == "revolver" or name:find("pistolet") then
+					local handle = obj:FindFirstChild("Handle") or obj:FindFirstChildOfClass("BasePart")
+					if handle and char:FindFirstChild("HumanoidRootPart") then
+						char.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 1, 0)
+					end
+				end
 			end
-		end)
+		end
 	end
 end)
 
