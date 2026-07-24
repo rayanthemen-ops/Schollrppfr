@@ -1284,25 +1284,21 @@ task.spawn(function()
 								
 								local currentPos = rootPart.Position
 								local nextPos = currentPos:Lerp(targetCF.Position, math.clamp(configData.CoinTransitSpeed * dt / math.max(distance, 0.1), 0, 1))
-								
-								rootPart.CFrame = CFrame.new(nextPos)
-								rootPart.AssemblyLinearVelocity = Vector3.zero
-								rootPart.AssemblyAngularVelocity = Vector3.zero
+							
 							end
-							task.wait(0.01) -- Pause impérative pour relâcher le processeur et éviter tout freeze
+							 -- Pause impérative pour relâcher le processeur et éviter tout freeze
 						else
-							task.wait(0.01)
+						
 						end
 					end
 					
 					humanoid.PlatformStand = false
 				end
 			else
-				task.wait(0.02)
+				
 			end
 		else
-			task.wait(0.02)
-		end
+end
 	end
 end)
 
