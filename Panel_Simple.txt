@@ -1,50 +1,1877 @@
-local gui = Instance.new("ScreenGui")
-gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Services requis
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local Camera = Workspace.CurrentCamera
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 400, 0, 300)
-frame.Position = UDim2.new(0.5, -200, 0.5, -150)
-frame.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-frame.Parent = gui
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 
-local text = Instance.new("TextLabel")
-text.Size = UDim2.new(1, 0, 1, 0)
-text.BackgroundTransparency = 1
-text.Text = "nom sf"
-text.TextSize = 80
-text.TextColor3 = Color3.fromRGB(255, 255, 255)
-text.Font = Enum.Font.GothamBlack
-text.Parent = frame
+-- Nettoyage si le script relance
+if playerGui:FindFirstChild("UltraModernPanel") then
+	playerGui.UltraModernPanel:Destroy()
+end
 
+if Workspace:FindFirstChild("ESPFolder") then
+	Workspace.ESPFolder:Destroy()
+end
+
+-- Système de Sauvegarde de Configuration
+local CONFIG_FILE = "PrimeV2_Config.json"
+local configData = {
+	Language = "FR",
+	AutoFarmSpeed = 70,
+	CoinTransitSpeed = 50,
+	TornadoSpeed = 50,
+	CurrentTheme = "Cyber"
+}
+
+local function saveConfig()
+	pcall(function()
+		if writefile then
+			writefile(CONFIG_FILE, HttpService:JSONEncode(configData))
+		end
+	end)
+end
+
+local function loadConfig()
+	pcall(function()
+		if readfile and isfile and isfile(CONFIG_FILE) then
+			local decoded = HttpService:JSONDecode(readfile(CONFIG_FILE))
+			for k, v in pairs(decoded) do
+				configData[k] = v
+			end
+		end
+	end)
+end
+
+loadConfig()
+
+-- Système de Langue (Français par défaut / Anglais)
+local currentLanguage = configData.Language
+
+local translations = {
+	FR = {
+		Brand = "⚡ PRIME V2",
+		Home = "Accueil",
+		ESP = "ESP & Outils",
+		AutoFarm = "Auto-Farm & Cibles Tornado",
+		Themes = "Thèmes de Couleurs",
+		Backgrounds = "Styles de Fond Arrière",
+		Settings = "Paramètres / Langue",
+		User = "Utilisateur : ",
+		Pseudo = "Pseudo : @",
+		MurderChance = "🎯 Affichage Chance d'être Meurtrier :",
+		StatusDisabled = "Statut : Désactivé",
+		Enable = "Activer",
+		DisableRefuse = "Refuser (Désactiver)",
+		AloneServer = "Seul dans le serveur (100%)",
+		ChanceRound = "~%.1f%% de chance ce round (%d joueurs)",
+		EspMm2 = "   ESP MM2 + Noms & Distances : ",
+		NoClip = "   No Clip : ",
+		Freecam = "   Freecam (Surveillance) : ",
+		AutoFarmCoins = "   Auto-Farm Coins Intelligent : ",
+		SpeedAutoFarm = "⚡ Vitesse de l'Auto-Farm : ",
+		SpeedAutoFarmHint = "(Plus c'est haut, plus c'est rapide)",
+		WaitMap = "   Auto-Farm : En attente nouvelle map...",
+		TargetMurder = "   Target Murderer (Tornado Envol Cible) : ",
+		TargetSheriff = "   Target Sheriff (Tornado Envol Cible) : ",
+		TornadoSpeedLabel = "🌪️ Vitesse Tornado (Montée / Descente) : ",
+		TornadoSpeedHint = "(Règle la vitesse de l'effet cyclone)",
+		TpMapCenter = "   TP Map : Centre de la Map Active",
+		TpRoof = "   TP Map : Plateforme en Hauteur (Roof)",
+		TpSpawn = "   TP sur le Spawn de la Map",
+		EnglishSheriff = "   Anglais Sheriff (Auto Equip Arme Sheriff) : ",
+		ThemeCyber = "Cyber Électrique",
+		ThemeNeon = "Néon Violet Majestueux",
+		ThemeEmerald = "Émeraude Cybernétique",
+		ThemeObsidian = "Obsidienne Royale",
+		BgBubbles = "Bulles Fluides",
+		BgCubes = "Cubes Géométriques",
+		BgStars = "Cristaux / Étoiles",
+		LangToggle = "🌍 Langue / Language : Français (FR)",
+		CoinTransitSpeed = "🚀 Vitesse Montée / Descente Pièces : ",
+		TransitHint = "(Modifie la vitesse lors des déplacements)"
+	},
+	EN = {
+		Brand = "⚡ PRIME V2",
+		Home = "Home",
+		ESP = "ESP & Tools",
+		AutoFarm = "Auto-Farm & Tornado Targets",
+		Themes = "Color Themes",
+		Backgrounds = "Background Styles",
+		Settings = "Settings / Language",
+		User = "User: ",
+		Pseudo = "Handle: @",
+		MurderChance = "🎯 Murderer Chance Display:",
+		StatusDisabled = "Status: Disabled",
+		Enable = "Enable",
+		DisableRefuse = "Disable",
+		AloneServer = "Alone in server (100%)",
+		ChanceRound = "~%.1f%% chance this round (%d players)",
+		EspMm2 = "   MM2 ESP + Names & Distances: ",
+		NoClip = "   No Clip: ",
+		Freecam = "   Freecam (Surveillance): ",
+		AutoFarmCoins = "   Smart Coins Auto-Farm: ",
+		SpeedAutoFarm = "⚡ Auto-Farm Speed: ",
+		SpeedAutoFarmHint = "(Higher means faster)",
+		WaitMap = "   Auto-Farm: Waiting for new map...",
+		TargetMurder = "   Target Murderer (Tornado Lift): ",
+		TargetSheriff = "   Target Sheriff (Tornado Lift): ",
+		TornadoSpeedLabel = "🌪️ Tornado Speed (Up / Down): ",
+		TornadoSpeedHint = "(Adjusts cyclone effect speed)",
+		TpMapCenter = "   TP Map: Active Map Center",
+		TpRoof = "   TP Map: High Platform (Roof)",
+		TpSpawn = "   TP to Map Spawn",
+		EnglishSheriff = "   Sheriff English (Auto Equip Sheriff Gun): ",
+		ThemeCyber = "Electric Cyber",
+		ThemeNeon = "Majestic Neon Purple",
+		ThemeEmerald = "Cyber Emerald",
+		ThemeObsidian = "Royal Obsidian",
+		BgBubbles = "Fluid Bubbles",
+		BgCubes = "Geometric Cubes",
+		BgStars = "Crystals / Stars",
+		LangToggle = "🌍 Language: English (EN)",
+		CoinTransitSpeed = "🚀 Coin Transit Speed (Up/Down): ",
+		TransitHint = "(Adjusts travel speed)"
+	}
+}
+
+local function L(key)
+	if translations[currentLanguage] and translations[currentLanguage][key] then
+		return translations[currentLanguage][key]
+	end
+	return key
+end
+
+-- 1. Création de l'interface principale (ScreenGui)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "UltraModernPanel"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Folder ESP
+local espFolder = Instance.new("Folder")
+espFolder.Name = "ESPFolder"
+espFolder.Parent = Workspace
+
+local function playKeyboardSound()
+	pcall(function()
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://6895070853" 
+		sound.Volume = 0.8
+		sound.Pitch = math.random(95, 105) / 100
+		sound.Parent = screenGui
+		sound:Play()
+		sound.Ended:Connect(function() sound:Destroy() end)
+	end)
+end
+
+-- 2. Mini Bouton (Ultra design avec lueur)
+local miniButton = Instance.new("TextButton")
+miniButton.Name = "MiniButton"
+miniButton.Size = UDim2.new(0, 52, 0, 52)
+miniButton.Position = UDim2.new(0.5, -26, 0, 15)
+miniButton.BackgroundColor3 = Color3.fromRGB(15, 18, 30)
+miniButton.Text = "⚡"
+miniButton.TextColor3 = Color3.fromRGB(0, 245, 255)
+miniButton.TextSize = 22
+miniButton.Font = Enum.Font.GothamBold
+miniButton.Visible = false
+miniButton.ZIndex = 10
+miniButton.Parent = screenGui
+
+local miniCorner = Instance.new("UICorner")
+miniCorner.CornerRadius = UDim.new(0, 16)
+miniCorner.Parent = miniButton
+
+local miniStroke = Instance.new("UIStroke")
+miniStroke.Color = Color3.fromRGB(0, 245, 255)
+miniStroke.Thickness = 2
+miniStroke.Transparency = 0.2
+miniStroke.Parent = miniButton
+
+-- 3. Fenêtre principale (Glassmorphism & Gradient Subtil)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 690, 0, 450)
+mainFrame.Position = UDim2.new(0.5, -345, 0.5, -225)
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 13, 22)
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+
+local mainGradient = Instance.new("UIGradient")
+mainGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 22, 38)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 10, 16))
+})
+mainGradient.Rotation = 45
+mainGradient.Parent = mainFrame
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 24)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(0, 220, 255)
+mainStroke.Thickness = 1.6
+mainStroke.Transparency = 0.4
+mainStroke.Parent = mainFrame
+
+-- 4. Bouton Croix design
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 50, 0, 50)
-closeBtn.Position = UDim2.new(1, -55, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.Text = "X"
-closeBtn.TextSize = 24
+closeBtn.Name = "CloseButton"
+closeBtn.Size = UDim2.new(0, 36, 0, 36)
+closeBtn.Position = UDim2.new(1, -46, 0, 14)
+closeBtn.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
+closeBtn.BackgroundTransparency = 0.3
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+closeBtn.TextSize = 15
 closeBtn.Font = Enum.Font.GothamBold
-closeBtn.Parent = frame
+closeBtn.ZIndex = 5
+closeBtn.Parent = mainFrame
 
-local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0, 100, 0, 50)
-openBtn.Position = UDim2.new(0, 10, 0, 10)
-openBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-openBtn.Text = "OUVRIR"
-openBtn.TextSize = 16
-openBtn.Font = Enum.Font.Gotham
-openBtn.Visible = false
-openBtn.Parent = gui
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 10)
+closeCorner.Parent = closeBtn
 
+local closeStroke = Instance.new("UIStroke")
+closeStroke.Color = Color3.fromRGB(255, 80, 80)
+closeStroke.Thickness = 1.5
+closeStroke.Transparency = 0.3
+closeStroke.Parent = closeBtn
+
+closeBtn.MouseEnter:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(230, 40, 60),
+		BackgroundTransparency = 0.1,
+		TextColor3 = Color3.fromRGB(255, 255, 255)
+	}):Play()
+end)
+
+closeBtn.MouseLeave:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(25, 30, 45),
+		BackgroundTransparency = 0.3,
+		TextColor3 = Color3.fromRGB(255, 100, 100)
+	}):Play()
+end)
+
+-- 5. Arrière-Plan Dynamique Amélioré
+local bgContainer = Instance.new("Folder")
+bgContainer.Name = "DynamicBackground"
+bgContainer.Parent = mainFrame
+
+local bgElements = {}
+
+local function clearBackground()
+	for _, el in ipairs(bgElements) do
+		if el.Obj then el.Obj:Destroy() end
+	end
+	bgElements = {}
+end
+
+local function generateBackground(mode)
+	clearBackground()
+	
+	local count = (mode == "Stars") and 24 or 14
+	for i = 1, count do
+		local p = Instance.new("Frame")
+		local size = (mode == "Stars") and math.random(15, 35) or math.random(60, 140)
+		p.Size = UDim2.new(0, size, 0, size)
+		p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+		p.BackgroundColor3 = Color3.fromRGB(math.random(0, 120), math.random(150, 255), math.random(220, 255))
+		p.BackgroundTransparency = 0.75
+		p.BorderSizePixel = 0
+		
+		local corner = Instance.new("UICorner")
+		if mode == "Bubbles" then
+			corner.CornerRadius = UDim.new(1, 0)
+		elseif mode == "Cubes" then
+			corner.CornerRadius = UDim.new(0, 10)
+		else
+			corner.CornerRadius = UDim.new(0.3, 0)
+		end
+		corner.Parent = p
+		
+		p.Parent = bgContainer
+		table.insert(bgElements, {
+			Obj = p,
+			SpeedX = math.random(-15, 15) / 100,
+			SpeedY = math.random(-15, 15) / 100,
+			RotSpeed = math.random(-30, 30)
+		})
+	end
+end
+
+generateBackground("Bubbles")
+
+RunService.RenderStepped:Connect(function(dt)
+	for _, data in ipairs(bgElements) do
+		if data.Obj and data.Obj.Parent then
+			local pos = data.Obj.Position
+			local nx = (pos.X.Scale + data.SpeedX * dt) % 1
+			local ny = (pos.Y.Scale + data.SpeedY * dt) % 1
+			data.Obj.Position = UDim2.new(nx, pos.X.Offset, ny, pos.Y.Offset)
+			data.Obj.Rotation = data.Obj.Rotation + (data.RotSpeed * dt)
+		end
+	end
+end)
+
+-- 6. Barre latérale (Navigation)
+local sidebar = Instance.new("Frame")
+sidebar.Size = UDim2.new(0, 210, 1, 0)
+sidebar.BackgroundColor3 = Color3.fromRGB(8, 10, 16)
+sidebar.BackgroundTransparency = 0.3
+sidebar.BorderSizePixel = 0
+sidebar.Parent = mainFrame
+
+local sideList = Instance.new("UIListLayout")
+sideList.SortOrder = Enum.SortOrder.LayoutOrder
+sideList.Padding = UDim.new(0, 8)
+sideList.Parent = sidebar
+
+local sidePadding = Instance.new("UIPadding")
+sidePadding.PaddingTop = UDim.new(0, 25)
+sidePadding.PaddingLeft = UDim.new(0, 14)
+sidePadding.PaddingRight = UDim.new(0, 14)
+sidePadding.Parent = sidebar
+
+local brand = Instance.new("TextLabel")
+brand.Size = UDim2.new(1, 0, 0, 40)
+brand.BackgroundTransparency = 1
+brand.Text = L("Brand")
+brand.TextColor3 = Color3.fromRGB(0, 245, 255)
+brand.TextSize = 19
+brand.Font = Enum.Font.GothamBold
+brand.TextXAlignment = Enum.TextXAlignment.Left
+brand.LayoutOrder = 0
+brand.Parent = sidebar
+
+-- 7. Conteneur des pages
+local contentArea = Instance.new("Frame")
+contentArea.Size = UDim2.new(1, -210, 1, 0)
+contentArea.Position = UDim2.new(0, 210, 0, 0)
+contentArea.BackgroundTransparency = 1
+contentArea.Parent = mainFrame
+
+local pages = {
+	Home = Instance.new("ScrollingFrame"),
+	ESP = Instance.new("ScrollingFrame"),
+	AutoFarm = Instance.new("ScrollingFrame"),
+	Themes = Instance.new("ScrollingFrame"),
+	Backgrounds = Instance.new("ScrollingFrame")
+}
+
+for name, page in pairs(pages) do
+	page.Name = name .. "Page"
+	page.Size = UDim2.new(1, 0, 1, 0)
+	page.BackgroundTransparency = 1
+	page.BorderSizePixel = 0
+	page.ScrollBarThickness = 3
+	page.CanvasSize = UDim2.new(0, 0, 0, 1500)
+	page.Visible = (name == "Home")
+	page.Parent = contentArea
+	
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, 30)
+	pad.PaddingLeft = UDim.new(0, 30)
+	pad.PaddingRight = UDim.new(0, 30)
+	pad.Parent = page
+	
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 12)
+	layout.Parent = page
+end
+
+local function createPageTitle(textKey, parentPage)
+	local title = Instance.new("TextLabel")
+	title.Name = "Title_" .. textKey
+	title.Size = UDim2.new(1, 0, 0, 35)
+	title.BackgroundTransparency = 1
+	title.Text = L(textKey)
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextSize = 22
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.LayoutOrder = 1
+	title.Parent = parentPage
+end
+
+createPageTitle("Home", pages.Home)
+createPageTitle("ESP", pages.ESP)
+createPageTitle("AutoFarm", pages.AutoFarm)
+createPageTitle("Themes", pages.Themes)
+createPageTitle("Backgrounds", pages.Backgrounds)
+
+local navButtons = {}
+
+local function createNavButton(nameKey, targetPage, order)
+	local btn = Instance.new("TextButton")
+	btn.Name = "Nav_" .. nameKey
+	btn.Size = UDim2.new(1, 0, 0, 44)
+	btn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+	btn.BackgroundTransparency = 0.5
+	btn.Text = "   " .. L(nameKey)
+	btn.TextColor3 = Color3.fromRGB(170, 185, 215)
+	btn.TextSize = 14
+	btn.Font = Enum.Font.GothamMedium
+	btn.TextXAlignment = Enum.TextXAlignment.Left
+	btn.LayoutOrder = order
+	btn.Parent = sidebar
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = btn
+	
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(0, 200, 255)
+	stroke.Thickness = 1
+	stroke.Transparency = 0.7
+	stroke.Parent = btn
+	
+	btn.MouseButton1Click:Connect(function()
+		playKeyboardSound()
+		for _, p in pairs(pages) do p.Visible = false end
+		targetPage.Visible = true
+	end)
+	
+	navButtons[nameKey] = btn
+	return btn
+end
+
+createNavButton("Home", pages.Home, 1)
+createNavButton("ESP", pages.ESP, 2)
+createNavButton("AutoFarm", pages.AutoFarm, 3)
+createNavButton("Themes", pages.Themes, 4)
+createNavButton("Backgrounds", pages.Backgrounds, 5)
+
+-- Widget Accueil
+local profileCard = Instance.new("Frame")
+profileCard.Size = UDim2.new(1, 0, 0, 110)
+profileCard.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+profileCard.BackgroundTransparency = 0.3
+profileCard.BorderSizePixel = 0
+profileCard.LayoutOrder = 2
+profileCard.Parent = pages.Home
+
+local profileCorner = Instance.new("UICorner")
+profileCorner.CornerRadius = UDim.new(0, 14)
+profileCorner.Parent = profileCard
+
+local profileStroke = Instance.new("UIStroke")
+profileStroke.Color = Color3.fromRGB(0, 220, 255)
+profileStroke.Thickness = 1
+profileStroke.Transparency = 0.5
+profileStroke.Parent = profileCard
+
+local avatarImg = Instance.new("ImageLabel")
+avatarImg.Size = UDim2.new(0, 72, 0, 72)
+avatarImg.Position = UDim2.new(0, 16, 0.5, -36)
+avatarImg.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+avatarImg.BorderSizePixel = 0
+avatarImg.Image = "rbxassetid://0"
+avatarImg.Parent = profileCard
+
+local avatarCorner = Instance.new("UICorner")
+avatarCorner.CornerRadius = UDim.new(1, 0)
+avatarCorner.Parent = avatarImg
+
+task.spawn(function()
+	local success, content = pcall(function()
+		return Players:GetUserThumbnailAsync(localPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+	end)
+	if success then
+		avatarImg.Image = content
+	end
+end)
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(1, -110, 0, 28)
+nameLabel.Position = UDim2.new(0, 102, 0, 16)
+nameLabel.BackgroundTransparency = 1
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextSize = 16
+nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.Text = L("User") .. localPlayer.Name
+nameLabel.Parent = profileCard
+
+local pseudoLabel = Instance.new("TextLabel")
+pseudoLabel.Size = UDim2.new(1, -110, 0, 24)
+pseudoLabel.Position = UDim2.new(0, 102, 0, 44)
+pseudoLabel.BackgroundTransparency = 1
+pseudoLabel.Font = Enum.Font.GothamMedium
+pseudoLabel.TextSize = 13
+pseudoLabel.TextColor3 = Color3.fromRGB(170, 185, 215)
+pseudoLabel.TextXAlignment = Enum.TextXAlignment.Left
+pseudoLabel.Text = L("Pseudo") .. localPlayer.DisplayName
+pseudoLabel.Parent = profileCard
+
+local statsLabel = Instance.new("TextLabel")
+statsLabel.Size = UDim2.new(1, -110, 0, 24)
+statsLabel.Position = UDim2.new(0, 102, 0, 70)
+statsLabel.BackgroundTransparency = 1
+statsLabel.Font = Enum.Font.GothamSemibold
+statsLabel.TextSize, statsLabel.TextColor3 = 13, Color3.fromRGB(0, 255, 140)
+statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+statsLabel.Text = "FPS : 60 | Ping : 0 ms"
+statsLabel.Parent = profileCard
+
+local fpsCounter = 60
+local lastTick = tick()
+RunService.RenderStepped:Connect(function()
+	local currentTick = tick()
+	if currentTick - lastTick > 0 then
+		fpsCounter = math.floor(1 / (currentTick - lastTick))
+	end
+	lastTick = currentTick
+	
+	local pingVal = 0
+	pcall(function()
+		pingVal = math.floor(localPlayer:GetNetworkPing() * 1000)
+	end)
+	
+	statsLabel.Text = string.format("FPS : %d | Ping : %d ms", fpsCounter, pingVal)
+end)
+
+-- Langue Card
+local langCard = Instance.new("Frame")
+langCard.Size = UDim2.new(1, 0, 0, 75)
+langCard.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+langCard.BackgroundTransparency = 0.3
+langCard.BorderSizePixel = 0
+langCard.LayoutOrder = 3
+langCard.Parent = pages.Home
+
+local langCardCorner = Instance.new("UICorner")
+langCardCorner.CornerRadius = UDim.new(0, 14)
+langCardCorner.Parent = langCard
+
+local langCardStroke = Instance.new("UIStroke")
+langCardStroke.Color = Color3.fromRGB(0, 220, 255)
+langCardStroke.Thickness = 1
+langCardStroke.Transparency = 0.5
+langCardStroke.Parent = langCard
+
+local langToggleBtn = Instance.new("TextButton")
+langToggleBtn.Size = UDim2.new(1, -24, 0, 45)
+langToggleBtn.Position = UDim2.new(0, 12, 0, 15)
+langToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+langToggleBtn.Text = L("LangToggle")
+langToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+langToggleBtn.TextSize = 14
+langToggleBtn.Font = Enum.Font.GothamBold
+langToggleBtn.Parent = langCard
+
+local langCorner = Instance.new("UICorner")
+langCorner.CornerRadius = UDim.new(0, 10)
+langCorner.Parent = langToggleBtn
+
+local chanceTitle
+
+local function updateInterfaceLanguage()
+	brand.Text = L("Brand")
+	nameLabel.Text = L("User") .. localPlayer.Name
+	pseudoLabel.Text = L("Pseudo") .. localPlayer.DisplayName
+	langToggleBtn.Text = L("LangToggle")
+	if chanceTitle then chanceTitle.Text = L("MurderChance") end
+	
+	for name, page in pairs(pages) do
+		local titleLabel = page:FindFirstChild("Title_" .. name)
+		if titleLabel then
+			titleLabel.Text = L(name)
+		end
+	end
+	
+	for key, btn in pairs(navButtons) do
+		btn.Text = "   " .. L(key)
+	end
+end
+
+langToggleBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	if currentLanguage == "FR" then
+		currentLanguage = "EN"
+	else
+		currentLanguage = "FR"
+	end
+	configData.Language = currentLanguage
+	saveConfig()
+	updateInterfaceLanguage()
+end)
+
+-- Widget Chance Murderer
+local chanceCard = Instance.new("Frame")
+chanceCard.Size = UDim2.new(1, 0, 0, 110)
+chanceCard.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+chanceCard.BackgroundTransparency = 0.3
+chanceCard.BorderSizePixel = 0
+chanceCard.LayoutOrder = 4
+chanceCard.Parent = pages.Home
+
+local chanceCorner = Instance.new("UICorner")
+chanceCorner.CornerRadius = UDim.new(0, 14)
+chanceCorner.Parent = chanceCard
+
+local chanceStroke = Instance.new("UIStroke")
+chanceStroke.Color = Color3.fromRGB(255, 100, 100)
+chanceStroke.Thickness = 1
+chanceStroke.Transparency = 0.5
+chanceStroke.Parent = chanceCard
+
+chanceTitle = Instance.new("TextLabel")
+chanceTitle.Size = UDim2.new(1, -20, 0, 25)
+chanceTitle.Position = UDim2.new(0, 12, 0, 10)
+chanceTitle.BackgroundTransparency = 1
+chanceTitle.Font = Enum.Font.GothamBold
+chanceTitle.TextSize = 14
+chanceTitle.TextColor3 = Color3.fromRGB(255, 120, 120)
+chanceTitle.TextXAlignment = Enum.TextXAlignment.Left
+chanceTitle.Text = L("MurderChance")
+chanceTitle.Parent = chanceCard
+
+local chanceValueLabel = Instance.new("TextLabel")
+chanceValueLabel.Size = UDim2.new(1, -20, 0, 30)
+chanceValueLabel.Position = UDim2.new(0, 12, 0, 35)
+chanceValueLabel.BackgroundTransparency = 1
+chanceValueLabel.Font = Enum.Font.GothamBold
+chanceValueLabel.TextSize = 16
+chanceValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+chanceValueLabel.TextXAlignment = Enum.TextXAlignment.Left
+chanceValueLabel.Text = L("StatusDisabled")
+chanceValueLabel.Parent = chanceCard
+
+local chanceToggleBtn = Instance.new("TextButton")
+chanceToggleBtn.Size = UDim2.new(0, 160, 0, 32)
+chanceToggleBtn.Position = UDim2.new(0, 12, 0, 70)
+chanceToggleBtn.BackgroundColor3 = Color3.fromRGB(35, 42, 60)
+chanceToggleBtn.Text = L("Enable")
+chanceToggleBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+chanceToggleBtn.TextSize, chanceToggleBtn.Font = 13, Enum.Font.GothamBold
+chanceToggleBtn.Parent = chanceCard
+
+local chanceToggleCorner = Instance.new("UICorner")
+chanceToggleCorner.CornerRadius = UDim.new(0, 8)
+chanceToggleCorner.Parent = chanceToggleBtn
+
+local showMurderChance = false
+
+chanceToggleBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	showMurderChance = not showMurderChance
+	if showMurderChance then
+		chanceToggleBtn.Text = L("DisableRefuse")
+		chanceToggleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+	else
+		chanceToggleBtn.Text = L("Enable")
+		chanceToggleBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+		chanceValueLabel.Text = L("StatusDisabled")
+	end
+end)
+
+task.spawn(function()
+	while true do
+		if showMurderChance then
+			pcall(function()
+				local playersList = Players:GetPlayers()
+				local totalPlayers = #playersList
+				if totalPlayers <= 1 then
+					chanceValueLabel.Text = L("AloneServer")
+				else
+					local chance = (1 / totalPlayers) * 100
+					chanceValueLabel.Text = string.format(L("ChanceRound"), chance, totalPlayers)
+				end
+			end)
+		end
+		task.wait(3)
+	end
+end)
+
+-- ESP MM2
+local espEnabled = false
+local espToggleBtn = Instance.new("TextButton")
+espToggleBtn.Size = UDim2.new(1, 0, 0, 50)
+espToggleBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+espToggleBtn.Text = L("EspMm2") .. "OFF"
+espToggleBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+espToggleBtn.TextSize = 14
+espToggleBtn.Font = Enum.Font.GothamSemibold
+espToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+espToggleBtn.LayoutOrder = 2
+espToggleBtn.Parent = pages.ESP
+
+local espCorner = Instance.new("UICorner")
+espCorner.CornerRadius = UDim.new(0, 14)
+espCorner.Parent = espToggleBtn
+
+local espStroke = Instance.new("UIStroke")
+espStroke.Color = Color3.fromRGB(0, 200, 255)
+espStroke.Thickness = 1
+espStroke.Transparency = 0.6
+espStroke.Parent = espToggleBtn
+
+local espData = {}
+
+local function removeESP(plr)
+	if espData[plr] then
+		if espData[plr].Highlight then espData[plr].Highlight:Destroy() end
+		if espData[plr].Billboard then espData[plr].Billboard:Destroy() end
+		espData[plr] = nil
+	end
+end
+
+local function updateESPForPlayer(plr)
+	if not espEnabled then
+		removeESP(plr)
+		return
+	end
+	
+	if plr == localPlayer then return end
+	local char = plr.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then 
+		removeESP(plr)
+		return 
+	end
+	
+	local rootPart = char.HumanoidRootPart
+	local head = char:FindFirstChild("Head") or rootPart
+	
+	local role = "Innocent"
+	local backpack = plr:FindFirstChild("Backpack")
+	local function checkContainer(container)
+		if not container then return end
+		for _, item in ipairs(container:GetChildren()) do
+			if item:IsA("Tool") then
+				local name = item.Name:lower()
+				if name == "knife" or name:find("couteau") then
+					role = "Murderer"
+				elseif name == "gun" or name == "revolver" or name:find("pistolet") then
+					role = "Sheriff"
+				end
+			end
+		end
+	end
+	
+	checkContainer(backpack)
+	checkContainer(char)
+	
+	local data = espData[plr]
+	if not data then
+		data = {}
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "ESPHighlight_" .. plr.Name
+		highlight.Adornee = char
+		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		highlight.Parent = espFolder
+		data.Highlight = highlight
+		
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name = "ESPBillboard_" .. plr.Name
+		billboard.Adornee = head
+		billboard.Size = UDim2.new(0, 200, 0, 50)
+		billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+		billboard.AlwaysOnTop = true
+		billboard.Parent = espFolder
+		
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Name = "InfoText"
+		textLabel.Size = UDim2.new(1, 0, 1, 0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.TextSize = 13
+		textLabel.Font = Enum.Font.GothamBold
+		textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		textLabel.TextStrokeTransparency = 0
+		textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		textLabel.Parent = billboard
+		
+		data.Billboard = billboard
+		data.TextLabel = textLabel
+		espData[plr] = data
+	else
+		data.Highlight.Adornee = char
+		data.Billboard.Adornee = head
+	end
+	
+	local distance = 0
+	if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		distance = math.floor((localPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude)
+	end
+	
+	local color = Color3.fromRGB(50, 255, 100)
+	local roleName = "Innocent"
+	
+	if role == "Murderer" then
+		color = Color3.fromRGB(255, 60, 60)
+		roleName = "Murder"
+	elseif role == "Sheriff" then
+		color = Color3.fromRGB(60, 140, 255)
+		roleName = "Sheriff"
+	end
+	
+	data.Highlight.FillColor = color
+	data.Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	data.Highlight.FillTransparency = (role == "Innocent") and 0.6 or 0.4
+	
+	data.TextLabel.Text = string.format("[%s] %s (%dm)", roleName, plr.Name, distance)
+	data.TextLabel.TextColor3 = color
+end
+
+espToggleBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	espEnabled = not espEnabled
+	if espEnabled then
+		espToggleBtn.Text = L("EspMm2") .. "ON"
+		espToggleBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+	else
+		espToggleBtn.Text = L("EspMm2") .. "OFF"
+		espToggleBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+		for _, plr in ipairs(Players:GetPlayers()) do
+			removeESP(plr)
+		end
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if espEnabled then
+		for _, plr in ipairs(Players:GetPlayers()) do
+			updateESPForPlayer(plr)
+		end
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+	removeESP(plr)
+end)
+
+-- No Clip Global
+local noClipEnabled = false
+local noclipBtn = Instance.new("TextButton")
+noclipBtn.Size = UDim2.new(1, 0, 0, 50)
+noclipBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+noclipBtn.Text = L("NoClip") .. "OFF"
+noclipBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+noclipBtn.TextSize = 14
+noclipBtn.Font = Enum.Font.GothamSemibold
+noclipBtn.TextXAlignment = Enum.TextXAlignment.Left
+noclipBtn.LayoutOrder = 3
+noclipBtn.Parent = pages.ESP
+
+local noclipCorner = Instance.new("UICorner")
+noclipCorner.CornerRadius = UDim.new(0, 14)
+noclipCorner.Parent = noclipBtn
+
+local noclipStroke = Instance.new("UIStroke")
+noclipStroke.Color = Color3.fromRGB(0, 200, 255)
+noclipStroke.Thickness = 1
+noclipStroke.Transparency = 0.6
+noclipStroke.Parent = noclipBtn
+
+noclipBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	noClipEnabled = not noClipEnabled
+	if noClipEnabled then
+		noclipBtn.Text = L("NoClip") .. "ON"
+		noclipBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+	else
+		noclipBtn.Text = L("NoClip") .. "OFF"
+		noclipBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+	end
+end)
+
+RunService.Stepped:Connect(function()
+	if noClipEnabled and localPlayer.Character then
+		for _, part in ipairs(localPlayer.Character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+	end
+end)
+
+-- Freecam
+local freecamEnabled = false
+local freecamConn = nil
+local freecamPos = Vector3.new(0, 10, 0)
+
+local freecamBtn = Instance.new("TextButton")
+freecamBtn.Size = UDim2.new(1, 0, 0, 50)
+freecamBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+freecamBtn.Text = L("Freecam") .. "OFF"
+freecamBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+freecamBtn.TextSize = 14
+freecamBtn.Font = Enum.Font.GothamSemibold
+freecamBtn.TextXAlignment = Enum.TextXAlignment.Left
+freecamBtn.LayoutOrder = 4
+freecamBtn.Parent = pages.ESP
+
+local freecamCorner = Instance.new("UICorner")
+freecamCorner.CornerRadius = UDim.new(0, 14)
+freecamCorner.Parent = freecamBtn
+
+local freecamStroke = Instance.new("UIStroke")
+freecamStroke.Color = Color3.fromRGB(0, 200, 255)
+freecamStroke.Thickness = 1
+freecamStroke.Transparency = 0.6
+freecamStroke.Parent = freecamBtn
+
+local mobileGui = Instance.new("ScreenGui")
+mobileGui.Name = "FreecamMobileOverlay"
+mobileGui.ResetOnSpawn = false
+mobileGui.Enabled = false
+mobileGui.Parent = playerGui
+
+local upMobileBtn = Instance.new("TextButton")
+upMobileBtn.Size = UDim2.new(0, 60, 0, 60)
+upMobileBtn.Position = UDim2.new(1, -140, 1, -140)
+upMobileBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+upMobileBtn.BackgroundTransparency = 0.3
+upMobileBtn.Text = "▲"
+upMobileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+upMobileBtn.TextSize = 22
+upMobileBtn.Parent = mobileGui
+
+local upCorner = Instance.new("UICorner")
+upCorner.CornerRadius = UDim.new(1, 0)
+upCorner.Parent = upMobileBtn
+
+local downMobileBtn = Instance.new("TextButton")
+downMobileBtn.Size = UDim2.new(0, 60, 0, 60)
+downMobileBtn.Position = UDim2.new(1, -70, 1, -140)
+downMobileBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+downMobileBtn.BackgroundTransparency = 0.3
+downMobileBtn.Text = "▼"
+downMobileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+downMobileBtn.TextSize = 22
+downMobileBtn.Parent = mobileGui
+
+local downCorner = Instance.new("UICorner")
+downCorner.CornerRadius = UDim.new(1, 0)
+downCorner.Parent = downMobileBtn
+
+local mobileUpHeld = false
+local mobileDownHeld = false
+
+upMobileBtn.MouseButton1Down:Connect(function() mobileUpHeld = true end)
+upMobileBtn.MouseButton1Up:Connect(function() mobileUpHeld = false end)
+downMobileBtn.MouseButton1Down:Connect(function() mobileDownHeld = true end)
+downMobileBtn.MouseButton1Up:Connect(function() mobileDownHeld = false end)
+
+local function toggleFreecam(state)
+	freecamEnabled = state
+	if freecamEnabled then
+		freecamBtn.Text = L("Freecam") .. "ON"
+		freecamBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+		mobileGui.Enabled = true
+		
+		if Camera.CameraSubject then
+			freecamPos = Camera.CFrame.Position
+		end
+		Camera.CameraType = Enum.CameraType.Scriptable
+		
+		freecamConn = RunService.RenderStepped:Connect(function(dt)
+			local moveDir = Vector3.new()
+			if UserInputService:IsKeyDown(Enum.KeyCode.Z) then moveDir = moveDir + Vector3.new(0, 0, -1) end
+			if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + Vector3.new(0, 0, 1) end
+			if UserInputService:IsKeyDown(Enum.KeyCode.Q) then moveDir = moveDir + Vector3.new(-1, 0, 0) end
+			if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Vector3.new(1, 0, 0) end
+			if UserInputService:IsKeyDown(Enum.KeyCode.E) or mobileUpHeld then moveDir = moveDir + Vector3.new(0, 1, 0) end
+			if UserInputService:IsKeyDown(Enum.KeyCode.R) or mobileDownHeld then moveDir = moveDir + Vector3.new(0, -1, 0) end
+			
+			freecamPos = freecamPos + (Camera.CFrame:VectorToWorldSpace(moveDir) * (60 * dt * 0.9))
+			Camera.CFrame = CFrame.new(freecamPos)
+		end)
+	else
+		freecamBtn.Text = L("Freecam") .. "OFF"
+		freecamBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+		mobileGui.Enabled = false
+		if freecamConn then freecamConn:Disconnect() end
+		Camera.CameraType = Enum.CameraType.Custom
+		if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+			Camera.CameraSubject = localPlayer.Character.Humanoid
+		end
+	end
+end
+
+freecamBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	toggleFreecam(not freecamEnabled)
+end)
+
+-- --- SYSTÈME INTELLIGENT AUTO-FARM COINS MM2 (ULTRA-FLUIDE SANS FREEZE) ---
+local autoFarmEnabled = false 
+
+local autofarmBtn = Instance.new("TextButton")
+autofarmBtn.Size = UDim2.new(1, 0, 0, 50)
+autofarmBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+autofarmBtn.Text = L("AutoFarmCoins") .. "OFF"
+autofarmBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+autofarmBtn.TextSize = 14
+autofarmBtn.Font = Enum.Font.GothamSemibold
+autofarmBtn.TextXAlignment = Enum.TextXAlignment.Left
+autofarmBtn.LayoutOrder = 2
+autofarmBtn.Parent = pages.AutoFarm
+
+local autofarmCorner = Instance.new("UICorner")
+autofarmCorner.CornerRadius = UDim.new(0, 14)
+autofarmCorner.Parent = autofarmBtn
+
+local autofarmStroke = Instance.new("UIStroke")
+autofarmStroke.Color = Color3.fromRGB(0, 200, 255)
+autofarmStroke.Thickness = 1
+autofarmStroke.Transparency = 0.6
+autofarmStroke.Parent = autofarmBtn
+
+autofarmBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	autoFarmEnabled = not autoFarmEnabled
+	if autoFarmEnabled then
+		autofarmBtn.Text = L("AutoFarmCoins") .. "ON"
+		autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+	else
+		autofarmBtn.Text = L("AutoFarmCoins") .. "OFF"
+		autofarmBtn.TextColor3 = Color3.fromRGB(240, 240, 250)
+	end
+end)
+
+-- Configuration Vitesse Auto-Farm
+local speedCard = Instance.new("Frame")
+speedCard.Size = UDim2.new(1, 0, 0, 75)
+speedCard.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+speedCard.BorderSizePixel = 0
+speedCard.LayoutOrder = 3
+speedCard.Parent = pages.AutoFarm
+
+local speedCardCorner = Instance.new("UICorner")
+speedCardCorner.CornerRadius = UDim.new(0, 14)
+speedCardCorner.Parent = speedCard
+
+local speedCardStroke = Instance.new("UIStroke")
+speedCardStroke.Color = Color3.fromRGB(0, 200, 255)
+speedCardStroke.Thickness = 1
+speedCardStroke.Transparency = 0.6
+speedCardStroke.Parent = speedCard
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, -20, 0, 25)
+speedLabel.Position = UDim2.new(0, 12, 0, 8)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextSize = 13
+speedLabel.TextColor3 = Color3.fromRGB(200, 215, 245)
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Text = L("SpeedAutoFarm") .. configData.AutoFarmSpeed
+speedLabel.Parent = speedCard
+
+local speedMinusBtn = Instance.new("TextButton")
+speedMinusBtn.Size = UDim2.new(0, 45, 0, 32)
+speedMinusBtn.Position = UDim2.new(0, 12, 0, 35)
+speedMinusBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+speedMinusBtn.Text = "-"
+speedMinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedMinusBtn.TextSize = 16
+speedMinusBtn.Font = Enum.Font.GothamBold
+speedMinusBtn.Parent = speedCard
+
+local minusCorner = Instance.new("UICorner")
+minusCorner.CornerRadius = UDim.new(0, 8)
+minusCorner.Parent = speedMinusBtn
+
+local speedPlusBtn = Instance.new("TextButton")
+speedPlusBtn.Size = UDim2.new(0, 45, 0, 32)
+speedPlusBtn.Position = UDim2.new(0, 65, 0, 35)
+speedPlusBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+speedPlusBtn.Text = "+"
+speedPlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedPlusBtn.TextSize = 16
+speedPlusBtn.Font = Enum.Font.GothamBold
+speedPlusBtn.Parent = speedCard
+
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(0, 8)
+plusCorner.Parent = speedPlusBtn
+
+local speedInfoText = Instance.new("TextLabel")
+speedInfoText.Size = UDim2.new(1, -125, 0, 32)
+speedInfoText.Position = UDim2.new(0, 120, 0, 35)
+speedInfoText.BackgroundTransparency = 1
+speedInfoText.Font = Enum.Font.GothamMedium
+speedInfoText.TextSize = 12
+speedInfoText.TextColor3 = Color3.fromRGB(150, 165, 195)
+speedInfoText.TextXAlignment = Enum.TextXAlignment.Left
+speedInfoText.Text = L("SpeedAutoFarmHint")
+speedInfoText.Parent = speedCard
+
+speedMinusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	configData.AutoFarmSpeed = math.clamp(configData.AutoFarmSpeed - 10, 10, 200)
+	speedLabel.Text = L("SpeedAutoFarm") .. configData.AutoFarmSpeed
+	saveConfig()
+end)
+
+speedPlusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	configData.AutoFarmSpeed = math.clamp(configData.AutoFarmSpeed + 10, 10, 200)
+	speedLabel.Text = L("SpeedAutoFarm") .. configData.AutoFarmSpeed
+	saveConfig()
+end)
+
+-- Configuration Vitesse de Transit
+local transitCard = Instance.new("Frame")
+transitCard.Size = UDim2.new(1, 0, 0, 75)
+transitCard.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+transitCard.BorderSizePixel = 0
+transitCard.LayoutOrder = 4
+transitCard.Parent = pages.AutoFarm
+
+local transitCardCorner = Instance.new("UICorner")
+transitCardCorner.CornerRadius = UDim.new(0, 14)
+transitCardCorner.Parent = transitCard
+
+local transitCardStroke = Instance.new("UIStroke")
+transitCardStroke.Color = Color3.fromRGB(0, 200, 255)
+transitCardStroke.Thickness = 1
+transitCardStroke.Transparency = 0.6
+transitCardStroke.Parent = transitCard
+
+local transitLabel = Instance.new("TextLabel")
+transitLabel.Size = UDim2.new(1, -20, 0, 25)
+transitLabel.Position = UDim2.new(0, 12, 0, 8)
+transitLabel.BackgroundTransparency = 1
+transitLabel.Font = Enum.Font.GothamBold
+transitLabel.TextSize = 13
+transitLabel.TextColor3 = Color3.fromRGB(200, 215, 245)
+transitLabel.TextXAlignment = Enum.TextXAlignment.Left
+transitLabel.Text = L("CoinTransitSpeed") .. configData.CoinTransitSpeed
+transitLabel.Parent = transitCard
+
+local tMinusBtn = Instance.new("TextButton")
+tMinusBtn.Size = UDim2.new(0, 45, 0, 32)
+tMinusBtn.Position = UDim2.new(0, 12, 0, 35)
+tMinusBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+tMinusBtn.Text = "-"
+tMinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+tMinusBtn.TextSize = 16
+tMinusBtn.Font = Enum.Font.GothamBold
+tMinusBtn.Parent = transitCard
+
+local tMinusCorner = Instance.new("UICorner")
+tMinusCorner.CornerRadius = UDim.new(0, 8)
+tMinusCorner.Parent = tMinusBtn
+
+local tPlusBtn = Instance.new("TextButton")
+tPlusBtn.Size = UDim2.new(0, 45, 0, 32)
+tPlusBtn.Position = UDim2.new(0, 65, 0, 35)
+tPlusBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+tPlusBtn.Text = "+"
+tPlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+tPlusBtn.TextSize = 16
+tPlusBtn.Font = Enum.Font.GothamBold
+tPlusBtn.Parent = transitCard
+
+local tPlusCorner = Instance.new("UICorner")
+tPlusCorner.CornerRadius = UDim.new(0, 8)
+tPlusCorner.Parent = tPlusBtn
+
+local transitInfoText = Instance.new("TextLabel")
+transitInfoText.Size = UDim2.new(1, -125, 0, 32)
+transitInfoText.Position = UDim2.new(0, 120, 0, 35)
+transitInfoText.BackgroundTransparency = 1
+transitInfoText.Font = Enum.Font.GothamMedium
+transitInfoText.TextSize = 12
+transitInfoText.TextColor3 = Color3.fromRGB(150, 165, 195)
+transitInfoText.TextXAlignment = Enum.TextXAlignment.Left
+transitInfoText.Text = L("TransitHint")
+transitInfoText.Parent = transitCard
+
+tMinusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	configData.CoinTransitSpeed = math.clamp(configData.CoinTransitSpeed - 10, 10, 150)
+	transitLabel.Text = L("CoinTransitSpeed") .. configData.CoinTransitSpeed
+	saveConfig()
+end)
+
+tPlusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	configData.CoinTransitSpeed = math.clamp(configData.CoinTransitSpeed + 10, 10, 150)
+	transitLabel.Text = L("CoinTransitSpeed") .. configData.CoinTransitSpeed
+	saveConfig()
+end)
+
+local function countTotalCoinsOnMap()
+	local count = 0
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			local nameLower = obj.Name:lower()
+			if nameLower == "coin" or nameLower == "coins" or nameLower:find("coin") or nameLower:find("piece") or nameLower:find("pièce") then
+				count = count + 1
+			end
+		end
+	end
+	return count
+end
+
+local function findNearestCoin()
+	local nearest = nil
+	local shortestDist = math.huge
+	local char = localPlayer.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
+	local rootPos = char.HumanoidRootPart.Position
+
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			local nameLower = obj.Name:lower()
+			if nameLower == "coin" or nameLower == "coins" or nameLower:find("coin") or nameLower:find("piece") or nameLower:find("pièce") then
+				local dist = (obj.Position - rootPos).Magnitude
+				if dist < shortestDist then
+					shortestDist = dist
+					nearest = obj
+				end
+			end
+		end
+	end
+	return nearest
+end
+
+-- Boucle Auto-Farm anti-freeze sécurisée par interruptions et pauses
+task.spawn(function()
+	local waitingForNewRound = false
+	
+	while true do
+		if autoFarmEnabled then
+			local char = localPlayer.Character
+			if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
+				local rootPart = char.HumanoidRootPart
+				local humanoid = char:FindFirstChildOfClass("Humanoid")
+				
+				local totalCoins = countTotalCoinsOnMap()
+				
+				if totalCoins == 0 then
+					if not waitingForNewRound then
+						waitingForNewRound = true
+						autofarmBtn.Text = L("WaitMap")
+						autofarmBtn.TextColor3 = Color3.fromRGB(255, 180, 50)
+					end
+					humanoid.PlatformStand = false
+					task.wait(0.5)
+				else
+					if waitingForNewRound then
+						waitingForNewRound = false
+						autofarmBtn.Text = L("AutoFarmCoins") .. "ON"
+						autofarmBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+					end
+					
+					humanoid.PlatformStand = true
+					
+					while autoFarmEnabled and countTotalCoinsOnMap() > 0 do
+						local coin = findNearestCoin()
+						if coin and coin.Parent then
+							local timeout = 0
+							while autoFarmEnabled and coin and coin.Parent and timeout < 2 do
+								local targetCF = coin.CFrame
+								local distance = (rootPart.Position - targetCF.Position).Magnitude
+								
+								if distance < 0.5 then break end 
+								
+								local dt = RunService.RenderStepped:Wait()
+								timeout = timeout + dt
+								
+								local currentPos = rootPart.Position
+								local nextPos = currentPos:Lerp(targetCF.Position, math.clamp(configData.CoinTransitSpeed * dt / math.max(distance, 0.1), 0, 1))
+								
+								rootPart.CFrame = CFrame.new(nextPos)
+								rootPart.AssemblyLinearVelocity = Vector3.zero
+								rootPart.AssemblyAngularVelocity = Vector3.zero
+							end
+							task.wait(0.01) -- Pause impérative pour relâcher le processeur et éviter tout freeze
+						else
+							task.wait(0.01)
+						end
+					end
+					
+					humanoid.PlatformStand = false
+				end
+			else
+				task.wait(0.02)
+			end
+		else
+			task.wait(0.02)
+		end
+	end
+end)
+
+local function findPlayerByRole(targetRole)
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= localPlayer then
+			local char = plr.Character
+			local function checkContainer(container)
+				if not container then return false end
+				for _, item in ipairs(container:GetChildren()) do
+					if item:IsA("Tool") then
+						local name = item.Name:lower()
+						if targetRole == "Murderer" and (name == "knife" or name:find("couteau")) then
+							return true
+						elseif targetRole == "Sheriff" and (name == "gun" or name == "revolver" or name:find("pistolet")) then
+							return true
+						end
+					end
+				end
+				return false
+			end
+			
+			if checkContainer(plr.Backpack) or (char and checkContainer(char)) then
+				return plr
+			end
+		end
+	end
+	return nil
+end
+
+-- Tornado Cibles
+local targetMurderTornado = false
+local targetSheriffTornado = false
+
+local tornadoMurderBtn = Instance.new("TextButton")
+tornadoMurderBtn.Size = UDim2.new(1, 0, 0, 50)
+tornadoMurderBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+tornadoMurderBtn.Text = L("TargetMurder") .. "OFF"
+tornadoMurderBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+tornadoMurderBtn.TextSize = 14
+tornadoMurderBtn.Font = Enum.Font.GothamSemibold
+tornadoMurderBtn.TextXAlignment = Enum.TextXAlignment.Left
+tornadoMurderBtn.LayoutOrder = 5
+tornadoMurderBtn.Parent = pages.AutoFarm
+
+local tornadoMurderCorner = Instance.new("UICorner")
+tornadoMurderCorner.CornerRadius = UDim.new(0, 14)
+tornadoMurderCorner.Parent = tornadoMurderBtn
+
+local tornadoMurderStroke = Instance.new("UIStroke")
+tornadoMurderStroke.Color = Color3.fromRGB(255, 100, 100)
+tornadoMurderStroke.Thickness = 1
+tornadoMurderStroke.Transparency = 0.6
+tornadoMurderStroke.Parent = tornadoMurderBtn
+
+tornadoMurderBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	targetMurderTornado = not targetMurderTornado
+	if targetMurderTornado then
+		targetSheriffTornado = false
+		tornadoMurderBtn.Text = L("TargetMurder") .. "ON"
+		tornadoMurderBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+	else
+		tornadoMurderBtn.Text = L("TargetMurder") .. "OFF"
+		tornadoMurderBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+	end
+end)
+
+local tornadoSheriffBtn = Instance.new("TextButton")
+tornadoSheriffBtn.Size = UDim2.new(1, 0, 0, 50)
+tornadoSheriffBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+tornadoSheriffBtn.Text = L("TargetSheriff") .. "OFF"
+tornadoSheriffBtn.TextColor3 = Color3.fromRGB(100, 160, 255)
+tornadoSheriffBtn.TextSize = 14
+tornadoSheriffBtn.Font = Enum.Font.GothamSemibold
+tornadoSheriffBtn.TextXAlignment = Enum.TextXAlignment.Left
+tornadoSheriffBtn.LayoutOrder = 6
+tornadoSheriffBtn.Parent = pages.AutoFarm
+
+local tornadoSheriffCorner = Instance.new("UICorner")
+tornadoSheriffCorner.CornerRadius = UDim.new(0, 14)
+tornadoSheriffCorner.Parent = tornadoSheriffBtn
+
+local tornadoSheriffStroke = Instance.new("UIStroke")
+tornadoSheriffStroke.Color = Color3.fromRGB(100, 160, 255)
+tornadoSheriffStroke.Thickness = 1
+tornadoSheriffStroke.Transparency = 0.6
+tornadoSheriffStroke.Parent = tornadoSheriffBtn
+
+tornadoSheriffBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	targetSheriffTornado = not targetSheriffTornado
+	if targetSheriffTornado then
+		targetMurderTornado = false
+		tornadoSheriffBtn.Text = L("TargetSheriff") .. "ON"
+		tornadoSheriffBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+	else
+		tornadoSheriffBtn.Text = L("TargetSheriff") .. "OFF"
+		tornadoSheriffBtn.TextColor3 = Color3.fromRGB(100, 160, 255)
+	end
+end)
+
+-- Vitesse Tornado
+local tornadoSpeedCard = Instance.new("Frame")
+tornadoSpeedCard.Size = UDim2.new(1, 0, 0, 75)
+tornadoSpeedCard.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+tornadoSpeedCard.BorderSizePixel = 0
+tornadoSpeedCard.LayoutOrder = 7
+tornadoSpeedCard.Parent = pages.AutoFarm
+
+local tornadoSpeedCardCorner = Instance.new("UICorner")
+tornadoSpeedCardCorner.CornerRadius = UDim.new(0, 14)
+tornadoSpeedCardCorner.Parent = tornadoSpeedCard
+
+local tornadoSpeedCardStroke = Instance.new("UIStroke")
+tornadoSpeedCardStroke.Color = Color3.fromRGB(0, 200, 255)
+tornadoSpeedCardStroke.Thickness = 1
+tornadoSpeedCardStroke.Transparency = 0.6
+tornadoSpeedCardStroke.Parent = tornadoSpeedCard
+
+local tornadoSpeedLabel = Instance.new("TextLabel")
+tornadoSpeedLabel.Size = UDim2.new(1, -20, 0, 25)
+tornadoSpeedLabel.Position = UDim2.new(0, 12, 0, 8)
+tornadoSpeedLabel.BackgroundTransparency = 1
+tornadoSpeedLabel.Font = Enum.Font.GothamBold
+tornadoSpeedLabel.TextSize = 13
+tornadoSpeedLabel.TextColor3 = Color3.fromRGB(200, 215, 245)
+tornadoSpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+tornadoSpeedLabel.Text = L("TornadoSpeedLabel") .. configData.TornadoSpeed
+tornadoSpeedLabel.Parent = tornadoSpeedCard
+
+local tSpeedMinusBtn = Instance.new("TextButton")
+tSpeedMinusBtn.Size = UDim2.new(0, 45, 0, 32)
+tSpeedMinusBtn.Position = UDim2.new(0, 12, 0, 35)
+tSpeedMinusBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+tSpeedMinusBtn.Text = "-"
+tSpeedMinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+tSpeedMinusBtn.TextSize = 16
+tSpeedMinusBtn.Font = Enum.Font.GothamBold
+tSpeedMinusBtn.Parent = tornadoSpeedCard
+
+local tMinusCorner2 = Instance.new("UICorner")
+tMinusCorner2.CornerRadius = UDim.new(0, 8)
+tMinusCorner2.Parent = tSpeedMinusBtn
+
+local tSpeedPlusBtn = Instance.new("TextButton")
+tSpeedPlusBtn.Size = UDim2.new(0, 45, 0, 32)
+tSpeedPlusBtn.Position = UDim2.new(0, 65, 0, 35)
+tSpeedPlusBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 58)
+tSpeedPlusBtn.Text = "+"
+tSpeedPlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+tSpeedPlusBtn.TextSize = 16
+tSpeedPlusBtn.Font = Enum.Font.GothamBold
+tSpeedPlusBtn.Parent = tornadoSpeedCard
+
+local tPlusCorner2 = Instance.new("UICorner")
+tPlusCorner2.CornerRadius = UDim.new(0, 8)
+tPlusCorner2.Parent = tSpeedPlusBtn
+
+local tSpeedInfoText = Instance.new("TextLabel")
+tSpeedInfoText.Size = UDim2.new(1, -125, 0, 32)
+tSpeedInfoText.Position = UDim2.new(0, 120, 0, 35)
+tSpeedInfoText.BackgroundTransparency = 1
+tSpeedInfoText.Font = Enum.Font.GothamMedium
+tSpeedInfoText.TextSize = 12
+tSpeedInfoText.TextColor3 = Color3.fromRGB(150, 165, 195)
+tSpeedInfoText.TextXAlignment = Enum.TextXAlignment.Left
+tSpeedInfoText.Text = L("TornadoSpeedHint")
+tSpeedInfoText.Parent = tornadoSpeedCard
+
+tSpeedMinusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	configData.TornadoSpeed = math.clamp(configData.TornadoSpeed - 10, 10, 150)
+	tornadoSpeedLabel.Text = L("TornadoSpeedLabel") .. configData.TornadoSpeed
+	saveConfig()
+end)
+
+tSpeedPlusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	configData.TornadoSpeed = math.clamp(configData.TornadoSpeed + 10, 10, 150)
+	tornadoSpeedLabel.Text = L("TornadoSpeedLabel") .. configData.TornadoSpeed
+	saveConfig()
+end)
+
+RunService.RenderStepped:Connect(function(dt)
+	local targetPlr = nil
+	if targetMurderTornado then
+		targetPlr = findPlayerByRole("Murderer")
+	elseif targetSheriffTornado then
+		targetPlr = findPlayerByRole("Sheriff")
+	end
+	
+	if targetPlr and targetPlr.Character and targetPlr.Character:FindFirstChild("HumanoidRootPart") then
+		local tRoot = targetPlr.Character.HumanoidRootPart
+		local tHumanoid = targetPlr.Character:FindFirstChildOfClass("Humanoid")
+		
+		if tHumanoid then
+			tHumanoid.PlatformStand = true
+		end
+		
+		local speed = tick() * 35
+		local wanderRadius = 15
+		local wanderX = math.cos(tick() * 3) * wanderRadius
+		local wanderZ = math.sin(tick() * 3) * wanderRadius
+		
+		local verticalOscillation = math.sin(tick() * (configData.TornadoSpeed / 10)) * (configData.TornadoSpeed / 2)
+		
+		tRoot.CFrame = CFrame.new(tRoot.Position + Vector3.new(wanderX * dt * 5, 2, wanderZ * dt * 5)) * CFrame.Angles(0, speed, 0)
+		tRoot.AssemblyLinearVelocity = Vector3.new(math.random(-40, 40), verticalOscillation + 20, math.random(-40, 40))
+		tRoot.AssemblyAngularVelocity = Vector3.new(0, configData.TornadoSpeed * 1.5, 0)
+		
+		local char = localPlayer.Character
+		if char and char:FindFirstChild("HumanoidRootPart") then
+			char.HumanoidRootPart.CFrame = tRoot.CFrame * CFrame.new(0, 3, 5)
+			char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		end
+	end
+end)
+
+-- TP Maps
+local function createMapTpButton(textKey, targetPosOffset, order)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, 0, 0, 50)
+	btn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+	btn.Text = L(textKey)
+	btn.TextColor3 = Color3.fromRGB(240, 240, 250)
+	btn.TextSize = 14
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextXAlignment = Enum.TextXAlignment.Left
+	btn.LayoutOrder = order
+	btn.Parent = pages.AutoFarm
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = btn
+	
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(0, 200, 255)
+	stroke.Thickness = 1
+	stroke.Transparency = 0.6
+	stroke.Parent = btn
+	
+	btn.MouseButton1Click:Connect(function()
+		playKeyboardSound()
+		local char = localPlayer.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		
+		local rootPart = char.HumanoidRootPart
+		local foundPart = nil
+		for _, obj in ipairs(Workspace:GetDescendants()) do
+			if obj:IsA("BasePart") and (obj.Name:lower():find("spawn") or obj.Name:lower():find("lobby") or obj.Name:lower():find("floor") or obj.Name:lower():find("part")) then
+				if obj.Position.Y > -10 and obj.Position.Y < 500 then
+					foundPart = obj
+					break
+				end
+			end
+		end
+		
+		if foundPart then
+			rootPart.CFrame = foundPart.CFrame + targetPosOffset
+		else
+			rootPart.CFrame = CFrame.new(0, 15, 0) + targetPosOffset
+		end
+	end)
+	
+	return btn
+end
+
+createMapTpButton("TpMapCenter", Vector3.new(0, 5, 0), 8)
+createMapTpButton("TpRoof", Vector3.new(0, 45, 0), 9)
+
+local tpSpawnBtn = Instance.new("TextButton")
+tpSpawnBtn.Size = UDim2.new(1, 0, 0, 50)
+tpSpawnBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+tpSpawnBtn.Text = L("TpSpawn")
+tpSpawnBtn.TextColor3 = Color3.fromRGB(255, 220, 100)
+tpSpawnBtn.TextSize = 14
+tpSpawnBtn.Font = Enum.Font.GothamSemibold
+tpSpawnBtn.TextXAlignment = Enum.TextXAlignment.Left
+tpSpawnBtn.LayoutOrder = 10
+tpSpawnBtn.Parent = pages.AutoFarm
+
+local tpSpawnCorner = Instance.new("UICorner")
+tpSpawnCorner.CornerRadius = UDim.new(0, 14)
+tpSpawnCorner.Parent = tpSpawnBtn
+
+local tpSpawnStroke = Instance.new("UIStroke")
+tpSpawnStroke.Color = Color3.fromRGB(255, 220, 100)
+tpSpawnStroke.Thickness = 1
+tpSpawnStroke.Transparency = 0.6
+tpSpawnStroke.Parent = tpSpawnBtn
+
+tpSpawnBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	local char = localPlayer.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+	
+	local targetCF = CFrame.new(0, 10, 0)
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if (obj:IsA("SpawnLocation") or obj.Name:lower():find("spawn")) and obj:IsA("BasePart") then
+			targetCF = obj.CFrame + Vector3.new(0, 4, 0)
+			break
+		end
+	end
+	char.HumanoidRootPart.CFrame = targetCF
+end)
+
+-- Anglais Sheriff
+local anglaisSheriffEnabled = false
+
+local anglaisSheriffBtn = Instance.new("TextButton")
+anglaisSheriffBtn.Size = UDim2.new(1, 0, 0, 50)
+anglaisSheriffBtn.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+anglaisSheriffBtn.Text = L("EnglishSheriff") .. "OFF"
+anglaisSheriffBtn.TextColor3 = Color3.fromRGB(100, 160, 255)
+anglaisSheriffBtn.TextSize = 14
+anglaisSheriffBtn.Font = Enum.Font.GothamSemibold
+anglaisSheriffBtn.TextXAlignment = Enum.TextXAlignment.Left
+anglaisSheriffBtn.LayoutOrder = 11
+anglaisSheriffBtn.Parent = pages.AutoFarm
+
+local anglaisSheriffCorner = Instance.new("UICorner")
+anglaisSheriffCorner.CornerRadius = UDim.new(0, 14)
+anglaisSheriffCorner.Parent = anglaisSheriffBtn
+
+local anglaisSheriffStroke = Instance.new("UIStroke")
+anglaisSheriffStroke.Color = Color3.fromRGB(100, 160, 255)
+anglaisSheriffStroke.Thickness = 1
+anglaisSheriffStroke.Transparency = 0.6
+anglaisSheriffStroke.Parent = anglaisSheriffBtn
+
+anglaisSheriffBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	anglaisSheriffEnabled = not anglaisSheriffEnabled
+	if anglaisSheriffEnabled then
+		anglaisSheriffBtn.Text = L("EnglishSheriff") .. "ON"
+		anglaisSheriffBtn.TextColor3 = Color3.fromRGB(80, 255, 140)
+	else
+		anglaisSheriffBtn.Text = L("EnglishSheriff") .. "OFF"
+		anglaisSheriffBtn.TextColor3 = Color3.fromRGB(100, 160, 255)
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if not anglaisSheriffEnabled then return end
+	
+	local char = localPlayer.Character
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+	local backpack = localPlayer:FindFirstChild("Backpack")
+	
+	if not char or not humanoid then return end
+	
+	local hasGunEquipped = false
+	for _, item in ipairs(char:GetChildren()) do
+		if item:IsA("Tool") then
+			local name = item.Name:lower()
+			if name == "gun" or name == "revolver" or name:find("pistolet") then
+				hasGunEquipped = true
+				break
+			end
+		end
+	end
+	
+	if not hasGunEquipped and backpack then
+		for _, item in ipairs(backpack:GetChildren()) do
+			if item:IsA("Tool") then
+				local name = item.Name:lower()
+				if name == "gun" or name == "revolver" or name:find("pistolet") then
+					humanoid:EquipTool(item)
+					break
+				end
+			end
+		end
+	end
+end)
+
+-- Thèmes Correctement Reliés
+local function applyTheme(col1, col2)
+	mainGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, col1),
+		ColorSequenceKeypoint.new(1, col2)
+	})
+	mainStroke.Color = col2
+end
+
+local function createThemeOption(themeKey, col1, col2, order)
+	local card = Instance.new("TextButton")
+	card.Size = UDim2.new(1, 0, 0, 54)
+	card.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+	card.Text = "   " .. L(themeKey)
+	card.TextColor3 = Color3.fromRGB(240, 240, 250)
+	card.TextSize = 15
+	card.Font = Enum.Font.GothamSemibold
+	card.TextXAlignment = Enum.TextXAlignment.Left
+	card.LayoutOrder = order
+	card.Parent = pages.Themes
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = card
+	
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = col2
+	stroke.Thickness = 1.2
+	stroke.Transparency = 0.4
+	stroke.Parent = card
+	
+	card.MouseButton1Click:Connect(function()
+		playKeyboardSound()
+		applyTheme(col1, col2)
+		configData.CurrentTheme = themeKey
+		saveConfig()
+	end)
+end
+
+createThemeOption("ThemeCyber", Color3.fromRGB(15, 25, 45), Color3.fromRGB(0, 180, 255), 2)
+createThemeOption("ThemeNeon", Color3.fromRGB(30, 15, 45), Color3.fromRGB(200, 80, 255), 3)
+createThemeOption("ThemeEmerald", Color3.fromRGB(10, 35, 25), Color3.fromRGB(0, 230, 130), 4)
+createThemeOption("ThemeObsidian", Color3.fromRGB(20, 20, 25), Color3.fromRGB(255, 215, 0), 5)
+
+if configData.CurrentTheme == "ThemeNeon" or configData.CurrentTheme == "Néon Violet Majestueux" then
+	applyTheme(Color3.fromRGB(30, 15, 45), Color3.fromRGB(200, 80, 255))
+elseif configData.CurrentTheme == "ThemeEmerald" or configData.CurrentTheme == "Émeraude Cybernétique" then
+	applyTheme(Color3.fromRGB(10, 35, 25), Color3.fromRGB(0, 230, 130))
+elseif configData.CurrentTheme == "ThemeObsidian" or configData.CurrentTheme == "Obsidienne Royale" then
+	applyTheme(Color3.fromRGB(20, 20, 25), Color3.fromRGB(255, 215, 0))
+else
+	applyTheme(Color3.fromRGB(15, 25, 45), Color3.fromRGB(0, 180, 255))
+end
+
+-- Styles de Fond
+local function createBgStyleOption(styleKey, modeKey, order)
+	local card = Instance.new("TextButton")
+	card.Size = UDim2.new(1, 0, 0, 54)
+	card.BackgroundColor3 = Color3.fromRGB(18, 22, 35)
+	card.Text = "   Style : " .. L(styleKey)
+	card.TextColor3 = Color3.fromRGB(240, 240, 250)
+	card.TextSize = 15
+	card.Font = Enum.Font.GothamSemibold
+	card.TextXAlignment = Enum.TextXAlignment.Left
+	card.LayoutOrder = order
+	card.Parent = pages.Backgrounds
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = card
+	
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(0, 200, 255)
+	stroke.Thickness = 1
+	stroke.Transparency = 0.6
+	stroke.Parent = card
+	
+	card.MouseButton1Click:Connect(function()
+		playKeyboardSound()
+		generateBackground(modeKey)
+	end)
+end
+
+createBgStyleOption("BgBubbles", "Bubbles", 2)
+createBgStyleOption("BgCubes", "Cubes", 3)
+createBgStyleOption("BgStars", "Stars", 4)
+
+-- Fermeture / Réouverture
 closeBtn.MouseButton1Click:Connect(function()
-    frame.Visible = false
-    openBtn.Visible = true
+	playKeyboardSound()
+	
+	for i = 1, 40 do
+		local bubble = Instance.new("Frame")
+		local size = math.random(15, 50)
+		bubble.Size = UDim2.new(0, size, 0, size)
+		bubble.Position = mainFrame.Position + UDim2.new(math.random(), -345, math.random(), -225)
+		bubble.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+		bubble.BackgroundTransparency = 0.15
+		bubble.BorderSizePixel = 0
+		bubble.ZIndex = 25
+		bubble.Parent = screenGui
+		
+		local bCorner = Instance.new("UICorner")
+		bCorner.CornerRadius = UDim.new(1, 0)
+		bCorner.Parent = bubble
+		
+		local tw = TweenService:Create(bubble, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
+			Position = UDim2.new(0.5, 0, 0, 38),
+			Size = UDim2.new(0, 2, 0, 2),
+			BackgroundTransparency = 1,
+			Rotation = 540
+		})
+		tw:Play()
+		tw.Completed:Connect(function() bubble:Destroy() end)
+	end
+	
+	TweenService:Create(mainCorner, TweenInfo.new(0.3), { CornerRadius = UDim.new(1, 0) }):Play()
+	
+	local shrinkTween = TweenService:Create(mainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+		Size = UDim2.new(0, 0, 0, 0),
+		Position = UDim2.new(0.5, 0, 0, 38)
+	})
+	shrinkTween:Play()
+	
+	shrinkTween.Completed:Connect(function()
+		mainFrame.Visible = false
+		
+		miniButton.Size = UDim2.new(0, 0, 0, 0)
+		miniButton.Visible = true
+		TweenService:Create(miniButton, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0, 52, 0, 52)
+		}):Play()
+	end)
 end)
 
-openBtn.MouseButton1Click:Connect(function()
-    frame.Visible = true
-    openBtn.Visible = false
+miniButton.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	
+	local miniTween = TweenService:Create(miniButton, TweenInfo.new(0.15), {
+		Size = UDim2.new(0, 0, 0, 0)
+	})
+	miniTween:Play()
+	
+	miniTween.Completed:Connect(function()
+		miniButton.Visible = false
+		
+		for i = 1, 40 do
+			local bubble = Instance.new("Frame")
+			local size = math.random(15, 50)
+			bubble.Size = UDim2.new(0, 2, 0, 2)
+			bubble.Position = UDim2.new(0.5, 0, 0, 38)
+			bubble.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+			bubble.BackgroundTransparency = 0.15
+			bubble.BorderSizePixel = 0
+			bubble.ZIndex = 25
+			bubble.Parent = screenGui
+			
+			local bCorner = Instance.new("UICorner")
+			bCorner.CornerRadius = UDim.new(1, 0)
+			bCorner.Parent = bubble
+			
+			local targetPosX = 0.5 + (math.random() - 0.5) * 0.7
+			local targetPosY = 0.5 + (math.random() - 0.5) * 0.7
+			
+			local tw = TweenService:Create(bubble, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+				Position = UDim2.new(targetPosX, 0, targetPosY, 0),
+				Size = UDim2.new(0, size, 0, size),
+				BackgroundTransparency = 1,
+				Rotation = -540
+			})
+			tw:Play()
+			tw.Completed:Connect(function() bubble:Destroy() end)
+		end
+		
+		mainFrame.Size = UDim2.new(0, 0, 0, 0)
+		mainFrame.Position = UDim2.new(0.5, 0, 0, 38)
+		mainCorner.CornerRadius = UDim.new(1, 0)
+		mainFrame.Visible = true
+		
+		TweenService:Create(mainCorner, TweenInfo.new(0.4), { CornerRadius = UDim.new(0, 24) }):Play()
+		TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0, 690, 0, 450),
+			Position = UDim2.new(0.5, -345, 0.5, -225)
+		}):Play()
+	end)
 end)
 
-print("Panel vert charge")
+-- Animation initiale
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainCorner.CornerRadius = UDim.new(1, 0)
+TweenService:Create(mainCorner, TweenInfo.new(0.5), { CornerRadius = UDim.new(0, 24) }):Play()
+TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+	Size = UDim2.new(0, 690, 0, 450),
+	Position = UDim2.new(0.5, -345, 0.5, -225)
+}):Play()
