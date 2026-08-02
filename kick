@@ -60,146 +60,241 @@ end
 -- ═══════════════════════════════════════════════════
 -- GUI COMPACT
 -- ═══════════════════════════════════════════════════
-local W,H = 310,510
-local MF = Instance.new("Frame")
-MF.Name="Main"; MF.Size=UDim2.new(0,W,0,H)
-MF.Position=UDim2.new(0.5,-W/2,0.5,-H/2)
-MF.BackgroundColor3=Color3.fromRGB(11,11,17)
-MF.Active=true; MF.Draggable=true; MF.Parent=ScreenGui
-Instance.new("UICorner",MF).CornerRadius=UDim.new(0,12)
-local mst=Instance.new("UIStroke",MF)
-mst.Thickness=1.5; mst.Color=Color3.fromRGB(110,70,220)
-mst.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+-- ═══════════════════════════════════════════════════
+-- SF HUB v30 — MODERN DASHBOARD EDITION
+-- ═══════════════════════════════════════════════════
+local TweenService = game:GetService("TweenService")
 
-local function mkL(p,pos,sz,txt,fs,col,font,xa)
-    local l=Instance.new("TextLabel",p)
-    l.Size=sz; l.Position=pos; l.BackgroundTransparency=1
-    l.Text=txt; l.TextColor3=col or Color3.fromRGB(215,215,220)
-    l.Font=font or Enum.Font.Gotham; l.TextSize=fs or 10
-    l.TextXAlignment=xa or Enum.TextXAlignment.Center; l.TextWrapped=true
+-- Dimensions agrandies pour un rendu aéré et professionnel
+local W, H = 620, 480
+
+-- Fenêtre Principale
+local MF = Instance.new("Frame")
+MF.Name = "Main"
+MF.Size = UDim2.new(0, W, 0, H)
+MF.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
+MF.BackgroundColor3 = Color3.fromRGB(15, 16, 22)
+MF.Active = true
+MF.Draggable = true
+MF.Parent = ScreenGui
+
+local mfCorner = Instance.new("UICorner", MF)
+mfCorner.CornerRadius = UDim.new(0, 14)
+
+local mst = Instance.new("UIStroke", MF)
+mst.Thickness = 1.5
+mst.Color = Color3.fromRGB(110, 75, 235)
+mst.Transparency = 0.3
+mst.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Effet de survol fluide pour les boutons
+local function addHoverEffect(btn, normalBg, hoverBg)
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = hoverBg}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = normalBg}):Play()
+    end)
+end
+
+-- Création de carte (Card container)
+local function mkCard(parent, pos, sz, bg, strokeColor)
+    local f = Instance.new("Frame", parent)
+    f.Position = pos
+    f.Size = sz
+    f.BackgroundColor3 = bg or Color3.fromRGB(22, 24, 34)
+    f.BorderSizePixel = 0
+    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
+    
+    local str = Instance.new("UIStroke", f)
+    str.Thickness = 1
+    str.Color = strokeColor or Color3.fromRGB(38, 42, 60)
+    str.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    return f
+end
+
+-- Generateur de Labels
+local function mkL(p, pos, sz, txt, fs, col, font, xa)
+    local l = Instance.new("TextLabel", p)
+    l.Size = sz
+    l.Position = pos
+    l.BackgroundTransparency = 1
+    l.Text = txt
+    l.TextColor3 = col or Color3.fromRGB(220, 222, 235)
+    l.Font = font or Enum.Font.GothamMedium
+    l.TextSize = fs or 11
+    l.TextXAlignment = xa or Enum.TextXAlignment.Center
+    l.TextYAlignment = Enum.TextYAlignment.Center
+    l.TextWrapped = true
     return l
 end
-local function mkB(p,pos,sz,txt,bg,fs)
-    local b=Instance.new("TextButton",p)
-    b.Size=sz; b.Position=pos; b.BackgroundColor3=bg
-    b.Text=txt; b.TextColor3=Color3.fromRGB(255,255,255)
-    b.Font=Enum.Font.GothamBold; b.TextSize=fs or 10; b.BorderSizePixel=0
-    Instance.new("UICorner",b).CornerRadius=UDim.new(0,7)
+
+-- Generateur de Boutons
+local function mkB(p, pos, sz, txt, bg, fs)
+    local b = Instance.new("TextButton", p)
+    b.Size = sz
+    b.Position = pos
+    b.BackgroundColor3 = bg
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = fs or 11
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+    
+    local hoverCol = Color3.fromRGB(
+        math.min(255, bg.R * 255 + 25),
+        math.min(255, bg.G * 255 + 25),
+        math.min(255, bg.B * 255 + 25)
+    )
+    addHoverEffect(b, bg, hoverCol)
     return b
 end
 
--- Header
-local hdr=Instance.new("Frame",MF)
-hdr.Size=UDim2.new(1,0,0,38); hdr.BackgroundColor3=Color3.fromRGB(17,17,26)
-Instance.new("UICorner",hdr).CornerRadius=UDim.new(0,12)
-mkL(hdr,UDim2.new(0,8,0,0),UDim2.new(1,-90,1,0),
-    "🛡️ SF HUB v30 — AUTO WHITELIST",11,Color3.fromRGB(255,255,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
-local clockLbl=mkL(hdr,UDim2.new(0.42,0,0,0),UDim2.new(0.58,-42,1,0),"",9,
-    Color3.fromRGB(150,120,240),Enum.Font.GothamBold,Enum.TextXAlignment.Right)
-local minBtn=mkB(hdr,UDim2.new(1,-36,0,4),UDim2.new(0,30,0,30),"─",Color3.fromRGB(26,26,38),13)
-minBtn.ZIndex=5
+-- ═══════════════════════════════════════════════════
+-- HEADER
+-- ═══════════════════════════════════════════════════
+local hdr = Instance.new("Frame", MF)
+hdr.Size = UDim2.new(1, 0, 0, 46)
+hdr.BackgroundColor3 = Color3.fromRGB(21, 23, 33)
+hdr.BorderSizePixel = 0
+Instance.new("UICorner", hdr).CornerRadius = UDim.new(0, 14)
 
--- Bannière statut
-local bnrF=Instance.new("Frame",MF)
-bnrF.Size=UDim2.new(0.92,0,0,26); bnrF.Position=UDim2.new(0.04,0,0,44)
-bnrF.BackgroundColor3=Color3.fromRGB(150,35,35); bnrF.BorderSizePixel=0
-Instance.new("UICorner",bnrF).CornerRadius=UDim.new(0,5)
-local bnrTxt=mkL(bnrF,UDim2.new(0,6,0,0),UDim2.new(1,-8,1,0),
-    "⏳ Analyse du jeu...",9,Color3.fromRGB(255,255,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
+local hdrSep = Instance.new("Frame", hdr)
+hdrSep.Size = UDim2.new(1, 0, 0, 1)
+hdrSep.Position = UDim2.new(0, 0, 1, -1)
+hdrSep.BackgroundColor3 = Color3.fromRGB(38, 42, 60)
+hdrSep.BorderSizePixel = 0
 
--- Rapport
-local rptF=Instance.new("Frame",MF)
-rptF.Size=UDim2.new(0.92,0,0,34); rptF.Position=UDim2.new(0.04,0,0,76)
-rptF.BackgroundColor3=Color3.fromRGB(9,9,16); rptF.BorderSizePixel=0
-Instance.new("UICorner",rptF).CornerRadius=UDim.new(0,5)
-local rptTxt=mkL(rptF,UDim2.new(0,5,0,0),UDim2.new(1,-6,1,0),
-    "🔍 En attente du scan...",9,Color3.fromRGB(130,130,150),Enum.Font.GothamMedium,Enum.TextXAlignment.Left)
+mkL(hdr, UDim2.new(0, 16, 0, 0), UDim2.new(0, 280, 1, 0),
+    "🛡️ SF HUB v30 — AUTO WHITELIST", 12, Color3.fromRGB(255, 255, 255), Enum.Font.GothamBold, Enum.TextXAlignment.Left)
 
--- Whitelist status
-local wlF=Instance.new("Frame",MF)
-wlF.Size=UDim2.new(0.92,0,0,22); wlF.Position=UDim2.new(0.04,0,0,116)
-wlF.BackgroundColor3=Color3.fromRGB(40,20,70); wlF.BorderSizePixel=0
-Instance.new("UICorner",wlF).CornerRadius=UDim.new(0,5)
-local wlTxt=mkL(wlF,UDim2.new(0,5,0,0),UDim2.new(1,-6,1,0),
-    "⚪ Whitelist : Non activée",9,Color3.fromRGB(180,150,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
+local clockLbl = mkL(hdr, UDim2.new(1, -210, 0, 0), UDim2.new(0, 150, 1, 0), "", 10,
+    Color3.fromRGB(160, 130, 255), Enum.Font.GothamBold, Enum.TextXAlignment.Right)
 
--- Liste joueurs
-local plS=Instance.new("ScrollingFrame",MF)
-plS.Size=UDim2.new(0.92,0,0,82); plS.Position=UDim2.new(0.04,0,0,144)
-plS.BackgroundColor3=Color3.fromRGB(9,9,15); plS.BorderSizePixel=0
-plS.CanvasSize=UDim2.new(0,0,0,0); plS.ScrollBarThickness=3
-Instance.new("UICorner",plS).CornerRadius=UDim.new(0,6)
-local plL=Instance.new("UIListLayout",plS); plL.Padding=UDim.new(0,3)
-local plP=Instance.new("UIPadding",plS)
-plP.PaddingTop=UDim.new(0,3); plP.PaddingLeft=UDim.new(0,3); plP.PaddingRight=UDim.new(0,3)
+local minBtn = mkB(hdr, UDim2.new(1, -42, 0, 8), UDim2.new(0, 30, 0, 30), "─", Color3.fromRGB(30, 33, 48), 13)
+minBtn.ZIndex = 5
 
--- Cible
-local tgtLbl=mkL(MF,UDim2.new(0.04,0,0,232),UDim2.new(0.92,0,0,18),
-    "🎯 Ciblé : Aucun",10,Color3.fromRGB(140,140,140),Enum.Font.GothamMedium,Enum.TextXAlignment.Left)
+-- ═══════════════════════════════════════════════════
+-- COLONNE GAUCHE : DIAGNOSTIC & LOGS
+-- ═══════════════════════════════════════════════════
 
--- Raison
-local rsnBox=Instance.new("TextBox",MF)
-rsnBox.Size=UDim2.new(0.92,0,0,28); rsnBox.Position=UDim2.new(0.04,0,0,254)
-rsnBox.BackgroundColor3=Color3.fromRGB(17,17,26); rsnBox.TextColor3=Color3.fromRGB(255,255,255)
-rsnBox.PlaceholderText="Raison (optionnel)"; rsnBox.Text=""
-rsnBox.Font=Enum.Font.Gotham; rsnBox.TextSize=11; rsnBox.BorderSizePixel=0
-Instance.new("UICorner",rsnBox).CornerRadius=UDim.new(0,6)
+-- Bannière Statut Jeu
+local bnrF = mkCard(MF, UDim2.new(0, 16, 0, 58), UDim2.new(0, 280, 0, 50), Color3.fromRGB(45, 20, 25), Color3.fromRGB(120, 35, 45))
+local bnrTxt = mkL(bnrF, UDim2.new(0, 12, 0, 0), UDim2.new(1, -24, 1, 0),
+    "⏳ Analyse du jeu en cours...", 10, Color3.fromRGB(255, 215, 215), Enum.Font.GothamBold, Enum.TextXAlignment.Left)
 
--- Durée ban
-local durF=Instance.new("Frame",MF)
-durF.Size=UDim2.new(0.92,0,0,52); durF.Position=UDim2.new(0.04,0,0,288)
-durF.BackgroundColor3=Color3.fromRGB(14,14,22); durF.BorderSizePixel=0
-Instance.new("UICorner",durF).CornerRadius=UDim.new(0,7)
-mkL(durF,UDim2.new(0,6,0,2),UDim2.new(0.55,0,0,14),"⏱️ DURÉE BAN",8,
-    Color3.fromRGB(170,130,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
-local permBtn=mkB(durF,UDim2.new(0.58,0,0,2),UDim2.new(0.40,0,0,18),"☐ Permanent",
-    Color3.fromRGB(26,26,40),8)
-mkL(durF,UDim2.new(0.02,0,0,18),UDim2.new(0.29,0,0,10),"Jours",7,Color3.fromRGB(110,110,125),Enum.Font.Gotham)
-mkL(durF,UDim2.new(0.35,0,0,18),UDim2.new(0.29,0,0,10),"Heures",7,Color3.fromRGB(110,110,125),Enum.Font.Gotham)
-mkL(durF,UDim2.new(0.68,0,0,18),UDim2.new(0.29,0,0,10),"Minutes",7,Color3.fromRGB(110,110,125),Enum.Font.Gotham)
-local function mkDI(p,xp)
-    local b=Instance.new("TextBox",p)
-    b.Size=UDim2.new(0.29,0,0,24); b.Position=UDim2.new(xp,0,0,26)
-    b.BackgroundColor3=Color3.fromRGB(20,20,32); b.TextColor3=Color3.fromRGB(255,255,255)
-    b.Text="0"; b.Font=Enum.Font.GothamBold; b.TextSize=12; b.BorderSizePixel=0
-    Instance.new("UICorner",b).CornerRadius=UDim.new(0,5); return b
+-- Rapport Scan
+local rptF = mkCard(MF, UDim2.new(0, 16, 0, 116), UDim2.new(0, 280, 0, 56))
+local rptTxt = mkL(rptF, UDim2.new(0, 12, 0, 0), UDim2.new(1, -24, 1, 0),
+    "🔍 En attente du premier scan...", 10, Color3.fromRGB(160, 165, 185), Enum.Font.GothamMedium, Enum.TextXAlignment.Left)
+
+-- Whitelist Status
+local wlF = mkCard(MF, UDim2.new(0, 16, 0, 180), UDim2.new(0, 280, 0, 42), Color3.fromRGB(26, 20, 48), Color3.fromRGB(80, 45, 150))
+local wlTxt = mkL(wlF, UDim2.new(0, 12, 0, 0), UDim2.new(1, -24, 1, 0),
+    "⚪ Whitelist : Non activée", 10, Color3.fromRGB(200, 175, 255), Enum.Font.GothamBold, Enum.TextXAlignment.Left)
+
+-- Terminal de Logs
+local logF = mkCard(MF, UDim2.new(0, 16, 0, 230), UDim2.new(0, 280, 0, 234), Color3.fromRGB(11, 12, 17))
+local logHeader = mkL(logF, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 0, 16), "📜 JOURNAL D'ACTIVITÉ", 9, Color3.fromRGB(110, 115, 140), Enum.Font.GothamBold, Enum.TextXAlignment.Left)
+
+local logTxt = mkL(logF, UDim2.new(0, 12, 0, 28), UDim2.new(1, -24, 1, -36),
+    "💡 Lance le DEEP SCAN automatiquement pour analyser le serveur...", 10,
+    Color3.fromRGB(150, 155, 175), Enum.Font.GothamMedium, Enum.TextXAlignment.Left)
+logTxt.TextYAlignment = Enum.TextYAlignment.Top
+
+-- ═══════════════════════════════════════════════════
+-- COLONNE DROITE : JOUEURS & SANCTIONS
+-- ═══════════════════════════════════════════════════
+
+-- Liste des Joueurs
+local plCard = mkCard(MF, UDim2.new(0, 312, 0, 58), UDim2.new(0, 292, 0, 114))
+local plS = Instance.new("ScrollingFrame", plCard)
+plS.Size = UDim2.new(1, -8, 1, -8)
+plS.Position = UDim2.new(0, 4, 0, 4)
+plS.BackgroundTransparency = 1
+plS.BorderSizePixel = 0
+plS.CanvasSize = UDim2.new(0, 0, 0, 0)
+plS.ScrollBarThickness = 4
+plS.ScrollBarImageColor3 = Color3.fromRGB(110, 75, 235)
+
+local plL = Instance.new("UIListLayout", plS)
+plL.Padding = UDim.new(0, 4)
+local plP = Instance.new("UIPadding", plS)
+plP.PaddingTop = UDim.new(0, 2); plP.PaddingLeft = UDim.new(0, 2); plP.PaddingRight = UDim.new(0, 2)
+
+-- Joueur ciblé
+local tgtLbl = mkL(MF, UDim2.new(0, 312, 0, 180), UDim2.new(0, 292, 0, 20),
+    "🎯 Ciblé : Aucun joueur sélectionné", 10, Color3.fromRGB(180, 185, 205), Enum.Font.GothamBold, Enum.TextXAlignment.Left)
+
+-- Champ Raison
+local rsnBox = Instance.new("TextBox", MF)
+rsnBox.Size = UDim2.new(0, 292, 0, 34)
+rsnBox.Position = UDim2.new(0, 312, 0, 204)
+rsnBox.BackgroundColor3 = Color3.fromRGB(22, 24, 34)
+rsnBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+rsnBox.PlaceholderColor3 = Color3.fromRGB(110, 115, 135)
+rsnBox.PlaceholderText = "Raison de la sanction (optionnel)..."
+rsnBox.Text = ""
+rsnBox.Font = Enum.Font.Gotham
+rsnBox.TextSize = 11
+rsnBox.BorderSizePixel = 0
+rsnBox.ClearTextOnFocus = false
+Instance.new("UICorner", rsnBox).CornerRadius = UDim.new(0, 8)
+local rsnStroke = Instance.new("UIStroke", rsnBox)
+rsnStroke.Thickness = 1
+rsnStroke.Color = Color3.fromRGB(38, 42, 60)
+
+-- Durée du Ban
+local durF = mkCard(MF, UDim2.new(0, 312, 0, 246), UDim2.new(0, 292, 0, 68))
+mkL(durF, UDim2.new(0, 10, 0, 6), UDim2.new(0, 130, 0, 16), "⏱️ DURÉE BAN", 9,
+    Color3.fromRGB(175, 140, 255), Enum.Font.GothamBold, Enum.TextXAlignment.Left)
+
+local permBtn = mkB(durF, UDim2.new(1, -112, 0, 6), UDim2.new(0, 102, 0, 22), "☐ Permanent", Color3.fromRGB(32, 35, 50), 9)
+
+mkL(durF, UDim2.new(0, 10, 0, 28), UDim2.new(0, 86, 0, 10), "Jours", 8, Color3.fromRGB(120, 125, 145), Enum.Font.Gotham)
+mkL(durF, UDim2.new(0, 103, 0, 28), UDim2.new(0, 86, 0, 10), "Heures", 8, Color3.fromRGB(120, 125, 145), Enum.Font.Gotham)
+mkL(durF, UDim2.new(0, 196, 0, 28), UDim2.new(0, 86, 0, 10), "Minutes", 8, Color3.fromRGB(120, 125, 145), Enum.Font.Gotham)
+
+local function mkDI(p, xp)
+    local b = Instance.new("TextBox", p)
+    b.Size = UDim2.new(0, 86, 0, 24)
+    b.Position = UDim2.new(0, xp, 0, 38)
+    b.BackgroundColor3 = Color3.fromRGB(15, 16, 22)
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Text = "0"
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 11
+    b.BorderSizePixel = 0
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    return b
 end
-local dBox=mkDI(durF,0.02); local hBox=mkDI(durF,0.35); local mBox=mkDI(durF,0.68)
+local dBox = mkDI(durF, 10)
+local hBox = mkDI(durF, 103)
+local mBox = mkDI(durF, 196)
 
+-- Gestion de l'état Permanent
 permBtn.MouseButton1Click:Connect(function()
-    isPermanent=not isPermanent
-    permBtn.Text=isPermanent and "☑ Permanent" or "☐ Permanent"
-    permBtn.BackgroundColor3=isPermanent and Color3.fromRGB(120,25,25) or Color3.fromRGB(26,26,40)
-    for _,b in ipairs({dBox,hBox,mBox}) do
-        b.TextEditable=not isPermanent; b.Text=isPermanent and "∞" or "0"
+    isPermanent = not isPermanent
+    permBtn.Text = isPermanent and "☑ Permanent" or "☐ Permanent"
+    local targetBg = isPermanent and Color3.fromRGB(160, 35, 45) or Color3.fromRGB(32, 35, 50)
+    TweenService:Create(permBtn, TweenInfo.new(0.2), {BackgroundColor3 = targetBg}):Play()
+    
+    for _, b in ipairs({dBox, hBox, mBox}) do
+        b.TextEditable = not isPermanent
+        b.Text = isPermanent and "∞" or "0"
     end
 end)
 
--- Boutons action
-local banBtn  = mkB(MF,UDim2.new(0.04,0,0,346),UDim2.new(0.44,0,0,36),"🔨 BAN",  Color3.fromRGB(150,25,25),11)
-local kickBtn = mkB(MF,UDim2.new(0.52,0,0,346),UDim2.new(0.44,0,0,36),"👢 KICK", Color3.fromRGB(165,85,12),11)
+-- Boutons Sanctions (Bannir / Expulser)
+local banBtn  = mkB(MF, UDim2.new(0, 312, 0, 322), UDim2.new(0, 142, 0, 38), "🔨 BANNIR",  Color3.fromRGB(180, 35, 45), 11)
+local kickBtn = mkB(MF, UDim2.new(0, 462, 0, 322), UDim2.new(0, 142, 0, 38), "👢 KICK",    Color3.fromRGB(190, 95, 20), 11)
 
--- Rangée boutons tools
-local scanBtn  = mkB(MF,UDim2.new(0.04,0,0,388),UDim2.new(0.44,0,0,28),"🔬 DEEP SCAN",Color3.fromRGB(40,110,65),9)
-local wlBtn    = mkB(MF,UDim2.new(0.52,0,0,388),UDim2.new(0.44,0,0,28),"⚡ AUTO WHITELIST",Color3.fromRGB(80,35,180),9)
-local fcBtn    = mkB(MF,UDim2.new(0.04,0,0,422),UDim2.new(0.92,0,0,28),"📷 FREE CAM (OFF)",Color3.fromRGB(32,105,175),9)
-
--- Log
-local logF=Instance.new("Frame",MF)
-logF.Size=UDim2.new(0.92,0,0,46); logF.Position=UDim2.new(0.04,0,0,456)
-logF.BackgroundColor3=Color3.fromRGB(9,9,15); logF.BorderSizePixel=0
-Instance.new("UICorner",logF).CornerRadius=UDim.new(0,6)
-local logTxt=mkL(logF,UDim2.new(0,5,0,0),UDim2.new(1,-8,1,0),
-    "💡 Lance le DEEP SCAN automatiquement...",9,
-    Color3.fromRGB(130,130,150),Enum.Font.GothamMedium,Enum.TextXAlignment.Left)
-
--- ═══════════════════════════════════════════════════
--- HORLOGE
--- ═══════════════════════════════════════════════════
-RunService.Heartbeat:Connect(function()
-    local d=os.date("*t",os.time())
-    clockLbl.Text=string.format("%02d:%02d:%02d  %02d/%02d/%04d",d.hour,d.min,d.sec,d.day,d.month,d.year)
-end)
+-- Boutons Outils
+local scanBtn  = mkB(MF, UDim2.new(0, 312, 0, 368), UDim2.new(0, 142, 0, 34), "🔬 DEEP SCAN", Color3.fromRGB(32, 125, 75), 9)
+local wlBtn    = mkB(MF, UDim2.new(0, 462, 0, 368), UDim2.new(0, 142, 0, 34), "⚡ AUTO WHITELIST", Color3.fromRGB(95, 45, 190), 9)
+local fcBtn    = mkB(MF, UDim2.new(0, 312, 0, 410), UDim2.new(0, 292, 0, 34), "📷 FREE CAM (OFF)", Color3.fromRGB(30, 95, 160), 10)
 
 -- ═══════════════════════════════════════════════════
 -- LISTE JOUEURS
