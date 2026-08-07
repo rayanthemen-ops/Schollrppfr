@@ -23,10 +23,10 @@ local isPermanent     = false
 local WHITELISTED     = false
 
 -- Nettoyage
-local old = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SF_v30")
-if old then old:Destroy() end
+local old = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SF_v30")´kkk
+if old then old:Destroy() endnnnn
 
-local ScreenGui = Instance.new("ScreenGui")
+local kkkkkkkkScreenGui = j'.new("ScreenGui")
 ScreenGui.Name = "SF_v30"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -51,7 +51,7 @@ local function notif(msg, col)
     TweenService:Create(f,TweenInfo.new(0.25,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),
         {Position=UDim2.new(0.5,-160,1,-148)}):Play()
     task.delay(3.5,function()
-        local t=TweenService:Create(f,TweenInfo.new(0.25,Enum.EasingStyle.Quart,Enum.EasingDirection.In),
+        local t=TweenService:Create(f,TweenInfo.new(0.25,Enum.EasingStyle.Quartjjjj,Enum.EasingDirection.In),
             {Position=UDim2.new(0.5,-160,1,-78)})
         t:Play(); t.Completed:Connect(function() f:Destroy() end)
     end)
