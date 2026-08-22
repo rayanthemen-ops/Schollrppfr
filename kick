@@ -23,10 +23,10 @@ local isPermanent     = false
 local WHITELISTED     = false
 
 -- Nettoyage
-local old = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SF_v30")´kkk
-if old then old:Destroy() endnnnn
+local old = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SF_v30")´
+if old then old:Destroy() 
 
-local kkkkkkkkScreenGui = j'.new("ScreenGui")
+local ScreenGui = j'.new("ScreenGui")
 ScreenGui.Name = "SF_v30"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
