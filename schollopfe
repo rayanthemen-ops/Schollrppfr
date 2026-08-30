@@ -533,6 +533,7 @@ btn.MouseButton1Click:Connect(function()
     if not hrp then return end
 
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+    screenGui.Name = "LoadingGui" -- Nommé explicitement pour le nettoyage plus bas
     screenGui.IgnoreGuiInset = true
 
     local frame = Instance.new("Frame", screenGui)
@@ -563,67 +564,79 @@ btn.MouseButton1Click:Connect(function()
     dots.Position = UDim2.new(0, 0, 0.55, 0)
     dots.BackgroundTransparency = 1
 
-task.spawn(function()
-while screenGui.Parent do
-dots.Text = ". " ; task.wait(0.3)
-dots.Text = ". .  " ; task.wait(0.3)
-dots.Text = ". . . " ; task.wait(0.3)
+    task.spawn(function()
+        while screenGui.Parent do
+            dots.Text = ". " ; task.wait(0.3)
+            dots.Text = ". .  " ; task.wait(0.3)
+            dots.Text = ". . . " ; task.wait(0.3)
         end
     end)
 
-task.spawn(function()
-    local player = game.Players.LocalPlayer
-    local success, err = pcall(function()
-        -- On attend le caractère si nécessaire
-        local character = player.Character or player.CharacterAdded:Wait()
-        local hrp = character:WaitForChild("HumanoidRootPart", 2)
-        local humanoid = character:WaitForChild("Humanoid", 2)
-        
-        if not hrp or not humanoid then error("Personnage non trouvé") end
+    task.spawn(function()
+        local player = game.Players.LocalPlayer
+        local success, err = pcall(function()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart", 2)
+            local humanoid = character:WaitForChild("Humanoid", 2)
+            
+            if not hrp or not humanoid then error("Personnage non trouvé") end
 
-        -- 1. Scan optimisé : on cherche dans un dossier spécifique si possible (ex: workspace.Bases)
-        -- Si tu n'as pas de dossier, on garde ta boucle mais en utilisant ipairs (plus rapide)
-        local targetObj = nil
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-                targetObj = obj
-                break
+            local targetObj = nil
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+                    targetObj = obj
+                    break
+                end
+            end
+
+            if not targetObj then error("Cible introuvable") end
+
+            -- Désactivation des états de chute pour éviter le ragdoll
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+
+            local destination = targetObj:GetPivot() * CFrame.new(0, 3.5, 0)
+            local startPos = hrp.CFrame
+
+            -- BY-PASS ANTI-CHEAT (Méthode Tween/Interpolation fluide + Masquage de vélocité)
+            local steps = 15 -- Nombre d'étapes intermédiaires pour simuler un déplacement rapide mais progressif
+            for i = 1, steps do
+                if not hrp or not character:FindFirstChild("Humanoid") then break end
+                -- Calcul de la position intermédiaire
+                hrp.CFrame = startPos:Lerp(destination, i / steps)
+                -- Neutraliser la vélocité pour empêcher les calculs de vitesse excessive du serveur
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                task.wait(0.02) -- Très court délai pour passer inaperçu
+            end
+
+            -- Position finale exacte
+            hrp.CFrame = destination
+            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            
+            task.wait(0.5) 
+
+            -- Réactivation des états
+            if humanoid and humanoid.Parent then 
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+            end
+        end)
+
+        if not success then
+            warn("Erreur TP : " + tostring(err))
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.Anchored = false
             end
         end
 
-        if not targetObj then error("Cible introuvable") end
-
-        -- 2. Désactivation des états de dégâts
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hrp.Anchored = true
-        
-        -- TP au Pivot de l'objet (plus précis)
-        hrp.CFrame = targetObj:GetPivot() * CFrame.new(0, 3.5, 0)
-        
-        task.wait(1) 
-
-        -- 3. Libération sécurisée
-        hrp.Anchored = false
-        hrp.AssemblyLinearVelocity = Vector3.new(0, -20, 0)
-        task.wait(0.5)
-        
-        -- Vérification que le perso est toujours vivant avant de réactiver
-        if humanoid then humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
-    end)
-
-    if not success then
-        warn("Erreur TP : " .. tostring(err))
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.Anchored = false
+        -- Nettoyage propre de l'UI de chargement
+        if screenGui and screenGui.Parent then 
+            screenGui:Destroy() 
         end
-    end
+    end)
+end)
 
-    -- Nettoyage propre
-    local gui = player.PlayerGui:FindFirstChild("LoadingGui") -- Assure-toi que le nom correspond
-    if gui then gui:Destroy() end
-end)
-end)
 
 
 
