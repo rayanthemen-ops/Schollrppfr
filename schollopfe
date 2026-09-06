@@ -592,33 +592,32 @@ btn.MouseButton1Click:Connect(function()
 
             if not targetObj then error("Cible introuvable") end
 
+            -- Désactivation des états pour éviter le ragdoll
             humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
             humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
 
             local destination = targetObj:GetPivot() * CFrame.new(0, 3.5, 0)
-            local startPos = hrp.CFrame
 
-            -- Annulation de la physique en ancrant temporairement pour éviter les calculs aberrants du serveur
-            hrp.Anchored = true
-
-            local steps = 10
-            for i = 1, steps do
-                if not hrp or not character:FindFirstChild("Humanoid") then break end
-                hrp.CFrame = startPos:Lerp(destination, i / steps)
-                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                task.wait(0.015)
-            end
-
+            -- ÉTAPE 1 : TP BRUT direct
             hrp.CFrame = destination
+
+            -- ÉTAPE 2 : Annulation totale de la vélocité (Vitesse à 0 net)
             hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
             hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            
-            -- Désancrage une fois la position finale atteinte
+
+            -- Petite astuce pour forcer le serveur à accepter la position sans rollback :
+            -- Un très court ancrage pour stabiliser la vitesse à 0, puis désancrage instantané
+            hrp.Anchored = true
+            task.wait(0.1)
             hrp.Anchored = false
-            
+
+            -- Remise à zéro de sécurité après le désancrage
+            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
             task.wait(0.3) 
 
+            -- Réactivation des états du humanoid
             if humanoid and humanoid.Parent then 
                 humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
                 humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
@@ -638,6 +637,7 @@ btn.MouseButton1Click:Connect(function()
         end
     end)
 end)
+
 
 
 
