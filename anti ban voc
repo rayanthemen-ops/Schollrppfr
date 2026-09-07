@@ -2,39 +2,31 @@ local Players = game:GetService("Players")
 local VoiceChatService = game:GetService("VoiceChatService")
 local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
-
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "VoiceControlPanel"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
-
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 220, 0, 110)
 mainFrame.Position = UDim2.new(0.5, -110, 0.83, -55)
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
-
 local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 12)
 uiCorner.Parent = mainFrame
-
--- Bouton Fausse Déco (Coupe le service mais garde l'illusion)
 local fakeCutBtn = Instance.new("TextButton")
-fakeCutBtn.Size = UDim2.new(0.9, 0, 0, 35)
-fakeCutBtn.Position = UDim2.new(0.05, 0, 0, 12)
-fakeCutBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-fakeCutBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-fakeCutBtn.TextSize = 13
-fakeCutBtn.Font = Enum.Font.GothamSemibold
-fakeCutBtn.Text = " appui ici sale zgeg (Déco)"
-fakeCutBtn.Parent = mainFrame
-
+CutBtn.Size = UDim2.new(0.9, 0, 0, 35)
+CutBtn.Position = UDim2.new(0.05, 0, 0, 12)
+CutBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CutBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CutBtn.TextSize = 13
+CutBtn.Font = Enum.Font.GothamSemibold
+CutBtn.Text = " appui ici sale zgeg (Déco)"
+CutBtn.Parent = mainFrame
 local cutCorner = Instance.new("UICorner")
 cutCorner.CornerRadius = UDim.new(0, 8)
-cutCorner.Parent = fakeCutBtn
-
--- Bouton Reconnexion / Rétablissement
+cutCorner.Parent = fakeCutBt
 local reconnectBtn = Instance.new("TextButton")
 reconnectBtn.Size = UDim2.new(0.9, 0, 0, 35)
 reconnectBtn.Position = UDim2.new(0.05, 0, 0, 58)
@@ -44,31 +36,26 @@ reconnectBtn.TextSize = 13
 reconnectBtn.Font = Enum.Font.GothamSemibold
 reconnectBtn.Text = " puis appui ici pour insulter "
 reconnectBtn.Parent = mainFrame
-
 local recCorner = Instance.new("UICorner")
 recCorner.CornerRadius = UDim.new(0, 8)
 recCorner.Parent = reconnectBtn
-
--- Action de coupure fictive
-fakeCutBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		VoiceChatService:leaveVoice()
-	end)
-	StarterGui:SetCore("SendNotification", {
-		Title = "Chat Vocal",
-		Text = "Statut : la cv ()",
-		Duration = 3
-	})
+CutBtn.MouseButton1Click:Connect(function()
+pcall(function()
+VoiceChatService:leaveVoice()
 end)
-
--- Action de reconnexion
+StarterGui:SetCore("SendNotification", {
+Title = "Chat Vocal",
+Text = "Statut : la cv ()",
+Duration = 3
+})
+end)
 reconnectBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		VoiceChatService:joinVoice()
-	end)
-	StarterGui:SetCore("SendNotification", {
-		Title = "Chat Vocal",
-		Text = "le chat vocal et la,maintenant tu peut insulter trdc  !",
-		Duration = 3
-	})
+pcall(function()
+VoiceChatService:joinVoice()
+end)
+StarterGui:SetCore("SendNotification", {
+Title = "Chat Vocal",
+Text = "le chat vocal et la,maintenant tu peut insulter trdc  !",
+Duration = 3
+})
 end)
