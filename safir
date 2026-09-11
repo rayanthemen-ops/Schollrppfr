@@ -1,0 +1,656 @@
+-- =========================================================================
+-- STEAL A BRAINROT : PRODUCTION SCANNER, INCREMENTAL MONITOR & EXPORTER
+-- =========================================================================
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+
+local DEBUG_MODE = true
+local function logDebug(...)
+    if DEBUG_MODE then
+        print("[BrainrotScanner Debug]", ...)
+    end
+end
+
+-- Raretés officielles
+local RARITY_CONFIG = {
+    ["Common"]        = { Color = Color3.fromRGB(175, 175, 175), Order = 1 },
+    ["Rare"]          = { Color = Color3.fromRGB(60, 160, 255),  Order = 2 },
+    ["Epic"]          = { Color = Color3.fromRGB(190, 70, 255),  Order = 3 },
+    ["Legendary"]     = { Color = Color3.fromRGB(255, 190, 0),   Order = 4 },
+    ["Mythic"]        = { Color = Color3.fromRGB(255, 55, 95),   Order = 5 },
+    ["Brainrot God"]  = { Color = Color3.fromRGB(0, 240, 255),   Order = 6 },
+    ["Secret"]        = { Color = Color3.fromRGB(50, 255, 150),  Order = 7 },
+    ["OG"]            = { Color = Color3.fromRGB(255, 215, 0),   Order = 8 },
+}
+
+-- Base de métadonnées
+local BRAINROT_META = {
+    ["Strawberry Elephant"]  = { Rarity = "OG",           Cost = 750000000000, Income = 750000000, Icon = "rbxassetid://13531123412" },
+    ["Headless Horseman"]    = { Rarity = "Secret",       Cost = 550000000000, Income = 550000000, Icon = "rbxassetid://13531123514" },
+    ["Ballerino Lololo"]     = { Rarity = "Brainrot God", Cost = 35000000,     Income = 200000,    Icon = "rbxassetid://13531123610" },
+    ["Nyan Cat"]             = { Rarity = "OG",           Cost = 100000000,    Income = 1500000,   Icon = "rbxassetid://10998366879" },
+    ["Sigma"]                = { Rarity = "Mythic",       Cost = 15000000,     Income = 85000,     Icon = "rbxassetid://13531123720" },
+    ["GigaChad"]             = { Rarity = "Legendary",    Cost = 2500000,      Income = 18000,     Icon = "rbxassetid://13531123830" },
+    ["Mewing Cat"]           = { Rarity = "Epic",         Cost = 350000,       Income = 3200,      Icon = "rbxassetid://13531123940" },
+    ["Tung Tung"]            = { Rarity = "Rare",         Cost = 45000,        Income = 450,       Icon = "rbxassetid://13531124050" },
+    ["Noobini Pizzanini"]    = { Rarity = "Common",       Cost = 1000,         Income = 15,        Icon = "rbxassetid://13531124160" },
+}
+
+local function formatCash(amount)
+    amount = tonumber(amount) or 0
+    if amount >= 1e12 then return string.format("$%.2fT", amount / 1e12) end
+    if amount >= 1e9  then return string.format("$%.2fB", amount / 1e9) end
+    if amount >= 1e6  then return string.format("$%.2fM", amount / 1e6) end
+    if amount >= 1e3  then return string.format("$%.1fK", amount / 1e3) end
+    return string.format("$%d", amount)
+end
+
+-- =========================================================================
+-- GESTION MÉMOIRE & SÉLECTEURS DE STRUCTURE RÉELLE
+-- =========================================================================
+
+local activeItems = {}        -- [Instance] = ItemData
+local activeCards = {}        -- [Instance] = Frame
+local baseListeners = {}      -- [Instance] = { Connection1, Connection2, ... }
+
+-- Détection étendue de l'Owner sur toutes les variations de structures de bases
+local function extractOwner(base)
+    -- 1. Attributs directs
+    local attr = base:GetAttribute("Owner") or base:GetAttribute("OwnerName") or base:GetAttribute("Player") or base:GetAttribute("BaseOwner")
+    if attr and tostring(attr) ~= "" then return tostring(attr) end
+
+    -- 2. ValueObjects (StringValue, ObjectValue, IntValue UserId)
+    local valObj = base:FindFirstChild("Owner") or base:FindFirstChild("OwnerName") or base:FindFirstChild("BaseOwner")
+    if valObj and valObj:IsA("ValueBase") and valObj.Value ~= "" then
+        if valObj:IsA("ObjectValue") and valObj.Value then return valObj.Value.Name end
+        return tostring(valObj.Value)
+    end
+
+    -- 3. Panneaux de base (Signs / BillboardGui / SurfaceGui)
+    local sign = base:FindFirstChild("Sign") or base:FindFirstChild("OwnerSign") or base:FindFirstChild("PlotSign")
+    if sign then
+        local textLabel = sign:FindFirstChildWhichIsA("TextLabel", true)
+        if textLabel and textLabel.Text ~= "" and not string.find(string.lower(textLabel.Text), "unclaimed") then
+            return textLabel.Text
+        end
+    end
+
+    return base.Name
+end
+
+-- Sélecteurs d'income, rarity et cost avec navigation dans les dossiers / stats
+local function extractStats(inst, bName)
+    local meta = BRAINROT_META[bName]
+
+    -- Recherche de conteneurs de stats dédiés
+    local statsFolder = inst:FindFirstChild("Stats") or inst:FindFirstChild("Data") or inst:FindFirstChild("Config")
+
+    -- Extraction Income
+    local income = inst:GetAttribute("Income")
+        or inst:GetAttribute("CashPerSec")
+        or inst:GetAttribute("CashRate")
+        or inst:GetAttribute("MoneyPerSecond")
+        or (statsFolder and statsFolder:GetAttribute("Income"))
+        or (inst:FindFirstChild("Income") and inst.Income.Value)
+        or (inst:FindFirstChild("CashPerSec") and inst.CashPerSec.Value)
+        or (statsFolder and statsFolder:FindFirstChild("Income") and statsFolder.Income.Value)
+        or (meta and meta.Income)
+        or 0
+
+    -- Extraction Rarity
+    local rarity = inst:GetAttribute("Rarity")
+        or inst:GetAttribute("Tier")
+        or (statsFolder and statsFolder:GetAttribute("Rarity"))
+        or (inst:FindFirstChild("Rarity") and inst.Rarity.Value)
+        or (statsFolder and statsFolder:FindFirstChild("Rarity") and statsFolder.Rarity.Value)
+        or (meta and meta.Rarity)
+        or "Common"
+
+    -- Extraction Cost
+    local cost = inst:GetAttribute("Cost")
+        or inst:GetAttribute("Price")
+        or (statsFolder and statsFolder:GetAttribute("Cost"))
+        or (inst:FindFirstChild("Cost") and inst.Cost.Value)
+        or (meta and meta.Cost)
+        or 0
+
+    -- Extraction Icone
+    local icon = meta and meta.Icon or "rbxassetid://1084991219"
+    local decal = inst:FindFirstChildWhichIsA("Decal", true)
+    if decal and decal.Texture ~= "" then icon = decal.Texture end
+
+    return tonumber(income) or 0, tostring(rarity), tonumber(cost) or 0, icon
+end
+
+-- =========================================================================
+-- INTERFACE GRAPHIQUE
+-- =========================================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BrainrotScannerSuite"
+ScreenGui.ResetOnSpawn = false
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 600, 0, 530)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -265)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 26)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 14)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(45, 52, 78)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = MainFrame
+
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 56)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 25, 38)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 14)
+TopCorner.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Text = "🧠 Steal a Brainrot — Radar Scanner & Base Monitor"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextColor3 = Color3.fromRGB(240, 243, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Position = UDim2.new(0, 16, 0, 0)
+Title.Size = UDim2.new(0.45, 0, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Parent = TopBar
+
+-- Boutons d'actions
+local ActionsHolder = Instance.new("Frame")
+ActionsHolder.Size = UDim2.new(0, 310, 0, 32)
+ActionsHolder.Position = UDim2.new(1, -320, 0.5, -16)
+ActionsHolder.BackgroundTransparency = 1
+ActionsHolder.Parent = TopBar
+
+local ActionsLayout = Instance.new("UIListLayout")
+ActionsLayout.FillDirection = Enum.FillDirection.Horizontal
+ActionsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+ActionsLayout.Padding = UDim.new(0, 6)
+ActionsLayout.Parent = ActionsHolder
+
+local function createHeaderBtn(text, color, width)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, width or 75, 1, 0)
+    btn.BackgroundColor3 = color
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 11
+    btn.Parent = ActionsHolder
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    return btn
+end
+
+local FullScanBtn = createHeaderBtn("🔄 Reset Total", Color3.fromRGB(45, 120, 230), 85)
+local ExportBtn   = createHeaderBtn("📤 Export", Color3.fromRGB(40, 165, 100), 70)
+local CloseBtn    = createHeaderBtn("✕", Color3.fromRGB(40, 45, 65), 32)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local ScrollList = Instance.new("ScrollingFrame")
+ScrollList.Size = UDim2.new(1, -24, 1, -75)
+ScrollList.Position = UDim2.new(0, 12, 0, 66)
+ScrollList.BackgroundTransparency = 1
+ScrollList.ScrollBarThickness = 5
+ScrollList.ScrollBarImageColor3 = Color3.fromRGB(70, 80, 120)
+ScrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollList.Parent = MainFrame
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 8)
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ListLayout.Parent = ScrollList
+
+ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    ScrollList.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 12)
+end)
+
+-- Fenêtre modale de détails
+local DetailModal = Instance.new("Frame")
+DetailModal.Size = UDim2.new(0, 460, 0, 360)
+DetailModal.Position = UDim2.new(0.5, -230, 0.5, -180)
+DetailModal.BackgroundColor3 = Color3.fromRGB(20, 24, 38)
+DetailModal.BorderSizePixel = 0
+DetailModal.Visible = false
+DetailModal.ZIndex = 10
+DetailModal.Parent = ScreenGui
+
+local ModalCorner = Instance.new("UICorner")
+ModalCorner.CornerRadius = UDim.new(0, 12)
+ModalCorner.Parent = DetailModal
+
+local ModalStroke = Instance.new("UIStroke")
+ModalStroke.Color = Color3.fromRGB(70, 85, 140)
+ModalStroke.Thickness = 1.8
+ModalStroke.Parent = DetailModal
+
+local ModalTitle = Instance.new("TextLabel")
+ModalTitle.Font = Enum.Font.GothamBold
+ModalTitle.TextSize = 16
+ModalTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ModalTitle.Position = UDim2.new(0, 20, 0, 15)
+ModalTitle.Size = UDim2.new(1, -70, 0, 24)
+ModalTitle.TextXAlignment = Enum.TextXAlignment.Left
+ModalTitle.BackgroundTransparency = 1
+ModalTitle.ZIndex = 11
+ModalTitle.Parent = DetailModal
+
+local ModalCloseBtn = Instance.new("TextButton")
+ModalCloseBtn.Text = "✕"
+ModalCloseBtn.Font = Enum.Font.GothamBold
+ModalCloseBtn.TextSize = 14
+ModalCloseBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+ModalCloseBtn.BackgroundColor3 = Color3.fromRGB(35, 40, 60)
+ModalCloseBtn.Position = UDim2.new(1, -45, 0, 12)
+ModalCloseBtn.Size = UDim2.new(0, 30, 0, 30)
+ModalCloseBtn.ZIndex = 11
+ModalCloseBtn.Parent = DetailModal
+
+local ModalCloseCorner = Instance.new("UICorner")
+ModalCloseCorner.CornerRadius = UDim.new(0, 6)
+ModalCloseCorner.Parent = ModalCloseBtn
+
+ModalCloseBtn.MouseButton1Click:Connect(function()
+    DetailModal.Visible = false
+end)
+
+local ModalContent = Instance.new("TextLabel")
+ModalContent.Font = Enum.Font.Gotham
+ModalContent.TextSize = 12
+ModalContent.TextColor3 = Color3.fromRGB(215, 220, 240)
+ModalContent.Position = UDim2.new(0, 20, 0, 52)
+ModalContent.Size = UDim2.new(1, -40, 1, -65)
+ModalContent.TextXAlignment = Enum.TextXAlignment.Left
+ModalContent.TextYAlignment = Enum.TextYAlignment.Top
+ModalContent.BackgroundTransparency = 1
+ModalContent.RichText = true
+ModalContent.ZIndex = 11
+ModalContent.Parent = DetailModal
+
+-- =========================================================================
+-- SYNCHRONISATION DES CARTES & TRI
+-- =========================================================================
+
+local function updateCardLayout()
+    local sortedList = {}
+    for _, item in pairs(activeItems) do
+        table.insert(sortedList, item)
+    end
+
+    table.sort(sortedList, function(a, b)
+        return a.Income > b.Income
+    end)
+
+    for rank, item in ipairs(sortedList) do
+        local card = activeCards[item.Instance]
+        if card then
+            card.LayoutOrder = rank
+            local rankLbl = card:FindFirstChild("RankBadge", true)
+            if rankLbl then
+                rankLbl.Text = "#" .. tostring(rank)
+                rankLbl.TextColor3 = rank == 1 and Color3.fromRGB(255, 215, 0)
+                    or (rank == 2 and Color3.fromRGB(205, 205, 205) or Color3.fromRGB(150, 155, 175))
+            end
+        end
+    end
+end
+
+local function removeBrainrot(inst)
+    if activeItems[inst] then
+        activeItems[inst] = nil
+        if activeCards[inst] then
+            activeCards[inst]:Destroy()
+            activeCards[inst] = nil
+        end
+        updateCardLayout()
+        logDebug("Suppression Brainrot :", inst.Name)
+    end
+end
+
+local function addOrUpdateBrainrot(inst, base)
+    if not inst:IsA("Model") then return end
+
+    -- Validation de détection d'un Brainrot
+    local isBrainrot = inst:GetAttribute("Brainrot") 
+        or inst:FindFirstChild("Brainrot")
+        or inst:FindFirstChild("Income")
+        or inst:FindFirstChild("CashPerSec")
+        or BRAINROT_META[inst.Name]
+
+    if not isBrainrot then return end
+
+    local bName = inst.Name
+    local meta = BRAINROT_META[bName]
+    local income, rarity, cost, icon = extractStats(inst, bName)
+    local owner = extractOwner(base)
+
+    -- Déduplication et stockage de l'instance
+    activeItems[inst] = {
+        Instance = inst,
+        Base = base,
+        Name = bName,
+        Owner = owner,
+        Income = income,
+        Rarity = rarity,
+        Cost = cost,
+        Icon = icon,
+        IsKnown = meta ~= nil,
+        Attributes = inst:GetAttributes(),
+        BaseAttributes = base:GetAttributes()
+    }
+
+    local rarityData = RARITY_CONFIG[rarity] or RARITY_CONFIG["Common"]
+    local card = activeCards[inst]
+
+    if not card then
+        card = Instance.new("TextButton")
+        card.Size = UDim2.new(1, 0, 0, 68)
+        card.BackgroundColor3 = Color3.fromRGB(23, 27, 40)
+        card.BorderSizePixel = 0
+        card.Text = ""
+        card.AutoButtonColor = false
+        card.Parent = ScrollList
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 10)
+        corner.Parent = card
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "Stroke"
+        stroke.Thickness = 1.2
+        stroke.Parent = card
+
+        local rankBadge = Instance.new("TextLabel")
+        rankBadge.Name = "RankBadge"
+        rankBadge.Size = UDim2.new(0, 36, 1, 0)
+        rankBadge.Position = UDim2.new(0, 6, 0, 0)
+        rankBadge.BackgroundTransparency = 1
+        rankBadge.Font = Enum.Font.GothamBold
+        rankBadge.TextSize = 14
+        rankBadge.Parent = card
+
+        local iconImg = Instance.new("ImageLabel")
+        iconImg.Name = "Icon"
+        iconImg.Size = UDim2.new(0, 48, 0, 48)
+        iconImg.Position = UDim2.new(0, 44, 0.5, -24)
+        iconImg.BackgroundColor3 = Color3.fromRGB(12, 14, 22)
+        iconImg.Parent = card
+
+        local iconCorner = Instance.new("UICorner")
+        iconCorner.CornerRadius = UDim.new(0, 8)
+        iconCorner.Parent = iconImg
+
+        local nameLbl = Instance.new("TextLabel")
+        nameLbl.Name = "NameLabel"
+        nameLbl.Font = Enum.Font.GothamBold
+        nameLbl.TextSize = 13
+        nameLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+        nameLbl.Position = UDim2.new(0, 102, 0, 14)
+        nameLbl.Size = UDim2.new(0, 210, 0, 18)
+        nameLbl.BackgroundTransparency = 1
+        nameLbl.Parent = card
+
+        local baseLbl = Instance.new("TextLabel")
+        baseLbl.Name = "BaseLabel"
+        baseLbl.Font = Enum.Font.Gotham
+        baseLbl.TextSize = 11
+        baseLbl.TextColor3 = Color3.fromRGB(160, 165, 190)
+        baseLbl.TextXAlignment = Enum.TextXAlignment.Left
+        baseLbl.Position = UDim2.new(0, 102, 0, 34)
+        baseLbl.Size = UDim2.new(0, 210, 0, 16)
+        baseLbl.BackgroundTransparency = 1
+        baseLbl.Parent = card
+
+        local rarityBadge = Instance.new("TextLabel")
+        rarityBadge.Name = "RarityBadge"
+        rarityBadge.Font = Enum.Font.GothamBold
+        rarityBadge.TextSize = 10
+        rarityBadge.BackgroundColor3 = Color3.fromRGB(14, 16, 24)
+        rarityBadge.Position = UDim2.new(1, -215, 0.5, -12)
+        rarityBadge.Size = UDim2.new(0, 80, 0, 24)
+        rarityBadge.Parent = card
+
+        local rCorner = Instance.new("UICorner")
+        rCorner.CornerRadius = UDim.new(0, 6)
+        rCorner.Parent = rarityBadge
+
+        local incomeLbl = Instance.new("TextLabel")
+        incomeLbl.Name = "IncomeLabel"
+        incomeLbl.Font = Enum.Font.GothamBold
+        incomeLbl.TextSize = 13
+        incomeLbl.TextColor3 = Color3.fromRGB(75, 235, 130)
+        incomeLbl.TextXAlignment = Enum.TextXAlignment.Right
+        incomeLbl.Position = UDim2.new(1, -125, 0.5, -10)
+        incomeLbl.Size = UDim2.new(0, 115, 0, 20)
+        incomeLbl.BackgroundTransparency = 1
+        incomeLbl.Parent = card
+
+        -- Clic sur la carte -> modale complète
+        card.MouseButton1Click:Connect(function()
+            local item = activeItems[inst]
+            if not item then return end
+
+            local instAttrStr = ""
+            for k, v in pairs(item.Attributes) do
+                instAttrStr = instAttrStr .. string.format("• %s: %s\n", tostring(k), tostring(v))
+            end
+            if instAttrStr == "" then instAttrStr = "<i>Aucun</i>\n" end
+
+            local baseAttrStr = ""
+            for k, v in pairs(item.BaseAttributes) do
+                baseAttrStr = baseAttrStr .. string.format("• %s: %s\n", tostring(k), tostring(v))
+            end
+            if baseAttrStr == "" then baseAttrStr = "<i>Aucun</i>\n" end
+
+            local alert = item.IsKnown and "" or "<font color=\"#FF5555\">⚠️ <b>Non répertorié dans le catalogue officiel</b></font>\n\n"
+
+            ModalTitle.Text = item.Name
+            ModalContent.Text = string.format(
+                "%s" ..
+                "<b>Rareté :</b> <font color=\"#%s\">%s</font>\n" ..
+                "<b>Revenu :</b> <font color=\"#48E680\">%s/s</font> | <b>Coût :</b> %s\n\n" ..
+                "<b>Propriétaire :</b> %s\n" ..
+                "<b>Base :</b> %s\n\n" ..
+                "<b>Attributs Brainrot :</b>\n%s\n" ..
+                "<b>Attributs Base :</b>\n%s",
+                alert,
+                rarityData.Color:ToHex(),
+                item.Rarity,
+                formatCash(item.Income),
+                formatCash(item.Cost),
+                item.Owner,
+                item.Base.Name,
+                instAttrStr,
+                baseAttrStr
+            )
+            DetailModal.Visible = true
+        end)
+
+        activeCards[inst] = card
+    end
+
+    -- Mise à jour visuelle des labels
+    card:FindFirstChild("Stroke").Color = rarityData.Color
+    card:FindFirstChild("Icon").Image = icon
+    card:FindFirstChild("NameLabel").Text = bName .. (meta and "" or " ⚠️")
+    card:FindFirstChild("BaseLabel").Text = "🏰 " .. owner .. " (" .. base.Name .. ")"
+    
+    local rBadge = card:FindFirstChild("RarityBadge")
+    rBadge.Text = rarity
+    rBadge.TextColor3 = rarityData.Color
+
+    card:FindFirstChild("IncomeLabel").Text = formatCash(income) .. "/s"
+
+    updateCardLayout()
+end
+
+-- =========================================================================
+-- NETTOYAGE & BINDING DES BASES (ANTI-FUITE / ANTI-DOUBLON)
+-- =========================================================================
+
+local function clearBaseListeners(base)
+    if baseListeners[base] then
+        for _, conn in ipairs(baseListeners[base]) do
+            conn:Disconnect()
+        end
+        baseListeners[base] = nil
+        logDebug("Listeners nettoyés pour la base :", base.Name)
+    end
+end
+
+local function bindBase(base)
+    clearBaseListeners(base) -- Protection : déconnexion préalable de tout listener existant
+    baseListeners[base] = {}
+
+    local connAdded = base.DescendantAdded:Connect(function(descendant)
+        task.wait(0.1)
+        addOrUpdateBrainrot(descendant, base)
+    end)
+
+    local connRemoving = base.DescendantRemoving:Connect(function(descendant)
+        removeBrainrot(descendant)
+    end)
+
+    local connAttr = base:GetAttributeChangedSignal("Owner"):Connect(function()
+        for inst, item in pairs(activeItems) do
+            if item.Base == base then
+                addOrUpdateBrainrot(inst, base)
+            end
+        end
+    end)
+
+    table.insert(baseListeners[base], connAdded)
+    table.insert(baseListeners[base], connRemoving)
+    table.insert(baseListeners[base], connAttr)
+
+    -- Détection initiale
+    for _, obj in ipairs(base:GetDescendants()) do
+        addOrUpdateBrainrot(obj, base)
+    end
+end
+
+local function scanAllBasesFull()
+    logDebug("Exécution d'un Scan Total demandé...")
+    
+    -- Nettoyage complet des cartes et données locales
+    for inst, card in pairs(activeCards) do
+        card:Destroy()
+    end
+    table.clear(activeCards)
+    table.clear(activeItems)
+
+    local basesFolder = workspace:FindFirstChild("Bases") 
+        or workspace:FindFirstChild("Plots") 
+        or workspace:FindFirstChild("PlayerBases")
+        or workspace
+
+    for _, base in ipairs(basesFolder:GetChildren()) do
+        bindBase(base)
+    end
+end
+
+-- =========================================================================
+-- SYSTÈME D'EXPORTATION (CSV & JSON)
+-- =========================================================================
+
+local function exportData(format)
+    local exportList = {}
+    for _, item in pairs(activeItems) do
+        table.insert(exportList, {
+            BaseName = item.Base.Name,
+            Owner = item.Owner,
+            Brainrot = item.Name,
+            Rarity = item.Rarity,
+            Cost = item.Cost,
+            Income = item.Income,
+            Icon = item.Icon
+        })
+    end
+
+    table.sort(exportList, function(a, b) return a.Income > b.Income end)
+
+    local outputStr = ""
+    if format == "json" then
+        outputStr = HttpService:JSONEncode(exportList)
+    else
+        outputStr = "Rank,BaseName,Owner,Brainrot,Rarity,Cost,Income,Icon\n"
+        for rank, row in ipairs(exportList) do
+            outputStr = outputStr .. string.format(
+                "%d,\"%s\",\"%s\",\"%s\",\"%s\",%d,%d,\"%s\"\n",
+                rank, row.BaseName, row.Owner, row.Brainrot, row.Rarity, row.Cost, row.Income, row.Icon
+            )
+        end
+    end
+
+    -- Copie dans le presse-papier si la fonction d'environnement existe
+    local clipFunc = setclipboard or toclipboard or (Clipboard and Clipboard.set)
+    if clipFunc then
+        clipFunc(outputStr)
+        logDebug("Exportation réussie et copiée dans le presse-papier (" .. format:upper() .. ")")
+    else
+        print("=== EXPORT RESULT (" .. format:upper() .. ") ===")
+        print(outputStr)
+        print("==============================================")
+    end
+end
+
+-- Événements des boutons d'en-tête
+FullScanBtn.MouseButton1Click:Connect(function()
+    FullScanBtn.Text = "Scan..."
+    scanAllBasesFull()
+    task.wait(0.3)
+    FullScanBtn.Text = "🔄 Reset Total"
+end)
+
+ExportBtn.MouseButton1Click:Connect(function()
+    exportData("csv")
+    ExportBtn.Text = "✓ Copié !"
+    task.wait(1.2)
+    ExportBtn.Text = "📤 Export"
+end)
+
+-- Initialisation globale
+local basesFolder = workspace:FindFirstChild("Bases") 
+    or workspace:FindFirstChild("Plots") 
+    or workspace:FindFirstChild("PlayerBases")
+    or workspace
+
+basesFolder.ChildAdded:Connect(function(newBase)
+    bindBase(newBase)
+end)
+
+basesFolder.ChildRemoved:Connect(function(oldBase)
+    clearBaseListeners(oldBase)
+    for inst, item in pairs(activeItems) do
+        if item.Base == oldBase then
+            removeBrainrot(inst)
+        end
+    end
+end)
+
+scanAllBasesFull()
