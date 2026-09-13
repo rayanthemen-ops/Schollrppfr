@@ -1,5 +1,5 @@
 --[[
-    SF Hub bi bi horloge kick
+    SF Hub fait par horloge kick
 ]]
 
 local Players           = game:GetService("Players")
@@ -107,7 +107,7 @@ plP.PaddingTop=UDim.new(0,3); plP.PaddingLeft=UDim.new(0,3); plP.PaddingRight=UD
 
 -- Cible
 local tgtLbl=mkL(MF,UDim2.new(0.04,0,0,184),UDim2.new(0.92,0,0,18),
-    "🎯 Ciblé : Aucun",10,Color3.fromRGB(140,140,140),Enum.Font.GothamMedium,Enum.TextXAlignment.Left)
+    " Ciblé : Aucun",10,Color3.fromRGB(140,140,140),Enum.Font.GothamMedium,Enum.TextXAlignment.Left)
 
 -- Raison
 local rsnBox=Instance.new("TextBox",MF)
@@ -118,7 +118,7 @@ rsnBox.Font=Enum.Font.Gotham; rsnBox.TextSize=11; rsnBox.BorderSizePixel=0
 Instance.new("UICorner",rsnBox).CornerRadius=UDim.new(0,6)
 
 -- Bouton KICK unique
-local kickBtn = mkB(MF,UDim2.new(0.04,0,0,252),UDim2.new(0.92,0,0,38),"👢 KICK", Color3.fromRGB(165,85,12),12)
+local kickBtn = mkB(MF,UDim2.new(0.04,0,0,252),UDim2.new(0.92,0,0,38)," KICK", Color3.fromRGB(165,85,12),12)
 
 -- ═══════════════════════════════════════════════════
 -- HORLOGE
@@ -138,7 +138,7 @@ local function updateList()
         local b=Instance.new("TextButton",plS)
         b.Size=UDim2.new(1,-6,0,23)
         b.BackgroundColor3=isMe and Color3.fromRGB(15,30,15) or Color3.fromRGB(17,17,26)
-        b.Text=(isMe and "⭐ " or "  ")..p.Name..(isMe and " (vous)" or "")
+        b.Text=(isMe and " " or "  ")..p.Name..(isMe and " (vous)" or "")
         b.TextColor3=isMe and Color3.fromRGB(90,240,90) or Color3.fromRGB(205,205,210)
         b.Font=Enum.Font.Gotham; b.TextSize=10
         b.TextXAlignment=Enum.TextXAlignment.Left; b.BorderSizePixel=0
@@ -149,12 +149,12 @@ local function updateList()
             end
             if selectedPlayer==p then
                 selectedPlayer=nil
-                tgtLbl.Text="🎯 Ciblé : Aucun"
+                tgtLbl.Text=" Ciblé : Aucun"
                 tgtLbl.TextColor3=Color3.fromRGB(140,140,140)
                 b.BackgroundColor3=Color3.fromRGB(17,17,26)
             else
                 selectedPlayer=p
-                tgtLbl.Text="🎯 Ciblé : "..p.Name
+                tgtLbl.Text=" Ciblé : "..p.Name
                 tgtLbl.TextColor3=Color3.fromRGB(160,130,255)
                 b.BackgroundColor3=Color3.fromRGB(48,18,82)
             end
@@ -165,9 +165,9 @@ local function updateList()
     end)
 end
 
-Players.PlayerAdded:Connect(function(p) task.wait(0.1); updateList(); notif("➕ "..p.Name.." a rejoint",Color3.fromRGB(80,210,100)) end)
+Players.PlayerAdded:Connect(function(p) task.wait(0.1); updateList(); notif(" "..p.Name.." a rejoint",Color3.fromRGB(80,210,100)) end)
 Players.PlayerRemoving:Connect(function(p)
-    if selectedPlayer==p then selectedPlayer=nil; tgtLbl.Text="🎯 Ciblé : Aucun (a quitté)"; tgtLbl.TextColor3=Color3.fromRGB(140,140,140) end
+    if selectedPlayer==p then selectedPlayer=nil; tgtLbl.Text=" Ciblé : Aucun (a quitté)"; tgtLbl.TextColor3=Color3.fromRGB(140,140,140) end
     task.wait(0.1); updateList(); notif("➖ "..p.Name.." a quitté",Color3.fromRGB(200,90,90))
 end)
 updateList()
@@ -234,7 +234,7 @@ local function deepScan()
     local sfF=ReplicatedStorage:FindFirstChild("SF_AdminRemotes")
     if sfF then
         local kr=sfF:FindFirstChild("SF_Kick"); local br=sfF:FindFirstChild("SF_Ban")
-        if kr and br then SR.sfServer=true; SR.sfKick=kr; SR.sfBan=br; print("[SF] ✅ Serveur SF détecté") end
+        if kr and br then SR.sfServer=true; SR.sfKick=kr; SR.sfBan=br; print("[SF]  Serveur SF détecté") end
     end
     print("══════ SCAN TERMINÉ ══════")
 end
@@ -331,7 +331,7 @@ local function autoWhitelist()
     end
 
     WHITELISTED = success > 0
-    notif("⚡ Auto-whitelist activée ("..success.." méthodes)", WHITELISTED and Color3.fromRGB(34,200,94) or Color3.fromRGB(255,160,40))
+    notif(" Auto-whitelist activée ("..success.." méthodes)", WHITELISTED and Color3.fromRGB(34,200,94) or Color3.fromRGB(255,160,40))
     print("══════ WHITELIST TERMINÉE — "..success.." succès ══════")
 end
 
@@ -358,13 +358,13 @@ end
 -- ═══════════════════════════════════════════════════
 local function execAction(action)
     if not selectedPlayer then
-        notif("⚠️ Sélectionne un joueur !", Color3.fromRGB(255,180,0)); return
+        notif(" Sélectionne un joueur !", Color3.fromRGB(255,180,0)); return
     end
     if selectedPlayer == LocalPlayer then
-        notif("⛔ Tu ne peux pas te cibler toi-même !", Color3.fromRGB(255,60,60)); return
+        notif(" Tu ne peux pas te cibler toi-même sale zig !", Color3.fromRGB(255,60,60)); return
     end
     if not Players:FindFirstChild(selectedPlayer.Name) then
-        notif("❌ Ce joueur a quitté le jeu", Color3.fromRGB(255,80,80)); return
+        notif(" Ce joueur a quitté le jeu trdc t'es un Zgeg", Color3.fromRGB(255,80,80)); return
     end
 
     local target = selectedPlayer
@@ -432,7 +432,7 @@ local function execAction(action)
     end
 
     local col = success > 0 and Color3.fromRGB(80,255,120) or Color3.fromRGB(255,155,40)
-    local msg = "👢 KICK : "..tName.." | "..success.." succès"
+    local msg = " KICK : "..tName.." | "..success.." succès"
     notif(msg, col)
     print("[KICK] Terminé — "..success.." succès")
 end
@@ -441,10 +441,10 @@ end
 -- CONNEXIONS
 -- ═══════════════════════════════════════════════════
 kickBtn.MouseButton1Click:Connect(function()
-    kickBtn.Text="⏳ KICK..."; kickBtn.BackgroundTransparency=0.4
+    kickBtn.Text=" KICK..."; kickBtn.BackgroundTransparency=0.4
     task.spawn(function()
         execAction("kick"); task.wait(1.5)
-        kickBtn.Text="👢 KICK"; kickBtn.BackgroundTransparency=0
+        kickBtn.Text=" KICK"; kickBtn.BackgroundTransparency=0
     end)
 end)
 
@@ -468,7 +468,7 @@ task.spawn(function()
         local kr=f:FindFirstChild("SF_Kick"); local br=f:FindFirstChild("SF_Ban")
         if kr and br then
             SR.sfServer=true; SR.sfKick=kr; SR.sfBan=br
-            notif("✅ Serveur SF connecté — Kick 100% actif",Color3.fromRGB(34,200,94))
+            notif(" Serveur SF connecté — Kick 100% actif",Color3.fromRGB(34,200,94))
             return
         end
     end
@@ -483,5 +483,5 @@ task.delay(1.2, function()
 end)
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("[SF Hub bi bi horloge kick] ✅ Prêt")
+print("[SF Hub by horloge kick]  Prêt")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
