@@ -89,7 +89,7 @@ local hdr=Instance.new("Frame",MF)
 hdr.Size=UDim2.new(1,0,0,38); hdr.BackgroundColor3=Color3.fromRGB(17,17,26)
 Instance.new("UICorner",hdr).CornerRadius=UDim.new(0,12)
 mkL(hdr,UDim2.new(0,8,0,0),UDim2.new(1,-90,1,0),
-    "SF Hub bi bi horloge kick",10,Color3.fromRGB(255,255,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
+    "SF Hub by horloge panzl qui sert a kick sur galaxy rp",10,Color3.fromRGB(255,255,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
 local clockLbl=mkL(hdr,UDim2.new(0.42,0,0,0),UDim2.new(0.58,-42,1,0),"",9,
     Color3.fromRGB(150,120,240),Enum.Font.GothamBold,Enum.TextXAlignment.Right)
 local minBtn=mkB(hdr,UDim2.new(1,-36,0,4),UDim2.new(0,30,0,30),"─",Color3.fromRGB(26,26,38),13)
