@@ -1,0 +1,487 @@
+--[[
+    SF Hub bi bi horloge kick
+]]
+
+local Players           = game:GetService("Players")
+local TweenService      = game:GetService("TweenService")
+local RunService        = game:GetService("RunService")
+local UserInputService  = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService   = game:GetService("TextChatService")
+local Workspace         = game:GetService("Workspace")
+local Camera            = Workspace.CurrentCamera
+local LocalPlayer       = Players.LocalPlayer
+
+local selectedPlayer  = nil
+local ALL_REMOTES     = {}
+local SR              = {}   -- Scan Results
+local isPermanent     = false
+local WHITELISTED     = false
+
+-- Nettoyage
+local old = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SF_v30")
+if old then old:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SF_v30"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ═══════════════════════════════════════════════════
+-- NOTIFICATION
+-- ═══════════════════════════════════════════════════
+local function notif(msg, col)
+    col = col or Color3.fromRGB(100,200,100)
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(0,320,0,54)
+    f.Position = UDim2.new(0.5,-160,1,-78)
+    f.BackgroundColor3 = Color3.fromRGB(11,11,17)
+    f.ZIndex = 30; f.Parent = ScreenGui
+    Instance.new("UICorner",f).CornerRadius = UDim.new(0,9)
+    local s=Instance.new("UIStroke",f); s.Thickness=1.5; s.Color=col
+    local l=Instance.new("TextLabel",f)
+    l.Size=UDim2.new(1,-12,1,0); l.Position=UDim2.new(0,6,0,0)
+    l.BackgroundTransparency=1; l.Text=msg; l.TextColor3=col
+    l.Font=Enum.Font.GothamBold; l.TextSize=10; l.TextWrapped=true; l.ZIndex=31
+    TweenService:Create(f,TweenInfo.new(0.25,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),
+        {Position=UDim2.new(0.5,-160,1,-148)}):Play()
+    task.delay(3.5,function()
+        local t=TweenService:Create(f,TweenInfo.new(0.25,Enum.EasingStyle.Quart,Enum.EasingDirection.In),
+            {Position=UDim2.new(0.5,-160,1,-78)})
+        t:Play(); t.Completed:Connect(function() f:Destroy() end)
+    end)
+end
+
+-- ═══════════════════════════════════════════════════
+-- GUI CARRÉ / COMPACT
+-- ═══════════════════════════════════════════════════
+local W,H = 280,340
+local MF = Instance.new("Frame")
+MF.Name="Main"; MF.Size=UDim2.new(0,W,0,H)
+MF.Position=UDim2.new(0.5,-W/2,0.5,-H/2)
+MF.BackgroundColor3=Color3.fromRGB(11,11,17)
+MF.Active=true; MF.Draggable=true; MF.Parent=ScreenGui
+Instance.new("UICorner",MF).CornerRadius=UDim.new(0,12)
+local mst=Instance.new("UIStroke",MF)
+mst.Thickness=1.5; mst.Color=Color3.fromRGB(110,70,220)
+mst.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+
+local function mkL(p,pos,sz,txt,fs,col,font,xa)
+    local l=Instance.new("TextLabel",p)
+    l.Size=sz; l.Position=pos; l.BackgroundTransparency=1
+    l.Text=txt; l.TextColor3=col or Color3.fromRGB(215,215,220)
+    l.Font=font or Enum.Font.Gotham; l.TextSize=fs or 10
+    l.TextXAlignment=xa or Enum.TextXAlignment.Center; l.TextWrapped=true
+    return l
+end
+local function mkB(p,pos,sz,txt,bg,fs)
+    local b=Instance.new("TextButton",p)
+    b.Size=sz; b.Position=pos; b.BackgroundColor3=bg
+    b.Text=txt; b.TextColor3=Color3.fromRGB(255,255,255)
+    b.Font=Enum.Font.GothamBold; b.TextSize=fs or 10; b.BorderSizePixel=0
+    Instance.new("UICorner",b).CornerRadius=UDim.new(0,7)
+    return b
+end
+
+-- Header
+local hdr=Instance.new("Frame",MF)
+hdr.Size=UDim2.new(1,0,0,38); hdr.BackgroundColor3=Color3.fromRGB(17,17,26)
+Instance.new("UICorner",hdr).CornerRadius=UDim.new(0,12)
+mkL(hdr,UDim2.new(0,8,0,0),UDim2.new(1,-90,1,0),
+    "SF Hub bi bi horloge kick",10,Color3.fromRGB(255,255,255),Enum.Font.GothamBold,Enum.TextXAlignment.Left)
+local clockLbl=mkL(hdr,UDim2.new(0.42,0,0,0),UDim2.new(0.58,-42,1,0),"",9,
+    Color3.fromRGB(150,120,240),Enum.Font.GothamBold,Enum.TextXAlignment.Right)
+local minBtn=mkB(hdr,UDim2.new(1,-36,0,4),UDim2.new(0,30,0,30),"─",Color3.fromRGB(26,26,38),13)
+minBtn.ZIndex=5
+
+-- Liste joueurs
+local plS=Instance.new("ScrollingFrame",MF)
+plS.Size=UDim2.new(0.92,0,0,130); plS.Position=UDim2.new(0.04,0,0,46)
+plS.BackgroundColor3=Color3.fromRGB(9,9,15); plS.BorderSizePixel=0
+plS.CanvasSize=UDim2.new(0,0,0,0); plS.ScrollBarThickness=3
+Instance.new("UICorner",plS).CornerRadius=UDim.new(0,6)
+local plL=Instance.new("UIListLayout",plS); plL.Padding=UDim.new(0,3)
+local plP=Instance.new("UIPadding",plS)
+plP.PaddingTop=UDim.new(0,3); plP.PaddingLeft=UDim.new(0,3); plP.PaddingRight=UDim.new(0,3)
+
+-- Cible
+local tgtLbl=mkL(MF,UDim2.new(0.04,0,0,184),UDim2.new(0.92,0,0,18),
+    "🎯 Ciblé : Aucun",10,Color3.fromRGB(140,140,140),Enum.Font.GothamMedium,Enum.TextXAlignment.Left)
+
+-- Raison
+local rsnBox=Instance.new("TextBox",MF)
+rsnBox.Size=UDim2.new(0.92,0,0,30); rsnBox.Position=UDim2.new(0.04,0,0,208)
+rsnBox.BackgroundColor3=Color3.fromRGB(17,17,26); rsnBox.TextColor3=Color3.fromRGB(255,255,255)
+rsnBox.PlaceholderText="Raison (optionnel)"; rsnBox.Text=""
+rsnBox.Font=Enum.Font.Gotham; rsnBox.TextSize=11; rsnBox.BorderSizePixel=0
+Instance.new("UICorner",rsnBox).CornerRadius=UDim.new(0,6)
+
+-- Bouton KICK unique
+local kickBtn = mkB(MF,UDim2.new(0.04,0,0,252),UDim2.new(0.92,0,0,38),"👢 KICK", Color3.fromRGB(165,85,12),12)
+
+-- ═══════════════════════════════════════════════════
+-- HORLOGE
+-- ═══════════════════════════════════════════════════
+RunService.Heartbeat:Connect(function()
+    local d=os.date("*t",os.time())
+    clockLbl.Text=string.format("%02d:%02d:%02d",d.hour,d.min,d.sec)
+end)
+
+-- ═══════════════════════════════════════════════════
+-- LISTE JOUEURS
+-- ═══════════════════════════════════════════════════
+local function updateList()
+    for _,c in ipairs(plS:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
+    for _,p in ipairs(Players:GetPlayers()) do
+        local isMe=(p==LocalPlayer)
+        local b=Instance.new("TextButton",plS)
+        b.Size=UDim2.new(1,-6,0,23)
+        b.BackgroundColor3=isMe and Color3.fromRGB(15,30,15) or Color3.fromRGB(17,17,26)
+        b.Text=(isMe and "⭐ " or "  ")..p.Name..(isMe and " (vous)" or "")
+        b.TextColor3=isMe and Color3.fromRGB(90,240,90) or Color3.fromRGB(205,205,210)
+        b.Font=Enum.Font.Gotham; b.TextSize=10
+        b.TextXAlignment=Enum.TextXAlignment.Left; b.BorderSizePixel=0
+        Instance.new("UICorner",b).CornerRadius=UDim.new(0,5)
+        b.MouseButton1Click:Connect(function()
+            for _,c2 in ipairs(plS:GetChildren()) do
+                if c2:IsA("TextButton") then c2.BackgroundColor3=Color3.fromRGB(17,17,26) end
+            end
+            if selectedPlayer==p then
+                selectedPlayer=nil
+                tgtLbl.Text="🎯 Ciblé : Aucun"
+                tgtLbl.TextColor3=Color3.fromRGB(140,140,140)
+                b.BackgroundColor3=Color3.fromRGB(17,17,26)
+            else
+                selectedPlayer=p
+                tgtLbl.Text="🎯 Ciblé : "..p.Name
+                tgtLbl.TextColor3=Color3.fromRGB(160,130,255)
+                b.BackgroundColor3=Color3.fromRGB(48,18,82)
+            end
+        end)
+    end
+    task.defer(function()
+        plS.CanvasSize=UDim2.new(0,0,0,plL.AbsoluteContentSize.Y+6)
+    end)
+end
+
+Players.PlayerAdded:Connect(function(p) task.wait(0.1); updateList(); notif("➕ "..p.Name.." a rejoint",Color3.fromRGB(80,210,100)) end)
+Players.PlayerRemoving:Connect(function(p)
+    if selectedPlayer==p then selectedPlayer=nil; tgtLbl.Text="🎯 Ciblé : Aucun (a quitté)"; tgtLbl.TextColor3=Color3.fromRGB(140,140,140) end
+    task.wait(0.1); updateList(); notif("➖ "..p.Name.." a quitté",Color3.fromRGB(200,90,90))
+end)
+updateList()
+
+-- ═══════════════════════════════════════════════════
+-- DEEP SCAN
+-- ═══════════════════════════════════════════════════
+local function deepScan()
+    ALL_REMOTES={}
+    SR={
+        adminSystem=nil, chatPrefixes={}, chatBased=false,
+        banR={}, kickR={}, staffR={}, grantR={}, allR={},
+        sfServer=false, sfKick=nil, sfBan=nil,
+    }
+
+    print("══════ SF DEEP SCAN v30 ══════")
+
+    local systems={
+        {name="Kohl's Admin",  prefixes={":",  "!"},  check=function() return ReplicatedStorage:FindFirstChild("KAEd") or LocalPlayer.PlayerGui:FindFirstChild("KAInterface") end},
+        {name="HD Admin",      prefixes={"/",  ":"},  check=function() return ReplicatedStorage:FindFirstChild("HDAdminClient") or ReplicatedStorage:FindFirstChild("HDAdmin") end},
+        {name="Adonis Admin",  prefixes={":",  ";"},  check=function() return ReplicatedStorage:FindFirstChild("Adonis") or ReplicatedStorage:FindFirstChild("AdonisLoader") end},
+        {name="Voxel Security",prefixes={":"},        check=function() return ReplicatedStorage:FindFirstChild("VoxelSecurity") end},
+        {name="Cmdr",          prefixes={"/"},        check=function() return ReplicatedStorage:FindFirstChild("CmdrClient") or ReplicatedStorage:FindFirstChild("Cmdr") end},
+        {name="Benet Admin",   prefixes={"!"},        check=function() return ReplicatedStorage:FindFirstChild("Benet") or ReplicatedStorage:FindFirstChild("BenetAdmin") end},
+        {name="Penzle Admin",  prefixes={":"},        check=function() return ReplicatedStorage:FindFirstChild("Penzle") end},
+        {name="Roactstrap",    prefixes={":"},        check=function() return game:GetService("ServerStorage") and game:GetService("ServerStorage"):FindFirstChild("AdminScript") end},
+    }
+
+    for _,sys in ipairs(systems) do
+        local ok,r=pcall(sys.check)
+        if ok and r then
+            SR.adminSystem=sys.name; SR.chatPrefixes=sys.prefixes; SR.chatBased=true
+            print("[ADMIN] Détecté : "..sys.name); break
+        end
+    end
+
+    local banKW   = {"ban","blacklist","block","restrict","suspend","permban","tempban"}
+    local kickKW  = {"kick","remove","eject","expel","boot"}
+    local staffKW = {"admin","staff","mod","moderator","command","punish","action","execute",
+                     "manage","control","auth","permission","rank","role","privilege"}
+    local grantKW = {"addadmin","giveadmin","setrank","addstaff","whitelist","grant","promote",
+                     "setadmin","makeadmin","setrole","giverole","addrank","addrole"}
+
+    local function classify(name)
+        local n=name:lower()
+        for _,k in ipairs(grantKW)  do if n:find(k) then return "grant" end end
+        for _,k in ipairs(banKW)    do if n:find(k) then return "ban"   end end
+        for _,k in ipairs(kickKW)   do if n:find(k) then return "kick"  end end
+        for _,k in ipairs(staffKW)  do if n:find(k) then return "staff" end end
+        return "other"
+    end
+
+    for _,obj in ipairs(game:GetDescendants()) do
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") or obj:IsA("BindableEvent") then
+            table.insert(ALL_REMOTES,obj); table.insert(SR.allR,obj)
+            local cat=classify(obj.Name)
+            if cat=="grant" then table.insert(SR.grantR,obj) end
+            if cat=="ban"   then table.insert(SR.banR,  obj) end
+            if cat=="kick"  then table.insert(SR.kickR, obj) end
+            if cat=="staff" then table.insert(SR.staffR,obj) end
+        end
+    end
+
+    local sfF=ReplicatedStorage:FindFirstChild("SF_AdminRemotes")
+    if sfF then
+        local kr=sfF:FindFirstChild("SF_Kick"); local br=sfF:FindFirstChild("SF_Ban")
+        if kr and br then SR.sfServer=true; SR.sfKick=kr; SR.sfBan=br; print("[SF] ✅ Serveur SF détecté") end
+    end
+    print("══════ SCAN TERMINÉ ══════")
+end
+
+-- ═══════════════════════════════════════════════════
+-- AUTO WHITELIST — SE DONNER L'ACCÈS STAFF
+-- ═══════════════════════════════════════════════════
+local function autoWhitelist()
+    local me=LocalPlayer
+    local success=0
+
+    print("══════ AUTO WHITELIST ══════")
+
+    pcall(function()
+        local vals={
+            {"Role","StringValue","Admin"},{"IsStaff","BoolValue",true},
+            {"IsAdmin","BoolValue",true},{"Rank","StringValue","Admin"},
+            {"CanBan","BoolValue",true},{"CanKick","BoolValue",true},
+            {"AdminLevel","NumberValue",5},{"StaffLevel","NumberValue",5},
+            {"Permission","NumberValue",255},{"AccessLevel","NumberValue",5},
+        }
+        for _,v in ipairs(vals) do
+            local e=me:FindFirstChild(v[1]) or Instance.new(v[2],me)
+            e.Name=v[1]; e.Value=v[3]
+        end
+        success+=1
+    end)
+
+    for _,r in ipairs(SR.grantR) do
+        pcall(function()
+            if r:IsA("RemoteEvent") then
+                r:FireServer(me, "Admin", 5, true)
+                r:FireServer(me.Name, "Admin", 5, true)
+                r:FireServer(me.UserId, "Admin", 5)
+                r:FireServer({player=me, role="Admin", rank=5, admin=true})
+                success+=1
+            elseif r:IsA("RemoteFunction") then
+                r:InvokeServer(me, "Admin")
+                success+=1
+            end
+        end)
+    end
+
+    for _,r in ipairs(SR.staffR) do
+        local n=r.Name:lower()
+        if n:find("auth") or n:find("rank") or n:find("role") or n:find("perm") or n:find("add") then
+            pcall(function()
+                if r:IsA("RemoteEvent") then
+                    r:FireServer(me, "Admin", 5, true)
+                    r:FireServer("Admin", true, me.UserId, 5)
+                    r:FireServer({player=me, admin=true, role="Admin", rank=5})
+                    success+=1
+                end
+            end)
+        end
+    end
+
+    if SR.chatBased and SR.adminSystem then
+        local cmds={}
+        if SR.adminSystem:find("Kohl") then
+            cmds={":adm "..me.Name, ":admin "..me.Name, "!adm "..me.Name}
+        elseif SR.adminSystem:find("HD Admin") then
+            cmds={"/setrank "..me.Name.." 255", "/admin "..me.Name}
+        elseif SR.adminSystem:find("Adonis") then
+            cmds={":sm "..me.Name.." superadmin", ":admin "..me.Name}
+        elseif SR.adminSystem:find("Cmdr") then
+            cmds={"/rank "..me.Name.." admin"}
+        end
+        for _,cmd in ipairs(cmds) do
+            pcall(function()
+                local chs=TextChatService:FindFirstChild("TextChannels")
+                if chs then
+                    local g=chs:FindFirstChild("RBXGeneral")
+                    if g then g:SendAsync(cmd) end
+                end
+                success+=1
+            end)
+        end
+    end
+
+    for _,r in ipairs(SR.allR) do
+        local n=r.Name:lower()
+        if (n:find("add") or n:find("give") or n:find("set") or n:find("make")) and
+           (n:find("admin") or n:find("staff") or n:find("rank") or n:find("mod")) then
+            pcall(function()
+                if r:IsA("RemoteEvent") then
+                    r:FireServer(me, "Admin")
+                    r:FireServer(me.Name, "Admin")
+                    r:FireServer({target=me, rank="Admin", level=5})
+                    success+=1
+                end
+            end)
+        end
+    end
+
+    WHITELISTED = success > 0
+    notif("⚡ Auto-whitelist activée ("..success.." méthodes)", WHITELISTED and Color3.fromRGB(34,200,94) or Color3.fromRGB(255,160,40))
+    print("══════ WHITELIST TERMINÉE — "..success.." succès ══════")
+end
+
+-- ═══════════════════════════════════════════════════
+-- DURÉE (conservé pour intégrité des fonctions)
+-- ═══════════════════════════════════════════════════
+local function getDur()
+    return 0, "Permanent (0=perm)"
+end
+
+-- ═══════════════════════════════════════════════════
+-- ENVOI CHAT
+-- ═══════════════════════════════════════════════════
+local function chat(cmd)
+    pcall(function()
+        local chs=TextChatService:FindFirstChild("TextChannels")
+        if chs then local g=chs:FindFirstChild("RBXGeneral"); if g then g:SendAsync(cmd) end end
+    end)
+    print("[CHAT] "..cmd)
+end
+
+-- ═══════════════════════════════════════════════════
+-- ACTION KICK — REMOTES UNIQUEMENT (jamais self-kick)
+-- ═══════════════════════════════════════════════════
+local function execAction(action)
+    if not selectedPlayer then
+        notif("⚠️ Sélectionne un joueur !", Color3.fromRGB(255,180,0)); return
+    end
+    if selectedPlayer == LocalPlayer then
+        notif("⛔ Tu ne peux pas te cibler toi-même !", Color3.fromRGB(255,60,60)); return
+    end
+    if not Players:FindFirstChild(selectedPlayer.Name) then
+        notif("❌ Ce joueur a quitté le jeu", Color3.fromRGB(255,80,80)); return
+    end
+
+    local target = selectedPlayer
+    local tName  = target.Name
+    local tId    = target.UserId
+    local reason = rsnBox.Text ~= "" and rsnBox.Text or "Expulsé par l'admin"
+    local success = 0
+
+    print("[KICK] ▶ "..tName.." | "..reason)
+
+    if SR.sfServer then
+        if action=="kick" and SR.sfKick then
+            pcall(function() SR.sfKick:FireServer(tName, reason); success+=1 end)
+        end
+    end
+
+    if SR.chatBased then
+        for _,pfx in ipairs(SR.chatPrefixes) do
+            if action=="kick" then
+                chat(pfx.."kick "..tName.." "..reason)
+                chat(pfx.."k "..tName)
+            end
+        end
+        success+=1
+    end
+
+    local targets = SR.kickR
+    for _,r in ipairs(targets) do
+        pcall(function()
+            if r:IsA("RemoteEvent") then
+                r:FireServer(target, reason)
+                r:FireServer(tName,  reason)
+                r:FireServer(tId,    reason)
+                r:FireServer({player=target, name=tName, userId=tId, reason=reason, action=action})
+                r:FireServer(action, target, reason)
+                success+=1
+            elseif r:IsA("RemoteFunction") then
+                r:InvokeServer(target, reason); success+=1
+            elseif r:IsA("BindableEvent") then
+                r:Fire(target, reason); success+=1
+            end
+        end)
+    end
+
+    for _,r in ipairs(SR.staffR) do
+        pcall(function()
+            if r:IsA("RemoteEvent") then
+                r:FireServer(action, target, reason)
+                r:FireServer(action, tName,  reason)
+                r:FireServer({action=action, target=target, reason=reason})
+                success+=1
+            end
+        end)
+    end
+
+    local brute=0
+    for _,r in ipairs(SR.allR) do
+        if r:IsA("RemoteEvent") then
+            pcall(function()
+                r:FireServer(action, target, reason)
+                r:FireServer(target, action, reason)
+                brute+=1
+            end)
+        end
+    end
+
+    local col = success > 0 and Color3.fromRGB(80,255,120) or Color3.fromRGB(255,155,40)
+    local msg = "👢 KICK : "..tName.." | "..success.." succès"
+    notif(msg, col)
+    print("[KICK] Terminé — "..success.." succès")
+end
+
+-- ═══════════════════════════════════════════════════
+-- CONNEXIONS
+-- ═══════════════════════════════════════════════════
+kickBtn.MouseButton1Click:Connect(function()
+    kickBtn.Text="⏳ KICK..."; kickBtn.BackgroundTransparency=0.4
+    task.spawn(function()
+        execAction("kick"); task.wait(1.5)
+        kickBtn.Text="👢 KICK"; kickBtn.BackgroundTransparency=0
+    end)
+end)
+
+-- ═══════════════════════════════════════════════════
+-- MINIMISER
+-- ═══════════════════════════════════════════════════
+local minimized=false; local origSz=MF.Size
+minBtn.MouseButton1Click:Connect(function()
+    minimized=not minimized
+    TweenService:Create(MF,TweenInfo.new(0.2,Enum.EasingStyle.Quart),
+        {Size=minimized and UDim2.new(0,W,0,40) or origSz}):Play()
+    minBtn.Text=minimized and "□" or "─"
+end)
+
+-- ═══════════════════════════════════════════════════
+-- CONNEXION SF SERVER AUTO / SCAN / WHITELIST
+-- ═══════════════════════════════════════════════════
+task.spawn(function()
+    local f=ReplicatedStorage:WaitForChild("SF_AdminRemotes",5)
+    if f then
+        local kr=f:FindFirstChild("SF_Kick"); local br=f:FindFirstChild("SF_Ban")
+        if kr and br then
+            SR.sfServer=true; SR.sfKick=kr; SR.sfBan=br
+            notif("✅ Serveur SF connecté — Kick 100% actif",Color3.fromRGB(34,200,94))
+            return
+        end
+    end
+end)
+
+task.delay(1.2, function()
+    task.spawn(function()
+        deepScan()
+        task.wait(0.5)
+        autoWhitelist()
+    end)
+end)
+
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("[SF Hub bi bi horloge kick] ✅ Prêt")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
