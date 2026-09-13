@@ -26,7 +26,7 @@ local WHITELISTED     = false
 local old = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SF_v30")´
 if old then old:Destroy() 
 
-local ScreenGui = j'.new("ScreenGui")
+local ScreenGui = .new("ScreenGui")
 ScreenGui.Name = "SF_v30"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
