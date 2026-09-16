@@ -540,14 +540,31 @@ btn.MouseButton1Click:Connect(function()
     progressBar.Size = UDim2.new(0, 0, 0, 15)
     progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
+task. spawn(function)
+local
+player = game. Players. LocalPlayer
+local
+success, err = pcall(function()
+local
+character
+= player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart", 2)
+local humanoid
+= character: WaitForChild( "Humanoid", 2)
+if not hep or not
+humanoid
+then error("Personnage
+non trouvé") end
+local
+targetObj = nil
+for
+= obj in ipairs(workspace:GetDescendants ())
+do
+if obj: IsA( "BasePart") and obj.Position. Y < -50 and obj.Size. > 40 then
+targetobj = obj
+break
+end
 
-    -- TP CIBLE
-    local targetObj = nil
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
-            targetObj = obj
-            break
-        end
     end
 
     if targetObj then
