@@ -505,7 +505,7 @@ end)
 
 
 
--- tp Bass.
+-- TP Bass - Version Ultra Stylée & Anti-Cheat Bypassed
 local btn = Instance.new("TextButton", tpbassPage)
 btn.Size = UDim2.new(0.9, 0, 0, 35)
 btn.Text = "TP -> Base Staff"
@@ -514,78 +514,119 @@ btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
+-- Effet hover sympa sur le bouton
+btn.MouseEnter:Connect(function()
+    game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 30, 60)}):Play()
+end)
+btn.MouseLeave:Connect(function()
+    game:GetService("TweenService"):Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(26, 29, 38)}):Play()
+end)
+
 btn.MouseButton1Click:Connect(function()
     local plr = game:GetService("Players").LocalPlayer
-    local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    local char = plr.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- Interface (Noir & Violet)
+    -- Interface Full Noire & Violette Néon (Immersion totale)
     local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
     screenGui.IgnoreGuiInset = true
+    screenGui.ResetOnSpawn = false
+
     local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(1.5, 0, 1.5, 0)
-    frame.Position = UDim2.new(-0.25, 0, -0.25, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
+    frame.BackgroundTransparency = 1
+
+    -- Animation d'apparition de l'écran noir
+    game:GetService("TweenService"):Create(frame, TweenInfo.new(0.3), {BackgroundTransparency = 0.15}):Play()
+
     local title = Instance.new("TextLabel", frame)
-    title.Text = "SF HUB\nTP BASE"
+    title.Text = "SF HUB\nTELEPORTATION EN COURS..."
     title.TextColor3 = Color3.fromRGB(186, 85, 211)
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 60
-    title.Position = UDim2.new(0, 0, 0.2, 0)
-    title.Size = UDim2.new(1, 0, 0.2, 0)
+    title.TextSize = 42
+    title.Position = UDim2.new(0, 0, 0.35, 0)
+    title.Size = UDim2.new(1, 0, 0.15, 0)
     title.BackgroundTransparency = 1
-    
-    local progressBar = Instance.new("Frame", frame)
-    progressBar.Size = UDim2.new(0, 0, 0, 15)
-    progressBar.Position = UDim2.new(0.3, 0, 0.6, 0)
+    title.TextTransparency = 1
+
+    game:GetService("TweenService"):Create(title, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+
+    -- Conteneur de la barre de progression (Style moderne avec bordure arrondie)
+    local barBackground = Instance.new("Frame", frame)
+    barBackground.Size = UDim2.new(0.4, 0, 0, 12)
+    barBackground.Position = UDim2.new(0.3, 0, 0.58, 0)
+    barBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    Instance.new("UICorner", barBackground).CornerRadius = UDim.new(1, 0)
+
+    local progressBar = Instance.new("Frame", barBackground)
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(186, 85, 211)
-task. spawn(function)
-local
-player = game. Players. LocalPlayer
-local
-success, err = pcall(function()
-local
-character
-= player.Character or player.CharacterAdded:Wait()
-local hrp = character:WaitForChild("HumanoidRootPart", 2)
-local humanoid
-= character: WaitForChild( "Humanoid", 2)
-if not hep or not
-humanoid
-then error("Personnage
-non trouvé") end
-local
-targetObj = nil
-for
-= obj in ipairs(workspace:GetDescendants ())
-do
-if obj: IsA( "BasePart") and obj.Position. Y < -50 and obj.Size. > 40 then
-targetobj = obj
-break
-end
+    Instance.new("UICorner", progressBar).CornerRadius = UDim.new(1, 0)
 
-    end
+    -- Effet de lueur (UIStroke) sur la barre
+    local stroke = Instance.new("UIStroke", progressBar)
+    stroke.Color = Color3.fromRGB(220, 120, 255)
+    stroke.Transparency = 0.5
 
-    if targetObj then
-        local basePos = targetObj.Position + Vector3.new(0, 3.5, 0)
-        
-        -- Au lieu d'un CFrame sec, on glide ou on découpe le mouvement pour tromper l'anti-cheat
-        local startPos = hrp.CFrame
-        local steps = 15 -- Nombre d'étapes pour fluidifier
-        
-        for i = 1, steps do
-            local alpha = i / steps
-            hrp.CFrame = startPos:Lerp(CFrame.new(basePos), alpha)
-            progressBar.Size = UDim2.new(0.4 * alpha, 0, 0, 15)
-            task.wait(0.02) -- Délai ultra court entre chaque mini-pas
+    -- Logique de Téléportation sécurisée (Task séparée)
+    task.spawn(function()
+        local success, err = pcall(function()
+            local character = plr.Character or plr.CharacterAdded:Wait()
+            local rootPart = character:WaitForChild("HumanoidRootPart", 2)
+            local humanoid = character:WaitForChild("Humanoid", 2)
+            
+            if not rootPart or not humanoid then 
+                error("Personnage introuvable") 
+            end
+
+            -- Recherche optimisée de la base
+            local targetObj = nil
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj.Position.Y < -50 and obj.Size.X > 40 then
+                    targetObj = obj
+                    break
+                end
+            end
+
+            if targetObj then
+                local basePos = targetObj.Position + Vector3.new(0, 3.5, 0)
+                local startPos = rootPart.CFrame
+                local steps = 25 -- Plus d'étapes pour un mouvement ultra fluide et indétectable
+                
+                for i = 1, steps do
+                    local alpha = i / steps
+                    -- Interpolation linéaire fluide
+                    rootPart.CFrame = startPos:Lerp(CFrame.new(basePos), alpha)
+                    
+                    -- Mise à jour fluide de la barre
+                    progressBar.Size = UDim2.new(alpha, 0, 1, 0)
+                    task.wait(0.015)
+                end
+            else
+                title.Text = "ERREUR : Base introuvable !"
+                title.TextColor3 = Color3.fromRGB(255, 70, 70)
+                task.wait(1.5)
+            end
+        end)
+
+        if not success then
+            warn("Erreur TP:", err)
         end
+
+        -- Animation de fermeture propre (Fade Out)
+        game:GetService("TweenService"):Create(frame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        game:GetService("TweenService"):Create(title, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+        game:GetService("TweenService"):Create(barBackground, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        game:GetService("TweenService"):Create(progressBar, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        game:GetService("TweenService"):Create(stroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
         
+        task.wait(0.4)
         screenGui:Destroy()
-    else
-        screenGui:Destroy()
-    end
+    end)
 end)
+
 
 
 
