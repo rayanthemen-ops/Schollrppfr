@@ -56,6 +56,7 @@ end
 -- ═══════════════════════════════════════════════════
 -- GUI CARRÉ / COMPACT
 -- ═══════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════
 local W,H = 280,340
 local MF = Instance.new("Frame")
 MF.Name="Main"; MF.Size=UDim2.new(0,W,0,H)
@@ -63,8 +64,10 @@ MF.Position=UDim2.new(0.5,-W/2,0.5,-H/2)
 MF.BackgroundColor3=Color3.fromRGB(11,11,17)
 MF.Active=true; MF.Draggable=true; MF.Parent=ScreenGui
 Instance.new("UICorner",MF).CornerRadius=UDim.new(0,12)
+
+-- Contour BLANC
 local mst=Instance.new("UIStroke",MF)
-mst.Thickness=1.5; mst.Color=Color3.fromRGB(110,70,220)
+mst.Thickness=1.5; mst.Color=Color3.fromRGB(255,255,255)
 mst.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
 
 local function mkL(p,pos,sz,txt,fs,col,font,xa)
