@@ -168,25 +168,6 @@ local function updateList()
     end)
 end
 
-Players.PlayerAdded:Connect(function(p) task.wait(0.1); updateList(); notif(" "..p.Name.." a rejoint",Color3.fromRGB(80,210,100)) end)
-Players.PlayerRemoving:Connect(function(p)
-    if selectedPlayer==p then selectedPlayer=nil; tgtLbl.Text=" Ciblé : Aucun (a quitté)"; tgtLbl.TextColor3=Color3.fromRGB(140,140,140) end
-    task.wait(0.1); updateList(); notif("➖ "..p.Name.." a quitté",Color3.fromRGB(200,90,90))
-end)
-updateList()
-searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    local query = string.lower(searchBox.Text)
-    for _, item in pairs(listeDesJoueursUI:GetChildren()) do
-        if item:IsA("Frame") then -- ou le conteneur de la ligne du joueur
-            local playerName = string.lower(item.Name)
-            if query == "" or string.find(playerName, query) then
-                item.Visible = true
-            else
-                item.Visible = false
-            end
-        end
-    end
-end)
 
 
 -- ═══════════════════════════════════════════════════
