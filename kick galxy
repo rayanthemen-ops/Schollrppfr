@@ -57,7 +57,7 @@ end
 -- GUI CARRÉ / COMPACT
 -- ═══════════════════════════════════════════════════
 -- ═══════════════════════════════════════════════════
-local W,H = 280,340
+local W,H = 480,740
 local MF = Instance.new("Frame")
 MF.Name="Main"; MF.Size=UDim2.new(0,W,0,H)
 MF.Position=UDim2.new(0.5,-W/2,0.5,-H/2)
