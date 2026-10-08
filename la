@@ -4809,6 +4809,7 @@ do
     _G.MeerkoArmedName = function() return _armedPet and _armedPet.name or nil end
 
     local UIC = {
+      local C = {
         bg   = Color3.fromRGB(12, 14, 16),
         bg2  = Color3.fromRGB(18, 21, 24),
         row  = Color3.fromRGB(24, 28, 32),
@@ -4818,6 +4819,8 @@ do
         acc2 = Color3.fromRGB(255, 150, 210), -- Dégradé secondaire en rose clair
         txt  = Color3.fromRGB(235, 240, 240),
         dim  = Color3.fromRGB(128, 142, 148),
+    }
+
 
     }
     local UIF, UIFB = Enum.Font.Gotham, Enum.Font.GothamBold
