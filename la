@@ -4808,7 +4808,7 @@ do
     end
     _G.MeerkoArmedName = function() return _armedPet and _armedPet.name or nil end
 
-    local UIC = {    local UIC = {
+      local UIC = {
         bg   = Color3.fromRGB(12, 14, 16),
         bg2  = Color3.fromRGB(18, 21, 24),
         card = Color3.fromRGB(24, 28, 32),
