@@ -4811,10 +4811,10 @@ do
     local UIC = {
         bg   = Color3.fromRGB(12, 14, 16),
         bg2  = Color3.fromRGB(18, 21, 24),
-        card = Color3.fromRGB(24, 28, 32),
-        track = Color3.fromRGB(36, 42, 48),
+        row  = Color3.fromRGB(24, 28, 32),
+        rowH = Color3.fromRGB(36, 42, 48),
         line = Color3.fromRGB(255, 105, 180), -- Bordures en rose
-        acc  = Color3.fromRGB(255, 105, 180), -- Boutons et éléments actifs en rose
+        acc  = Color3.fromRGB(255, 105, 180), -- Bouton sélectionné (Priority/Nearest) en rose
         acc2 = Color3.fromRGB(255, 150, 210), -- Dégradé secondaire en rose clair
         txt  = Color3.fromRGB(235, 240, 240),
         dim  = Color3.fromRGB(128, 142, 148),
