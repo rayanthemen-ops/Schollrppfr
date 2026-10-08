@@ -5734,7 +5734,7 @@ do
     })
     mk("TextLabel", rail, {
         Size = UDim2.new(1, -PAD * 2, 0, 20), Position = UDim2.fromOffset(PAD, 28),
-        BackgroundTransparency = 1, Text = "MEERKO TP", Font = UIFB, TextSize = 15,
+        BackgroundTransparency = 1, Text = "horloge TP", Font = UIFB, TextSize = 15,
         TextColor3 = UIC.txt, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 2,
     })
 
