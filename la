@@ -5686,10 +5686,10 @@ do
                 TextColor3 = col, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 51,
             })
         end
-        seg(18, 110, "MEERKO TP", UIC.acc, UIFB, 14)
+        seg(18, 110, "horloge ", UIC.acc, UIFB, 14)
         mk("TextLabel", hdr, {
             Size = UDim2.fromOffset(200, 16), Position = UDim2.fromOffset(18, 20),
-            BackgroundTransparency = 1, Text = "leaked at discord.gg/Z7vPrxecnJ", Font = UIF, TextSize = 11,
+            BackgroundTransparency = 1, Text = "by horloge", Font = UIF, TextSize = 11,
             TextColor3 = UIC.acc, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 51,
         })
         local fpsLbl = seg(180, 100, "FPS --", UIC.txt, UIF)
