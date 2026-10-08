@@ -4813,11 +4813,12 @@ do
         bg2  = Color3.fromRGB(18, 21, 24),
         card = Color3.fromRGB(24, 28, 32),
         track = Color3.fromRGB(36, 42, 48),
-        line = Color3.fromRGB(54, 64, 72),
-        acc  = Color3.fromRGB(0, 200, 140),
-        acc2 = Color3.fromRGB(96, 240, 190),
+        line = Color3.fromRGB(255, 105, 180), -- Bordures en rose
+        acc  = Color3.fromRGB(255, 105, 180), -- Boutons et éléments actifs en rose
+        acc2 = Color3.fromRGB(255, 150, 210), -- Dégradé secondaire en rose clair
         txt  = Color3.fromRGB(235, 240, 240),
         dim  = Color3.fromRGB(128, 142, 148),
+
     }
     local UIF, UIFB = Enum.Font.Gotham, Enum.Font.GothamBold
 
