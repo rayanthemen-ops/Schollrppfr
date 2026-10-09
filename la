@@ -4875,7 +4875,7 @@ do
             AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(1, 44, 1, 0),
             Size = UDim2.fromOffset(58, 20), BorderSizePixel = 0,
             BackgroundColor3 = (_G.MeerkoStealQuick == true) and UIC.acc or UIC.track,
-            Text = (_G.MeerkoStealQuick == true) and "1.3s" or "2.6s",
+            Text = (_G.MeerkoStealQuick == true) and "1.3s" or "0.4s",
             Font = UIFB, TextSize = 11,
             TextColor3 = (_G.MeerkoStealQuick == true) and UIC.bg or UIC.txt,
             AutoButtonColor = false, Active = true,
@@ -4883,7 +4883,7 @@ do
         stroke(modeBtn)
         local function _repaintModeBtn()
             local q = _G.MeerkoStealQuick == true
-            modeBtn.Text = q and "1.3s" or "2.6s"
+            modeBtn.Text = q and "1.3s" or "0.4s"
             modeBtn.BackgroundColor3 = q and UIC.acc or UIC.track
             modeBtn.TextColor3 = q and UIC.bg or UIC.txt
         end
