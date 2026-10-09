@@ -1,0 +1,1980 @@
+setProperties(newInstance("TextLabel"), {
+            Name = "SubtitleLabel",
+            Size = UDim2.new(1, 0, 0, 10),
+            Position = UDim2.new(0, 0, 0, isMobile2 and 12 or 18),
+            Text = "Movement Panel",
+            TextColor3 = purpleAccentColor,
+            BackgroundTransparency = 1,
+            Font = enumValues.gothamSemiboldFont,
+            TextSize = isMobile2 and 6 or 9,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local frame = newInstance("Frame")
+          setProperties(frame, {
+            Size = sliderFillSize,
+            Position = UDim2.new(0.075, 0, 0, isConditionMet),
+            BackgroundColor3 = indigoAccentColor,
+            BackgroundTransparency = 0.5,
+            BorderSizePixel = 0,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local gradient = newInstance("UIGradient", frame)
+          local items = {}
+          local state = NumberSequenceKeypoint.new(0, 1)
+          local state2 = NumberSequenceKeypoint.new(0.2, 0)
+          local state3 = NumberSequenceKeypoint.new(0.8, 0)
+          items[1] = state
+          items[2] = state2
+          items[3] = state3
+          items[4] = NumberSequenceKeypoint.new(1, 1)
+          gradient.Transparency = NumberSequence.new(items)
+          input.InputBegan:Connect(function(input)
+            if _G.uiLocked then
+              return
+            end
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled = true
+              position = input.Position
+              position2 = walkspeedFrame.Position
+            end
+          end)
+          input.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              if isEnabled then
+                isEnabled = false
+                if _G.savePositions then
+                  pcall(_G.savePositions)
+                end
+              end
+            end
+          end)
+          InputService.InputChanged:Connect(function(input)
+            if _G.uiLocked then
+              return
+            end
+            if
+              isEnabled
+              and (input.UserInputType == enumValues.mouseMovementInput or input.UserInputType == enumValues.touchInput)
+            then
+              local vector = input.Position - position
+              walkspeedFrame.Position = UDim2.new(
+                position2.X.Scale,
+                position2.X.Offset + vector.X,
+                position2.Y.Scale,
+                position2.Y.Offset + vector.Y
+              )
+            end
+          end)
+          InputService.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled = false
+            end
+          end)
+          if isMobile2 then
+            local parent = newInstance("TextButton")
+            setProperties(parent, {
+              Size = UDim2.new(1, 0, 0, 20),
+              Position = UDim2.new(0, 0, 1, -20),
+              BackgroundColor3 = indigoAccentColor,
+              BackgroundTransparency = 0.85,
+              Text = "≡ DRAG ≡",
+              TextColor3 = whiteColor,
+              TextTransparency = 0.5,
+              TextSize = 8,
+              Font = enumValues.gothamBoldFont,
+              AutoButtonColor = false,
+              ZIndex = 11,
+              Parent = walkspeedFrame,
+            })
+            parent.Visible = false
+            local corner = newInstance("UICorner")
+            corner.CornerRadius = cornerRadius6
+            corner.Parent = parent
+            parent.InputBegan:Connect(function(input)
+              if _G.uiLocked then
+                return
+              end
+              if
+                input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput
+              then
+                isEnabled = true
+                position = input.Position
+                position2 = walkspeedFrame.Position
+              end
+            end)
+            parent.InputEnded:Connect(function(input)
+              if
+                input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput
+              then
+                if isEnabled then
+                  isEnabled = false
+                  if _G.savePositions then
+                    pcall(_G.savePositions)
+                  end
+                end
+              end
+            end)
+          end
+          _G.updateStealPanelInvisToggle = function() end
+          local isConditionMet7 = isMobile2 and 3 or 6
+          local calculatedValue = isConditionMet + (isMobile2 and 4 or 10)
+          local calculatedValue2 = calculatedValue + isConditionMet2 + isConditionMet7
+          local calculatedValue3 = calculatedValue2 + isConditionMet2 + isConditionMet7
+          local calculatedValue4 = calculatedValue3 + isConditionMet2 + isConditionMet7
+          local calculatedValue5 = calculatedValue4 + isConditionMet2 + isConditionMet7
+          local calculatedValue6 = (
+            isMobile2 and calculatedValue5 + isConditionMet2 + isConditionMet7
+            or calculatedValue4 + isConditionMet2 + isConditionMet7
+          ) + (isMobile2 and 6 or 14)
+          local calculatedValue7 = calculatedValue6 + (isMobile2 and 35 or 68)
+          local calculatedValue8 = calculatedValue7 + (isMobile2 and 30 or 55)
+          local rootPart = newInstance("TextLabel")
+          local udim22 = UDim2.new(0, isConditionMet3, 0, isConditionMet2)
+          local udim23 = UDim2.new(0, isMobile2 and 2 or 10, 0, calculatedValue)
+          rootPart.Size = udim22
+          rootPart.Position = udim23
+          local text3 = "V"
+          if _G.INVISIBLE_STEAL_KEY then
+            text3 = typeof(_G.INVISIBLE_STEAL_KEY) == "EnumItem" and _G.INVISIBLE_STEAL_KEY.Name
+              or tostring(_G.INVISIBLE_STEAL_KEY)
+          end
+          setProperties(rootPart, {
+            Text = isMobile2 and "Invis Steal:"
+              or (_G._keyDisplay(text3) == "Unknown" or _G._keyDisplay(text3) == "None") and "Invis Steal:"
+              or "Invis Steal (" .. _G._keyDisplay(text3) .. "):",
+            TextColor3 = lightTextColor,
+            TextXAlignment = enumValues.textAlignLeft,
+            BackgroundTransparency = 1,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          _G.updateMovementPanelInvisLabel = function()
+            if rootPart and rootPart.Parent then
+              local text2 = "U"
+              if _G.INVISIBLE_STEAL_KEY then
+                text2 = typeof(_G.INVISIBLE_STEAL_KEY) == "EnumItem" and _G.INVISIBLE_STEAL_KEY.Name
+                  or tostring(_G.INVISIBLE_STEAL_KEY)
+              end
+              local textLabel = rootPart
+              local text3 = _G.isMobile and "Invis Steal:"
+              local text
+              if text3 then
+                text = text3
+              else
+                text = (_G._keyDisplay(text2) == "Unknown" or _G._keyDisplay(text2) == "None") and "Invis Steal:"
+                  or "Invis Steal (" .. _G._keyDisplay(text2) .. "):"
+              end
+              textLabel.Text = text
+            end
+          end
+          local parent = newInstance("TextButton")
+          setProperties(parent, {
+            Size = UDim2.new(0, isConditionMet4, 0, isConditionMet2),
+            Position = UDim2.new(1, -(isConditionMet4 + 5), 0, calculatedValue),
+            BackgroundColor3 = navyColor,
+            BackgroundTransparency = 0.15,
+            BorderSizePixel = 0,
+            Text = "OFF",
+            TextColor3 = whiteColor,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            AutoButtonColor = false,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local corner2 = newInstance("UICorner")
+          corner2.CornerRadius = cornerRadius6
+          corner2.Parent = parent
+          local stroke = newInstance("UIStroke")
+          stroke.Color = indigoAccentColor
+          stroke.Thickness = 1
+          stroke.Transparency = 0.7
+          stroke.Parent = parent
+          local function updateMovementPanelInvisVisual(data)
+            if not parent or not parent.Parent then
+              return
+            end
+            local backgroundColor3 = data and slateButtonColor or navyColor
+            local backgroundTransparency = data and 0 or 0.15
+            parent.Text = data and "ON" or "OFF"
+            TweenService:Create(parent, TweenInfo.new(0.2, enumValues.quadEasing, enumValues.easingOut), {
+              BackgroundColor3 = backgroundColor3,
+              BackgroundTransparency = backgroundTransparency,
+            }):Play()
+          end
+          if _G.invisibleStealEnabled then
+            updateMovementPanelInvisVisual(true)
+          end
+          parent.MouseButton1Click:Connect(function()
+            if _G.toggleInvisibleSteal then
+              pcall(_G.toggleInvisibleSteal)
+              updateMovementPanelInvisVisual(_G.invisibleStealEnabled or false)
+            end
+          end)
+          local snapshot = _G
+          _G.updateMovementPanelInvisVisual = updateMovementPanelInvisVisual
+          snapshot.AutoRecoverLagback = true
+          local name = _G.FLOAT_KEY and _G.FLOAT_KEY.Name or "B"
+          local textLabel = newInstance("TextLabel")
+          local tweenProperties = {
+            Size = UDim2.new(0, isConditionMet3, 0, isConditionMet2),
+            Position = UDim2.new(0, isMobile2 and 2 or 10, 0, calculatedValue2),
+          }
+          local text = isMobile2 and "Float:"
+          if not text then
+            text = (_G._keyDisplay(name) == "Unknown" or _G._keyDisplay(name) == "None") and "Float:"
+              or "Float (" .. _G._keyDisplay(name) .. "):"
+          end
+          tweenProperties.Text = text
+          tweenProperties.TextColor3 = lightTextColor
+          tweenProperties.TextXAlignment = enumValues.textAlignLeft
+          tweenProperties.BackgroundTransparency = 1
+          tweenProperties.Font = enumValues.gothamBoldFont
+          tweenProperties.TextSize = textSize
+          tweenProperties.ZIndex = 11
+          tweenProperties.Parent = walkspeedFrame
+          setProperties(textLabel, tweenProperties)
+          _G.updateMovementPanelFloatLabel = function(text)
+            if textLabel and textLabel.Parent then
+              textLabel.Text = isMobile2 and "Float:"
+                or (_G._keyDisplay(text) == "Unknown" or _G._keyDisplay(text) == "None") and "Float:"
+                or "Float (" .. _G._keyDisplay(text) .. "):"
+            end
+          end
+          local parent2 = newInstance("TextButton")
+          setProperties(parent2, {
+            Size = UDim2.new(0, isConditionMet4, 0, isConditionMet2),
+            Position = UDim2.new(1, -(isConditionMet4 + 5), 0, calculatedValue2),
+            BackgroundColor3 = _G.FloatEnabled and slateButtonColor or navyColor,
+            BackgroundTransparency = _G.FloatEnabled and 0 or 0.15,
+            BorderSizePixel = 0,
+            Text = _G.FloatEnabled and "ON" or "OFF",
+            TextColor3 = whiteColor,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            AutoButtonColor = false,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local corner3 = newInstance("UICorner")
+          corner3.CornerRadius = cornerRadius6
+          corner3.Parent = parent2
+          local stroke2 = newInstance("UIStroke")
+          stroke2.Color = indigoAccentColor
+          stroke2.Thickness = 1
+          stroke2.Transparency = 0.7
+          stroke2.Parent = parent2
+          local function updateMovementPanelFloatVisual(data)
+            if not parent2 or not parent2.Parent then
+              return
+            end
+            local backgroundColor3 = data and slateButtonColor or navyColor
+            local backgroundTransparency = data and 0 or 0.15
+            parent2.Text = data and "ON" or "OFF"
+            TweenService:Create(parent2, TweenInfo.new(0.2, enumValues.quadEasing, enumValues.easingOut), {
+              BackgroundColor3 = backgroundColor3,
+              BackgroundTransparency = backgroundTransparency,
+            }):Play()
+          end
+          parent2.MouseButton1Click:Connect(function()
+            _G.FloatEnabled = not _G.FloatEnabled
+            if _G.FloatEnabled then
+              if _G.enableFloat then
+                pcall(_G.enableFloat)
+              end
+            elseif _G.disableFloat then
+              pcall(_G.disableFloat)
+            end
+            updateMovementPanelFloatVisual(_G.FloatEnabled)
+          end)
+          _G.updateMovementPanelFloatVisual = updateMovementPanelFloatVisual
+          local walkspeedHeader = newInstance("TextLabel")
+          local tweenProperties2 = {
+            Size = UDim2.new(0, isConditionMet3, 0, isConditionMet2),
+            Position = UDim2.new(0, isMobile2 and 2 or 10, 0, calculatedValue3),
+          }
+          local text2 = isMobile2 and "Walkspeed:"
+          if not text2 then
+            local function getValue()
+              local state = _G._keyDisplay(_G.WALKSPEED_KEY and _G.WALKSPEED_KEY.Name or "C")
+              return state == "Unknown" or state == "None"
+            end
+            text2 = getValue() and "Walkspeed:"
+            if not text2 then
+              text2 = "Walkspeed (" .. _G._keyDisplay(_G.WALKSPEED_KEY and _G.WALKSPEED_KEY.Name or "C") .. "):"
+            end
+          end
+          tweenProperties2.Text = text2
+          tweenProperties2.TextColor3 = lightTextColor
+          tweenProperties2.TextXAlignment = enumValues.textAlignLeft
+          tweenProperties2.BackgroundTransparency = 1
+          tweenProperties2.Font = enumValues.gothamBoldFont
+          tweenProperties2.TextSize = textSize
+          tweenProperties2.ZIndex = 11
+          tweenProperties2.Parent = walkspeedFrame
+          setProperties(walkspeedHeader, tweenProperties2)
+          _G.walkspeedHeader = walkspeedHeader
+          local parent3 = newInstance("TextButton")
+          setProperties(parent3, {
+            Size = UDim2.new(0, isConditionMet4, 0, isConditionMet2),
+            Position = UDim2.new(1, -(isConditionMet4 + 5), 0, calculatedValue3),
+            BackgroundColor3 = navyColor,
+            BackgroundTransparency = 0.15,
+            BorderSizePixel = 0,
+            Text = "OFF",
+            TextColor3 = whiteColor,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            AutoButtonColor = false,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local corner4 = newInstance("UICorner")
+          corner4.CornerRadius = cornerRadius6
+          corner4.Parent = parent3
+          local stroke3 = newInstance("UIStroke")
+          stroke3.Color = indigoAccentColor
+          stroke3.Thickness = 1
+          stroke3.Transparency = 0.7
+          stroke3.Parent = parent3
+          _G.movementPanelWalkspeedToggle = parent3
+          if _G.walkspeedEnabled then
+            setProperties(parent3, {
+              BackgroundColor3 = slateButtonColor,
+              Text = "ON",
+              BackgroundTransparency = 0,
+            })
+          end
+          setProperties(newInstance("TextLabel"), {
+            Size = UDim2.new(0, isConditionMet3, 0, isConditionMet2),
+            Position = UDim2.new(0, isMobile2 and 2 or 10, 0, calculatedValue4),
+            Text = "Unwalk:",
+            TextColor3 = lightTextColor,
+            TextXAlignment = enumValues.textAlignLeft,
+            BackgroundTransparency = 1,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local parent4 = newInstance("TextButton")
+          setProperties(parent4, {
+            Size = UDim2.new(0, isConditionMet4, 0, isConditionMet2),
+            Position = UDim2.new(1, -(isConditionMet4 + 5), 0, calculatedValue4),
+            BackgroundColor3 = navyColor,
+            BackgroundTransparency = 0.15,
+            BorderSizePixel = 0,
+            Text = "OFF",
+            TextColor3 = whiteColor,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            AutoButtonColor = false,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local corner5 = newInstance("UICorner")
+          corner5.CornerRadius = cornerRadius6
+          corner5.Parent = parent4
+          local stroke4 = newInstance("UIStroke")
+          stroke4.Color = indigoAccentColor
+          stroke4.Thickness = 1
+          stroke4.Transparency = 0.7
+          stroke4.Parent = parent4
+          if _G.AutoStealDisableAnimEnabled then
+            setProperties(parent4, {
+              BackgroundColor3 = slateButtonColor,
+              Text = "ON",
+              BackgroundTransparency = 0,
+            })
+          end
+          local function updateUnwalkPanelVisual(data)
+            if not parent4 or not parent4.Parent then
+              return
+            end
+            local backgroundColor3 = data and slateButtonColor or navyColor
+            local backgroundTransparency = data and 0 or 0.15
+            parent4.Text = data and "ON" or "OFF"
+            TweenService:Create(parent4, TweenInfo.new(0.2, enumValues.quadEasing, enumValues.easingOut), {
+              BackgroundColor3 = backgroundColor3,
+              BackgroundTransparency = backgroundTransparency,
+            }):Play()
+          end
+          parent4.MouseButton1Click:Connect(function()
+            _G.AutoStealDisableAnimEnabled = not (_G.AutoStealDisableAnimEnabled or false)
+            updateUnwalkPanelVisual(_G.AutoStealDisableAnimEnabled)
+            if keybinds then
+              keybinds.AutoStealDisableAnimEnabled = _G.AutoStealDisableAnimEnabled
+              if _G.saveKeybinds then
+                pcall(_G.saveKeybinds)
+              end
+            end
+            if _G.AutoStealDisableAnimEnabled then
+              if _G.startAnimDisable then
+                pcall(_G.startAnimDisable)
+              end
+            elseif _G.stopAnimDisable then
+              pcall(_G.stopAnimDisable)
+            end
+          end)
+          _G.updateUnwalkPanelVisual = updateUnwalkPanelVisual
+          if isMobile2 then
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(0, isConditionMet3, 0, isConditionMet2),
+              Position = UDim2.new(0, 2, 0, calculatedValue5),
+              Text = "Carpet Speed:",
+              TextColor3 = lightTextColor,
+              TextXAlignment = enumValues.textAlignLeft,
+              BackgroundTransparency = 1,
+              Font = enumValues.gothamBoldFont,
+              TextSize = textSize,
+              ZIndex = 11,
+              Parent = walkspeedFrame,
+            })
+            local parent = newInstance("TextButton")
+            setProperties(parent, {
+              Size = UDim2.new(0, isConditionMet4, 0, isConditionMet2),
+              Position = UDim2.new(1, -(isConditionMet4 + 5), 0, calculatedValue5),
+              BackgroundColor3 = _G.SpeedBoostEnabled and slateButtonColor or navyColor,
+              BackgroundTransparency = _G.SpeedBoostEnabled and 0 or 0.15,
+              BorderSizePixel = 0,
+              Text = _G.SpeedBoostEnabled and "ON" or "OFF",
+              TextColor3 = whiteColor,
+              Font = enumValues.gothamBoldFont,
+              TextSize = textSize,
+              AutoButtonColor = false,
+              ZIndex = 11,
+              Parent = walkspeedFrame,
+            })
+            local corner = newInstance("UICorner")
+            corner.CornerRadius = cornerRadius6
+            corner.Parent = parent
+            local function updateMovementPanelCarpetVisual(data)
+              if not parent or not parent.Parent then
+                return
+              end
+              local backgroundColor3 = data and slateButtonColor or navyColor
+              local backgroundTransparency = data and 0 or 0.15
+              parent.Text = data and "ON" or "OFF"
+              TweenService:Create(parent, TweenInfo.new(0.2, enumValues.quadEasing, enumValues.easingOut), {
+                BackgroundColor3 = backgroundColor3,
+                BackgroundTransparency = backgroundTransparency,
+              }):Play()
+            end
+            parent.MouseButton1Click:Connect(function()
+              if _G.toggleSpeedBoost then
+                pcall(_G.toggleSpeedBoost)
+                updateMovementPanelCarpetVisual(_G.SpeedBoostEnabled or false)
+              end
+            end)
+            _G.updateMovementPanelCarpetVisual = updateMovementPanelCarpetVisual
+          end
+          local autoRotateInvis = keybinds.AutoRotateInvis or false
+          _G.AutoRotateInvis = autoRotateInvis
+          local invisStealAngle = keybinds.InvisStealAngle or _G.InvisStealAngle or 180
+          _G.InvisStealAngle = invisStealAngle
+          pcall(function()
+            local parent = newInstance("Frame")
+            setProperties(parent, {
+              Size = sliderFillSize,
+              Position = UDim2.new(0.075, 0, 0, calculatedValue6 - (isMobile2 and 4 or 8)),
+              BackgroundColor3 = indigoAccentColor,
+              BackgroundTransparency = 0.5,
+              BorderSizePixel = 0,
+              ZIndex = 11,
+              Parent = walkspeedFrame,
+            })
+            local gradient = newInstance("UIGradient")
+            local items = {}
+            local state = NumberSequenceKeypoint.new(0, 1)
+            local state2 = NumberSequenceKeypoint.new(0.2, 0)
+            local state3 = NumberSequenceKeypoint.new(0.8, 0)
+            items[1] = state
+            items[2] = state2
+            items[3] = state3
+            items[4] = NumberSequenceKeypoint.new(1, 1)
+            gradient.Transparency = NumberSequence.new(items)
+            gradient.Parent = parent
+          end)
+          local parent5 = newInstance("Frame")
+          setProperties(parent5, {
+            Size = UDim2.new(1, -(isMobile2 and 8 or 16), 0, isMobile2 and 32 or 58),
+            Position = UDim2.new(0, isMobile2 and 4 or 8, 0, calculatedValue6),
+            BackgroundTransparency = 1,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local textLabel2 = newInstance("TextLabel")
+          setProperties(textLabel2, {
+            Size = UDim2.new(0, isMobile2 and 60 or 120, 0, isMobile2 and 8 or 16),
+            Position = zeroSize,
+            Text = "Rotation: " .. tostring(math.floor(invisStealAngle)),
+            TextColor3 = autoRotateInvis and Color3.fromRGB(100, 100, 100) or whiteColor,
+            TextXAlignment = enumValues.textAlignLeft,
+            BackgroundTransparency = 1,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            ZIndex = 11,
+            Parent = parent5,
+          })
+          local parent6 = newInstance("Frame")
+          setProperties(parent6, {
+            Size = UDim2.new(1, 0, 0, isMobile2 and 4 or 8),
+            Position = UDim2.new(0, 0, 0, isMobile2 and 10 or 22),
+            BackgroundColor3 = autoRotateInvis and darkSurfaceColor or mutedRedSurfaceColor,
+            ZIndex = 11,
+            Parent = parent5,
+          })
+          local corner6 = newInstance("UICorner")
+          corner6.CornerRadius = fullCornerRadius
+          corner6.Parent = parent6
+          local parent7 = newInstance("Frame")
+          setProperties(parent7, {
+            Size = UDim2.new((invisStealAngle - 180) / 180, 0, 1, 0),
+            BackgroundColor3 = autoRotateInvis and Color3.fromRGB(60, 80, 80) or indigoAccentColor,
+            ZIndex = 12,
+            Parent = parent6,
+          })
+          local corner7 = newInstance("UICorner")
+          corner7.CornerRadius = fullCornerRadius
+          corner7.Parent = parent7
+          local isConditionMet8 = isMobile2 and 8 or 12
+          local parent8 = newInstance("Frame")
+          setProperties(parent8, {
+            Size = UDim2.new(0, isConditionMet8, 0, isConditionMet8),
+            Position = UDim2.new((invisStealAngle - 180) / 180, -isConditionMet8 / 2, 0.5, -isConditionMet8 / 2),
+            BackgroundColor3 = autoRotateInvis and Color3.fromRGB(200, 200, 200) or whiteColor,
+            ZIndex = 13,
+            Parent = parent6,
+          })
+          local corner8 = newInstance("UICorner")
+          corner8.CornerRadius = fullCornerRadius
+          corner8.Parent = parent8
+          setProperties(newInstance("TextLabel"), {
+            Size = UDim2.new(0, isMobile2 and 50 or 90, 0, isMobile2 and 10 or 16),
+            Position = UDim2.new(0, 0, 0, isMobile2 and 20 or 36),
+            Text = "Auto rotate:",
+            TextColor3 = whiteColor,
+            TextXAlignment = enumValues.textAlignLeft,
+            BackgroundTransparency = 1,
+            Font = Enum.Font.GothamMedium,
+            TextSize = isMobile2 and 7 or 12,
+            ZIndex = 11,
+            Parent = parent5,
+          })
+          local isConditionMet9 = isMobile2 and 14 or 18
+          local parent9 = newInstance("TextButton")
+          setProperties(parent9, {
+            Size = UDim2.new(0, isConditionMet9, 0, isConditionMet9),
+            Position = UDim2.new(0, isMobile2 and 52 or 80, 0, (isMobile2 and 20 or 36) + (isMobile2 and -1 or -1)),
+            BackgroundColor3 = autoRotateInvis and indigoAccentColor or Color3.fromRGB(35, 35, 45),
+            BackgroundTransparency = 0,
+            BorderSizePixel = 0,
+            Text = autoRotateInvis and "✓" or "",
+            TextColor3 = whiteColor,
+            TextSize = isMobile2 and 10 or 14,
+            Font = enumValues.gothamBoldFont,
+            AutoButtonColor = false,
+            ZIndex = 11,
+            Parent = parent5,
+          })
+          local corner9 = newInstance("UICorner")
+          corner9.CornerRadius = UDim.new(0, isMobile2 and 3 or 4)
+          corner9.Parent = parent9
+          local function updateLabel(data)
+            local color2 = data and indigoAccentColor or Color3.fromRGB(35, 40, 45)
+            TweenService:Create(parent9, TweenInfo.new(0.15, enumValues.quadEasing, enumValues.easingOut), {
+              BackgroundColor3 = color2,
+            }):Play()
+            parent9.Text = data and "✓" or ""
+          end
+          parent9.MouseButton1Click:Connect(function()
+            autoRotateInvis = not autoRotateInvis
+            _G.AutoRotateInvis = autoRotateInvis
+            updateLabel(autoRotateInvis)
+            keybinds.AutoRotateInvis = autoRotateInvis
+            if _G.setRotationSliderLocked then
+              pcall(_G.setRotationSliderLocked, autoRotateInvis)
+            end
+            if not autoRotateInvis then
+              keybinds.InvisStealAngle = _G.InvisStealAngle
+            end
+            if _G.saveKeybinds then
+              pcall(_G.saveKeybinds)
+            end
+          end)
+          local isEnabled2 = false
+          _G.setRotationSliderLocked = function(data)
+            if data then
+              textLabel2.TextColor3 = Color3.fromRGB(200, 100, 100)
+              parent6.BackgroundColor3 = darkSurfaceColor
+              parent7.BackgroundColor3 = Color3.fromRGB(60, 80, 80)
+              parent8.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
+            else
+              textLabel2.TextColor3 = whiteColor
+              parent6.BackgroundColor3 = mutedRedSurfaceColor
+              parent7.BackgroundColor3 = indigoAccentColor
+              parent8.BackgroundColor3 = whiteColor
+            end
+          end
+          _G.updateRotationSliderUI = function(data)
+            invisStealAngle = math.clamp(data, 180, 360)
+            _G.InvisStealAngle = invisStealAngle
+            local calculatedValue = (invisStealAngle - 180) / 180
+            parent7.Size = UDim2.new(calculatedValue, 0, 1, 0)
+            parent8.Position = UDim2.new(calculatedValue, -isConditionMet8 / 2, 0.5, -isConditionMet8 / 2)
+            textLabel2.Text = "Rotation: " .. tostring(math.floor(invisStealAngle))
+          end
+          local function updateLabel2(vector)
+            if _G.AutoRotateInvis then
+              return
+            end
+            invisStealAngle = math.floor(
+              180 + math.clamp((vector.X - parent6.AbsolutePosition.X) / parent6.AbsoluteSize.X, 0, 1) * 180 + 0.5
+            )
+            local calculatedValue = (invisStealAngle - 180) / 180
+            parent7.Size = UDim2.new(calculatedValue, 0, 1, 0)
+            parent8.Position = UDim2.new(calculatedValue, -isConditionMet8 / 2, 0.5, -isConditionMet8 / 2)
+            textLabel2.Text = "Rotation: " .. tostring(invisStealAngle)
+            _G.InvisStealAngle = invisStealAngle
+            keybinds.InvisStealAngle = invisStealAngle
+            if _G.saveKeybinds then
+              pcall(_G.saveKeybinds)
+            end
+          end
+          parent6.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled2 = true
+              updateLabel2(input.Position)
+            end
+          end)
+          parent6.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled2 = false
+            end
+          end)
+          parent8.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled2 = true
+            end
+          end)
+          InputService.InputChanged:Connect(function(input)
+            if
+              isEnabled2
+              and (input.UserInputType == enumValues.mouseMovementInput or input.UserInputType == enumValues.touchInput)
+            then
+              updateLabel2(input.Position)
+            end
+          end)
+          InputService.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled2 = false
+            end
+          end)
+          local sinkSliderValue = keybinds.SinkSliderValue or 5
+          _G.SinkSliderValue = sinkSliderValue
+          local parent10 = newInstance("Frame")
+          setProperties(parent10, {
+            Size = UDim2.new(1, -(isMobile2 and 8 or 16), 0, isMobile2 and 16 or 36),
+            Position = UDim2.new(0, isMobile2 and 4 or 8, 0, calculatedValue7),
+            BackgroundTransparency = 1,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local textLabel3 = newInstance("TextLabel")
+          setProperties(textLabel3, {
+            Size = UDim2.new(0, isMobile2 and 40 or 70, 0, isMobile2 and 8 or 16),
+            Position = zeroSize,
+            Text = "Depth: " .. string.format("%.1f", sinkSliderValue),
+            TextColor3 = whiteColor,
+            TextXAlignment = enumValues.textAlignLeft,
+            BackgroundTransparency = 1,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            ZIndex = 11,
+            Parent = parent10,
+          })
+          local isConditionMet10 = isMobile2 and 8 or 12
+          local parent11 = newInstance("Frame")
+          setProperties(parent11, {
+            Size = UDim2.new(1, 0, 0, isMobile2 and 4 or 8),
+            Position = UDim2.new(0, 0, 0, isMobile2 and 10 or 22),
+            BackgroundColor3 = mutedRedSurfaceColor,
+            ZIndex = 11,
+            Parent = parent10,
+          })
+          local corner10 = newInstance("UICorner")
+          corner10.CornerRadius = fullCornerRadius
+          corner10.Parent = parent11
+          local parent12 = newInstance("Frame")
+          setProperties(parent12, {
+            Size = UDim2.new((sinkSliderValue - 0.5) / 9.5, 0, 1, 0),
+            BackgroundColor3 = indigoAccentColor,
+            ZIndex = 12,
+            Parent = parent11,
+          })
+          local corner11 = newInstance("UICorner")
+          corner11.CornerRadius = fullCornerRadius
+          corner11.Parent = parent12
+          local parent13 = newInstance("Frame")
+          setProperties(parent13, {
+            Size = UDim2.new(0, isConditionMet10, 0, isConditionMet10),
+            Position = UDim2.new((sinkSliderValue - 0.5) / 9.5, -isConditionMet10 / 2, 0.5, -isConditionMet10 / 2),
+            BackgroundColor3 = whiteColor,
+            ZIndex = 13,
+            Parent = parent11,
+          })
+          local corner12 = newInstance("UICorner")
+          corner12.CornerRadius = fullCornerRadius
+          corner12.Parent = parent13
+          local isEnabled3 = false
+          _G.updateDepthSliderUI = function(data)
+            sinkSliderValue = math.clamp(data, 0.5, 10)
+            _G.SinkSliderValue = sinkSliderValue
+            local calculatedValue = (sinkSliderValue - 0.5) / 9.5
+            parent12.Size = UDim2.new(calculatedValue, 0, 1, 0)
+            parent13.Position = UDim2.new(calculatedValue, -isConditionMet10 / 2, 0.5, -isConditionMet10 / 2)
+            textLabel3.Text = "Depth: " .. string.format("%.1f", sinkSliderValue)
+          end
+          local function updateLabel3(vector)
+            sinkSliderValue = 0.5
+              + math.floor(
+                  math.clamp((vector.X - parent11.AbsolutePosition.X) / parent11.AbsoluteSize.X, 0, 1) * 95 + 0.5
+                )
+                * 0.1
+            sinkSliderValue = math.clamp(sinkSliderValue, 0.5, 10)
+            local calculatedValue = (sinkSliderValue - 0.5) / 9.5
+            parent12.Size = UDim2.new(calculatedValue, 0, 1, 0)
+            parent13.Position = UDim2.new(calculatedValue, -isConditionMet10 / 2, 0.5, -isConditionMet10 / 2)
+            textLabel3.Text = "Depth: " .. string.format("%.1f", sinkSliderValue)
+            _G.SinkSliderValue = sinkSliderValue
+            keybinds.SinkSliderValue = sinkSliderValue
+            if _G.saveKeybinds then
+              pcall(_G.saveKeybinds)
+            end
+          end
+          parent11.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled3 = true
+              updateLabel3(input.Position)
+            end
+          end)
+          parent11.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled3 = false
+            end
+          end)
+          parent13.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled3 = true
+            end
+          end)
+          InputService.InputChanged:Connect(function(input)
+            if
+              isEnabled3
+              and (input.UserInputType == enumValues.mouseMovementInput or input.UserInputType == enumValues.touchInput)
+            then
+              updateLabel3(input.Position)
+            end
+          end)
+          InputService.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled3 = false
+            end
+          end)
+          if _G.walkspeedEnabled then
+            setProperties(parent3, {
+              BackgroundColor3 = slateButtonColor,
+              BackgroundTransparency = 0,
+              Text = "ON",
+            })
+          end
+          local parent14 = newInstance("Frame")
+          setProperties(parent14, {
+            Size = UDim2.new(1, -(isMobile2 and 8 or 16), 0, isMobile2 and 16 or 36),
+            Position = UDim2.new(0, isMobile2 and 4 or 8, 0, calculatedValue8),
+            BackgroundTransparency = 1,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local textLabel4 = newInstance("TextLabel")
+          setProperties(textLabel4, {
+            Name = "SpeedLabel",
+            Size = UDim2.new(0, isMobile2 and 50 or 200, 0, isMobile2 and 8 or 16),
+            Position = zeroSize,
+            Text = "Speed: " .. tostring(math.floor(currentWalkSpeed)),
+            TextColor3 = whiteColor,
+            TextXAlignment = enumValues.textAlignLeft,
+            BackgroundTransparency = 1,
+            Font = enumValues.gothamBoldFont,
+            TextSize = textSize,
+            ZIndex = 11,
+            Parent = parent14,
+          })
+          local parent15 = newInstance("Frame")
+          setProperties(parent15, {
+            Size = UDim2.new(1, 0, 0, isMobile2 and 4 or 8),
+            Position = UDim2.new(0, 0, 0, isMobile2 and 10 or 22),
+            BackgroundColor3 = mutedRedSurfaceColor,
+            ZIndex = 11,
+            Parent = parent14,
+          })
+          local corner13 = newInstance("UICorner")
+          corner13.CornerRadius = fullCornerRadius
+          corner13.Parent = parent15
+          local walkspeedSliderFill = newInstance("Frame")
+          setProperties(walkspeedSliderFill, {
+            Size = UDim2.new((currentWalkSpeed - 5) / 24, 0, 1, 0),
+            BackgroundColor3 = indigoAccentColor,
+            ZIndex = 12,
+            Parent = parent15,
+          })
+          _G.walkspeedSliderFill = walkspeedSliderFill
+          local corner14 = newInstance("UICorner")
+          corner14.CornerRadius = fullCornerRadius
+          corner14.Parent = walkspeedSliderFill
+          local isConditionMet11 = isMobile2 and 8 or 12
+          local parent16 = newInstance("Frame")
+          setProperties(parent16, {
+            Size = UDim2.new(0, isConditionMet11, 0, isConditionMet11),
+            Position = UDim2.new((currentWalkSpeed - 5) / 36, -isConditionMet11 / 2, 0.5, -isConditionMet11 / 2),
+            BackgroundColor3 = whiteColor,
+            ZIndex = 13,
+            Parent = parent15,
+          })
+          local corner15 = newInstance("UICorner")
+          corner15.CornerRadius = fullCornerRadius
+          corner15.Parent = parent16
+          local isEnabled4 = false
+          local function updateLabel4(vector)
+            currentWalkSpeed = math.floor(
+              5 + math.clamp((vector.X - parent15.AbsolutePosition.X) / parent15.AbsoluteSize.X, 0, 1) * 24 + 0.5
+            )
+            local calculatedValue = (currentWalkSpeed - 5) / 24
+            walkspeedSliderFill.Size = UDim2.new(calculatedValue, 0, 1, 0)
+            parent16.Position = UDim2.new(calculatedValue, -isConditionMet11 / 2, 0.5, -isConditionMet11 / 2)
+            textLabel4.Text = "Speed: " .. tostring(currentWalkSpeed)
+            _G.currentWalkSpeed = currentWalkSpeed
+            if keybinds then
+              keybinds.WalkSpeed = currentWalkSpeed
+              if _G.saveKeybinds then
+                pcall(_G.saveKeybinds)
+              end
+            end
+          end
+          parent15.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled4 = true
+              updateLabel4(input.Position)
+            end
+          end)
+          parent15.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled4 = false
+            end
+          end)
+          parent16.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled4 = true
+            end
+          end)
+          InputService.InputChanged:Connect(function(input)
+            if
+              isEnabled4
+              and (input.UserInputType == enumValues.mouseMovementInput or input.UserInputType == enumValues.touchInput)
+            then
+              updateLabel4(input.Position)
+            end
+          end)
+          InputService.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled4 = false
+            end
+          end)
+          local function handleState()
+            if _G.toggleWalkspeed then
+              _G.toggleWalkspeed()
+            else
+              local walkspeedEnabled2 = not _G.walkspeedEnabled
+              _G.walkspeedEnabled = walkspeedEnabled2
+              if walkspeedEnabled2 then
+                setProperties(parent3, {
+                  BackgroundColor3 = slateButtonColor,
+                  BackgroundTransparency = 0,
+                  Text = "ON",
+                })
+              else
+                setProperties(parent3, {
+                  BackgroundColor3 = navyColor,
+                  BackgroundTransparency = 0.15,
+                  Text = "OFF",
+                })
+              end
+            end
+          end
+          parent3.MouseButton1Click:Connect(function()
+            handleState()
+          end)
+          _G.updateWalkspeedToggleVisual = function(data)
+            setProperties(parent3, {
+              BackgroundColor3 = data and slateButtonColor or navyColor,
+              BackgroundTransparency = data and 0 or 0.15,
+              Text = data and "ON" or "OFF",
+            })
+          end
+          local isEnabled5 = false
+          local function updateLabel5(vector)
+            currentWalkSpeed = math.floor(
+              5 + math.clamp((vector.X - parent15.AbsolutePosition.X) / parent15.AbsoluteSize.X, 0, 1) * 24 + 0.5
+            )
+            local calculatedValue = (currentWalkSpeed - 5) / 24
+            local isConditionMet = _G.isMobile and 3.5 or 7
+            walkspeedSliderFill.Size = UDim2.new(calculatedValue, 0, 1, 0)
+            parent16.Position = UDim2.new(calculatedValue, -isConditionMet, 0.5, -isConditionMet)
+            textLabel4.Text = "Speed: " .. tostring(currentWalkSpeed)
+            _G.currentWalkSpeed = currentWalkSpeed
+            if keybinds then
+              keybinds.WalkSpeed = currentWalkSpeed
+              if _G.saveKeybinds then
+                pcall(_G.saveKeybinds)
+              end
+            end
+          end
+          parent15.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled5 = true
+              updateLabel5(input.Position)
+            end
+          end)
+          parent15.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled5 = false
+            end
+          end)
+          parent16.InputBegan:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled5 = true
+            end
+          end)
+          InputService.InputChanged:Connect(function(input)
+            if
+              isEnabled5
+              and (input.UserInputType == enumValues.mouseMovementInput or input.UserInputType == enumValues.touchInput)
+            then
+              updateLabel5(input.Position)
+            end
+          end)
+          InputService.InputEnded:Connect(function(input)
+            if input.UserInputType == enumValues.primaryMouseButton or input.UserInputType == enumValues.touchInput then
+              isEnabled5 = false
+            end
+          end)
+          local parent17 = newInstance("TextButton")
+          setProperties(parent17, {
+            Name = "ToggleButton",
+            Size = UDim2.new(1, _G.isMobile and -8 or -16, 0, _G.isMobile and 14 or 28),
+            Position = UDim2.new(0, _G.isMobile and 4 or 8, 0, _G.isMobile and 54 or 108),
+            Visible = false,
+            Text = "OFF",
+            TextColor3 = whiteColor,
+            TextStrokeColor3 = indigoAccentColor,
+            TextStrokeTransparency = 0.5,
+            BackgroundColor3 = mutedRedSurfaceColor,
+            Font = enumValues.gothamBoldFont,
+            TextSize = _G.isMobile and 7 or 14,
+            BorderSizePixel = 0,
+            ZIndex = 11,
+            Parent = walkspeedFrame,
+          })
+          local corner16 = newInstance("UICorner")
+          corner16.CornerRadius = UDim.new(0, _G.isMobile and 3 or 6)
+          corner16.Parent = parent17
+          local snapshot2 = _G
+          _G.walkspeedToggleBtn = parent17
+          snapshot2.walkspeedEnabled = false
+          local function findTarget(data)
+            local character = localPlayer.Character
+            if not character then
+              return
+            end
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            local primaryPart = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
+            if not humanoid or not primaryPart or humanoid.Health <= 0 then
+              return
+            end
+            local moveDirection = humanoid.MoveDirection
+            if moveDirection.Magnitude > 0 and currentWalkSpeed > humanoid.WalkSpeed then
+              primaryPart.CFrame = primaryPart.CFrame
+                + moveDirection * (currentWalkSpeed - humanoid.WalkSpeed) * (data or 0.016666666666666666)
+            end
+          end
+          local function toggleWalkspeed()
+            if _G.SpeedBoostEnabled and not walkspeedEnabled then
+              pcall(function()
+                StarterGuiService:SetCore("SendNotification", {
+                  Title = "Walkspeed",
+                  Text = "Cannot enable while Carpet Speed is on!",
+                  Duration = 2,
+                })
+              end)
+              return
+            end
+            walkspeedEnabled = not walkspeedEnabled
+            _G.walkspeedEnabled = walkspeedEnabled
+            if connection then
+              connection:Disconnect()
+              connection = nil
+            end
+            pcall(function()
+              if _G.movementPanelWalkspeedToggle then
+                if walkspeedEnabled then
+                  local movementPanelWalkspeedToggle = _G.movementPanelWalkspeedToggle
+                  local movementPanelWalkspeedToggle2 = _G.movementPanelWalkspeedToggle
+                  _G.movementPanelWalkspeedToggle.BackgroundColor3 = slateButtonColor
+                  movementPanelWalkspeedToggle.BackgroundTransparency = 0
+                  movementPanelWalkspeedToggle2.Text = "ON"
+                else
+                  local movementPanelWalkspeedToggle = _G.movementPanelWalkspeedToggle
+                  local movementPanelWalkspeedToggle2 = _G.movementPanelWalkspeedToggle
+                  _G.movementPanelWalkspeedToggle.BackgroundColor3 = navyColor
+                  movementPanelWalkspeedToggle.BackgroundTransparency = 0.15
+                  movementPanelWalkspeedToggle2.Text = "OFF"
+                end
+              end
+            end)
+            if walkspeedEnabled then
+              setProperties(parent17, {
+                Text = "ON",
+                BackgroundColor3 = slateButtonColor,
+                TextColor3 = whiteColor,
+              })
+              connection = RunService.Heartbeat:Connect(function(w)
+                if walkspeedEnabled then
+                  pcall(findTarget, w)
+                end
+              end)
+              pcall(function()
+                StarterGuiService:SetCore("SendNotification", {
+                  Title = "Walkspeed",
+                  Text = "Enabled (Speed: " .. tostring(currentWalkSpeed) .. ")",
+                  Duration = 2,
+                })
+              end)
+            else
+              setProperties(parent17, {
+                Text = "OFF",
+                BackgroundColor3 = mutedRedSurfaceColor,
+                TextColor3 = whiteColor,
+              })
+              pcall(function()
+                if _G._wsWall then
+                  _G._wsWall:Destroy()
+                end
+                local snapshot = _G
+                _G._wsWall = nil
+                snapshot._wsLastT = nil
+                local character = localPlayer.Character
+                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                local wsLV = humanoidRootPart and humanoidRootPart:FindFirstChild("WsLV")
+                if wsLV then
+                  wsLV:Destroy()
+                end
+                humanoidRootPart = humanoidRootPart and humanoidRootPart:FindFirstChild("WsAtt")
+                if humanoidRootPart then
+                  humanoidRootPart:Destroy()
+                end
+              end)
+              pcall(function()
+                StarterGuiService:SetCore("SendNotification", {
+                  Title = "Walkspeed",
+                  Text = "Disabled",
+                  Duration = 2,
+                })
+              end)
+            end
+          end
+          _G.toggleWalkspeed = toggleWalkspeed
+          parent17.MouseButton1Click:Connect(toggleWalkspeed)
+          _G._xenIB(function(data)
+            if _G.isSettingKeybind then
+              return
+            end
+            if InputService:GetFocusedTextBox() then
+              return
+            end
+            local walkspeedKey = _G.WALKSPEED_KEY or Enum.KeyCode.V
+            local state
+            if typeof(walkspeedKey) == "string" then
+              state = Enum.KeyCode[walkspeedKey] or Enum.KeyCode.V
+            else
+              state = walkspeedKey
+            end
+            if _G._xenBindHit(data, state) then
+              if _G.toggleWalkspeed then
+                _G.toggleWalkspeed()
+              end
+            end
+          end)
+          localPlayer.CharacterAdded:Connect(function()
+            if walkspeedEnabled then
+              task.wait(0.1)
+              if connection then
+                connection:Disconnect()
+              end
+              connection = RunService.Heartbeat:Connect(function(w)
+                if walkspeedEnabled then
+                  pcall(findTarget, w)
+                end
+              end)
+            end
+          end)
+        end)
+        local snapshot = _G
+        local snapshot2 = _G
+        _G.invisibleStealEnabled = false
+        snapshot.AutoRecoverLagback = true
+        snapshot2.RecoveryInProgress = false
+        task.spawn(function()
+          local isEnabled = false
+          local invisTracks = {}
+          _G._invisTracks = invisTracks
+          local clone = nil
+          local humanoidRootPart = nil
+          local hipHeight = nil
+          local connection = nil
+          local connection2 = nil
+          local items = {}
+          local items2 = {}
+          local amount = 0
+          local amount2 = 0
+          local amount3 = 0
+          local isEnabled3 = false
+          local instance = nil
+          local function cleanup()
+            if instance and instance.Parent then
+              instance:Destroy()
+            end
+            instance = nil
+            isEnabled3 = false
+          end
+          local function createUiElement()
+            if isEnabled3 then
+              return
+            end
+            isEnabled3 = true
+            for _, descendant in pairs(items2) do
+              if descendant and descendant.Parent then
+                descendant:Destroy()
+              end
+            end
+            items2 = {}
+            local ScreenGui2 = newInstance("ScreenGui")
+            setProperties(ScreenGui2, {
+              Name = "ErrorOrbGui",
+              ResetOnSpawn = false,
+              Parent = _G._xenHUI(),
+            })
+            local parent = newInstance("Frame")
+            setProperties(parent, {
+              Size = UDim2.new(0, 500, 0, 60),
+              Position = UDim2.new(0.5, -250, 0.3, 0),
+              BackgroundTransparency = 1,
+              BorderSizePixel = 0,
+              Parent = ScreenGui2,
+            })
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(1, 0, 0.5, 0),
+              Position = zeroSize,
+              BackgroundTransparency = 1,
+              Text = "ERROR CAUSED BY PLAYER DEATH",
+              TextColor3 = redColor,
+              TextStrokeTransparency = 0,
+              TextStrokeColor3 = Color3.new(0, 0, 0),
+              Font = enumValues.gothamBoldFont,
+              TextScaled = true,
+              Parent = parent,
+            })
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(1, 0, 0.5, 0),
+              Position = UDim2.new(0, 0, 0.5, 0),
+              BackgroundTransparency = 1,
+              Text = "MUST RESET TO FIX ERROR",
+              TextColor3 = redColor,
+              TextStrokeTransparency = 0,
+              TextStrokeColor3 = Color3.new(0, 0, 0),
+              Font = enumValues.gothamBoldFont,
+              TextScaled = true,
+              Parent = parent,
+            })
+            instance = ScreenGui2
+          end
+          local function createUiElement2(data)
+            if isEnabled3 then
+              return
+            end
+            local now2 = tick()
+            if now2 - amount3 < 0.05 then
+              return
+            end
+            amount3 = now2
+            if now2 - amount2 > 1 then
+              amount = 0
+              amount2 = now2
+            end
+            amount += 1
+            if amount >= 7 then
+              createUiElement()
+              return
+            end
+            for _, descendant in pairs(items2) do
+              if descendant and descendant.Parent then
+                descendant:Destroy()
+              end
+            end
+            items2 = {}
+            local ScreenGui2 = newInstance("ScreenGui")
+            setProperties(ScreenGui2, {
+              Name = "LagbackNotification",
+              ResetOnSpawn = false,
+              Parent = _G._xenHUI(),
+            })
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(0, 500, 0, 30),
+              Position = UDim2.new(0.5, -250, 0.15, 0),
+              BackgroundTransparency = 1,
+              Text = "",
+              TextColor3 = redColor,
+              TextStrokeTransparency = 0,
+              TextStrokeColor3 = Color3.new(0, 0, 0),
+              Font = enumValues.gothamBoldFont,
+              TextScaled = true,
+              Parent = ScreenGui2,
+            })
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(0, 650, 0, 25),
+              Position = UDim2.new(0.5, -325, 0.15, 32),
+              BackgroundTransparency = 1,
+              Text = "",
+              TextColor3 = whiteColor,
+              TextStrokeTransparency = 0,
+              TextStrokeColor3 = Color3.new(0, 0, 0),
+              Font = enumValues.gothamBoldFont,
+              TextScaled = true,
+              Parent = ScreenGui2,
+            })
+            task.delay(1.5, function()
+              if ScreenGui2 and ScreenGui2.Parent then
+                ScreenGui2:Destroy()
+              end
+            end)
+            local position = data + Vector3.new(0, 5, 0)
+            local parent = newInstance("Part")
+            setProperties(parent, {
+              Name = "LagbackGhost",
+              Shape = Enum.PartType.Ball,
+              Size = Vector3.new(3, 3, 3),
+              Color = redColor,
+              Material = Enum.Material.Glass,
+              Transparency = 0.5,
+              CanCollide = false,
+              Anchored = true,
+              CastShadow = false,
+              Position = position,
+              Parent = enumValues.Workspace.CurrentCamera,
+            })
+            local BillboardGui = newInstance("BillboardGui")
+            setProperties(BillboardGui, {
+              Size = UDim2.new(0, 400, 0, 60),
+              StudsOffset = Vector3.new(0, 4, 0),
+              AlwaysOnTop = true,
+              Parent = parent,
+            })
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(1, 0, 0, 25),
+              Position = zeroSize,
+              BackgroundTransparency = 1,
+              Text = "",
+              TextColor3 = redColor,
+              TextStrokeTransparency = 0,
+              TextStrokeColor3 = Color3.new(0, 0, 0),
+              Font = enumValues.gothamBoldFont,
+              TextScaled = true,
+              Parent = BillboardGui,
+            })
+            setProperties(newInstance("TextLabel"), {
+              Size = UDim2.new(1, 0, 0, 25),
+              Position = UDim2.new(0, 0, 0, 25),
+              BackgroundTransparency = 1,
+              Text = "",
+              TextColor3 = whiteColor,
+              TextStrokeTransparency = 0,
+              TextStrokeColor3 = Color3.new(0, 0, 0),
+              Font = enumValues.gothamBoldFont,
+              TextScaled = true,
+              Parent = BillboardGui,
+            })
+            table.insert(items2, parent)
+            return parent
+          end
+          local function cleanup2()
+            for _, descendant in pairs(items2) do
+              pcall(function()
+                if descendant and descendant.Parent then
+                  descendant:Destroy()
+                end
+              end)
+            end
+            items2 = {}
+            cleanup()
+            amount = 0
+            amount3 = 0
+            pcall(function()
+              local playerGui = localPlayer:FindFirstChild("PlayerGui")
+              if playerGui then
+                for _, child in pairs(playerGui:GetChildren()) do
+                  if child.Name == "LagbackNotification" then
+                    child:Destroy()
+                  end
+                end
+              end
+            end)
+            pcall(function()
+              if enumValues.Workspace.CurrentCamera then
+                for _, child in pairs(enumValues.Workspace.CurrentCamera:GetChildren()) do
+                  if child.Name == "LagbackGhost" then
+                    child:Destroy()
+                  end
+                end
+              end
+            end)
+            pcall(function()
+              for _, descendant in pairs(enumValues.Workspace:GetDescendants()) do
+                if descendant.Name == "LagbackGhost" then
+                  descendant:Destroy()
+                end
+              end
+            end)
+          end
+          local function handleState(data)
+            createUiElement2(data)
+          end
+          local function findTarget()
+            local instance = enumValues.Workspace:FindFirstChild(localPlayer.Name)
+            if not instance then
+              return
+            end
+            local doubleRig = instance:FindFirstChild("DoubleRig")
+            if doubleRig then
+              local basePart = doubleRig:FindFirstChild("HumanoidRootPart")
+                or doubleRig:FindFirstChildWhichIsA("BasePart")
+              if basePart and true then
+                handleState(basePart.Position)
+              end
+              doubleRig:Destroy()
+            end
+            local constraints = instance:FindFirstChild("Constraints")
+            if constraints then
+              constraints:Destroy()
+            end
+            local connection3 = instance.ChildAdded:Connect(function(child)
+              if child.Name == "DoubleRig" then
+                task.defer(function()
+                  local humanoidRootPart2 = child:FindFirstChild("HumanoidRootPart")
+                    or child:FindFirstChildWhichIsA("BasePart")
+                  if humanoidRootPart2 and true then
+                    handleState(humanoidRootPart2.Position)
+                  end
+                  child:Destroy()
+                end)
+              elseif child.Name == "Constraints" then
+                child:Destroy()
+              end
+            end)
+            table.insert(items, connection3)
+          end
+          local function createUiElement3()
+            local character = localPlayer.Character
+            if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+              hipHeight = character.Humanoid.HipHeight
+              humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+              if not humanoidRootPart or not humanoidRootPart.Parent then
+                return false
+              end
+              for _, child in pairs(humanoidRootPart:GetChildren()) do
+                if child:IsA("Attachment") and (child.Name:find("Beam") or child.Name:find("Attach")) then
+                  child:Destroy()
+                end
+              end
+              for _, child in pairs(humanoidRootPart:GetChildren()) do
+                if child:IsA("Beam") then
+                  child:Destroy()
+                end
+              end
+              local Model = newInstance("Model")
+              Model.Parent = game
+              character.Parent = Model
+              clone = humanoidRootPart:Clone()
+              clone.Parent = character
+              humanoidRootPart.Parent = enumValues.Workspace.CurrentCamera
+              clone.CFrame = humanoidRootPart.CFrame
+              character.PrimaryPart = clone
+              character.Parent = enumValues.Workspace
+              for _, descendant in pairs(character:GetDescendants()) do
+                if descendant:IsA("Weld") or descendant:IsA("Motor6D") then
+                  if descendant.Part0 == humanoidRootPart then
+                    descendant.Part0 = clone
+                  end
+                  if descendant.Part1 == humanoidRootPart then
+                    descendant.Part1 = clone
+                  end
+                end
+              end
+              Model:Destroy()
+              task.defer(function()
+                if _G._xenFixRig then
+                  _G._xenFixRig()
+                end
+              end)
+              return true
+            end
+            return false
+          end
+          local function createUiElement4()
+            local character = localPlayer.Character
+            if
+              not humanoidRootPart
+              or not humanoidRootPart:IsDescendantOf(enumValues.Workspace)
+              or not character
+              or character.Humanoid.Health <= 0
+            then
+              return false
+            end
+            local Model = newInstance("Model")
+            Model.Parent = game
+            character.Parent = Model
+            humanoidRootPart.Parent = character
+            character.PrimaryPart = humanoidRootPart
+            character.Parent = enumValues.Workspace
+            humanoidRootPart.CanCollide = true
+            for _, descendant in pairs(character:GetDescendants()) do
+              if descendant:IsA("Weld") or descendant:IsA("Motor6D") then
+                if descendant.Part0 == clone then
+                  descendant.Part0 = humanoidRootPart
+                end
+                if descendant.Part1 == clone then
+                  descendant.Part1 = humanoidRootPart
+                end
+              end
+            end
+            if clone then
+              local cFrame = clone.CFrame
+              clone:Destroy()
+              clone = nil
+              humanoidRootPart.CFrame = cFrame
+            end
+            humanoidRootPart = nil
+            if character and character.Humanoid then
+              character.Humanoid.HipHeight = hipHeight
+            end
+            task.defer(function()
+              if _G._xenFixRig then
+                _G._xenFixRig()
+              end
+            end)
+            cleanup2()
+          end
+          local buildInterface = nil
+          buildInterface = function()
+            local character = localPlayer.Character
+            if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+              local Animation = newInstance("Animation")
+              Animation.AnimationId = "http://www.roblox.com/asset/?id=18537363391"
+              local humanoid = character.Humanoid
+              local tween = (humanoid:FindFirstChild("Animator") or newInstance("Animator", humanoid)):LoadAnimation(
+                Animation
+              )
+              tween.Priority = Enum.AnimationPriority.Action4
+              tween:Play(0, 1, 0)
+              Animation:Destroy()
+              table.insert(invisTracks, tween)
+              _G._invisTracks = invisTracks
+              tween.Stopped:Connect(function()
+                if isEnabled then
+                  buildInterface()
+                end
+              end)
+              task.delay(0, function()
+                if tween then
+                  tween.TimePosition = _G.InvisAnimFrame or 0.8
+                  tween:AdjustSpeed(0)
+                end
+              end)
+            end
+          end
+          local function findTarget2()
+            cleanup2()
+            if not isEnabled then
+              return
+            end
+            local character = localPlayer.Character
+            character = character and character:FindFirstChildOfClass("Humanoid")
+            isEnabled = false
+            _G.invisibleStealEnabled = false
+            for _, invisTrack in pairs(invisTracks) do
+              pcall(function()
+                invisTrack:Stop(0)
+              end)
+              pcall(function()
+                invisTrack:Destroy()
+              end)
+            end
+            invisTracks = {}
+            _G._invisTracks = invisTracks
+            if connection then
+              connection:Disconnect()
+              connection = nil
+            end
+            if connection2 then
+              connection2:Disconnect()
+              connection2 = nil
+            end
+            for _, item in ipairs(items) do
+              if item then
+                pcall(function()
+                  item:Disconnect()
+                end)
+              end
+            end
+            items = {}
+            createUiElement4()
+            cleanup2()
+            local character2 = localPlayer.Character
+            local humanoid = character2 and character2:FindFirstChildOfClass("Humanoid") or character
+            if humanoid then
+              pcall(function()
+                local animator = humanoid:FindFirstChildOfClass("Animator")
+                if animator then
+                  for _, item in ipairs(animator:GetPlayingAnimationTracks()) do
+                    if
+                      item.Priority == Enum.AnimationPriority.Action4
+                      or item.Priority == Enum.AnimationPriority.Action3
+                    then
+                      pcall(function()
+                        item:Stop(0)
+                      end)
+                    end
+                  end
+                end
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                task.defer(function()
+                  if humanoid and humanoid.Parent then
+                    pcall(function()
+                      humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                    end)
+                  end
+                end)
+              end)
+            end
+            pcall(function()
+              local character3 = localPlayer.Character
+              character3 = character3 and character3:FindFirstChildOfClass("Humanoid")
+              if character3 then
+                character3.BreakJointsOnDeath = false
+                if character3.Health <= 0 then
+                  character3.Health = character3.MaxHealth
+                end
+              end
+              if _G.setupAntiDie then
+                _G.setupAntiDie()
+              end
+            end)
+            if _G.updateStealPanelInvisToggle then
+              pcall(function()
+                _G.updateStealPanelInvisToggle(false)
+              end)
+            end
+            if _G.updateMovementPanelInvisVisual then
+              pcall(function()
+                _G.updateMovementPanelInvisVisual(false)
+              end)
+            end
+          end
+          local function findTarget3()
+            if isEnabled then
+              return
+            end
+            local character = localPlayer.Character
+            if not character then
+              return
+            end
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if not humanoid then
+              return
+            end
+            _G._autoInvisCancelPending = false
+            local xenLocalStolenSlot = _G._xenLocalStolenSlot and _G._xenLocalStolenSlot()
+            local amount = 0
+            if xenLocalStolenSlot then
+              if xenLocalStolenSlot >= 19 then
+                amount = 3
+              elseif xenLocalStolenSlot >= 11 then
+                amount = 2
+              else
+                amount = 0
+                if xenLocalStolenSlot >= 1 then
+                  amount = 1
+                end
+              end
+            end
+            local y2 = character:FindFirstChild("HumanoidRootPart")
+            y2 = y2 and y2.Position.Y
+            local amount2 = 0
+            if y2 then
+              if y2 >= -6.9 and y2 <= 8.9 then
+                amount2 = 1
+              elseif y2 >= 11 and y2 <= 23.15 then
+                amount2 = 2
+              elseif y2 > 23.15 then
+                amount2 = 3
+              end
+            end
+            if _G._autoInvisApplying then
+              if amount > 0 and amount2 > 0 and amount2 < amount then
+                task.wait(0.75)
+              else
+                task.wait(0.05)
+              end
+            end
+            _G._autoInvisApplying = false
+            if _G._autoInvisCancelPending then
+              _G._autoInvisCancelPending = false
+              return
+            end
+            if connection then
+              connection:Disconnect()
+              connection = nil
+            end
+            if connection2 then
+              connection2:Disconnect()
+              connection2 = nil
+            end
+            for _, item in ipairs(items) do
+              if item then
+                pcall(function()
+                  item:Disconnect()
+                end)
+              end
+            end
+            items = {}
+            for _, invisTrack in pairs(invisTracks) do
+              pcall(function()
+                invisTrack:Stop(0)
+              end)
+              pcall(function()
+                invisTrack:Destroy()
+              end)
+            end
+            invisTracks = {}
+            _G._invisTracks = invisTracks
+            isEnabled = true
+            _G.invisibleStealEnabled = true
+            if _G.updateMovementPanelInvisVisual then
+              pcall(function()
+                _G.updateMovementPanelInvisVisual(true)
+              end)
+            end
+            findTarget()
+            if createUiElement3() then
+              task.wait(0.05)
+              buildInterface()
+              task.defer(function()
+                if _G.resetBrainrotBeam then
+                  pcall(_G.resetBrainrotBeam)
+                end
+                if _G.resetPlotBeam then
+                  pcall(_G.resetPlotBeam)
+                end
+                task.wait(0.1)
+                if _G.updateBrainrotBeam then
+                  pcall(_G.updateBrainrotBeam)
+                end
+                if _G.createPlotBeam then
+                  pcall(_G.createPlotBeam)
+                end
+              end)
+              local function findTarget()
+                if not _G.AutoRotateInvis then
+                  return _G.InvisStealAngle or 180
+                end
+                local character2 = localPlayer.Character
+                if not character2 then
+                  return 180
+                end
+                local now2 = os.clock()
+                local autoRotAngle = _G._autoRotAngle
+                if autoRotAngle then
+                  autoRotAngle = now2 - (_G._autoRotAngleT or 0) < 0.2
+                end
+                if autoRotAngle then
+                  return _G._autoRotAngle
+                end
+                local huge = math.huge
+                local state62 = -math.huge
+                local amount = 0
+                for _, descendant in pairs(character2:GetDescendants()) do
+                  if descendant:IsA("BasePart") and descendant ~= clone then
+                    local size = descendant.Size
+                    local position = descendant.Position
+                    huge = math.min(huge, position.Y - size.Y / 2)
+                    state62 = math.max(state62, position.Y + size.Y / 2)
+                    amount = math.max(amount, size.X, size.Z)
+                  end
+                end
+                if localPlayer:GetAttribute("Stealing") then
+                  local primaryPart = clone or character2.PrimaryPart or character2:FindFirstChild("HumanoidRootPart")
+                  primaryPart = primaryPart and primaryPart.Position
+                  if primaryPart then
+                    local state63 = nil
+                    local state2 = nil
+                    for _, child in ipairs(enumValues.Workspace:GetChildren()) do
+                      if
+                        child:IsA("Model")
+                        and not PlayersService:FindFirstChild(child.Name)
+                        and child:FindFirstChild("FakeRootPart")
+                      then
+                        local primaryPart2 = child.PrimaryPart or child:FindFirstChildWhichIsA("BasePart")
+                        if primaryPart2 then
+                          local magnitude = (primaryPart2.Position - primaryPart).Magnitude
+                          if magnitude < 14 and (not state63 or magnitude < state63) then
+                            state63 = magnitude
+                            state2 = child
+                          end
+                        end
+                      end
+                    end
+                    if state2 then
+                      local boundingBox, vector = state2:GetBoundingBox()
+                      local minimumValue = math.min(huge, boundingBox.Y - vector.Y / 2)
+                      state62 = math.max(state62, boundingBox.Y + vector.Y / 2)
+                      huge = minimumValue
+                    end
+                  end
+                end
+                local calculatedValue = state62 - huge
+                if calculatedValue <= 0 then
+                  return 180
+                end
+                local autoRotAngle2 = math.clamp(
+                  215 + (0.5 - math.min(1, (_G.SinkSliderValue or 5) * 0.5 / calculatedValue)) * 10,
+                  210,
+                  220
+                )
+                if _G.updateRotationSliderUI then
+                  pcall(_G.updateRotationSliderUI, autoRotAngle2)
+                end
+                local snapshot = _G
+                _G._autoRotAngle = autoRotAngle2
+                snapshot._autoRotAngleT = now2
+                return autoRotAngle2
+              end
+              local isEnabled = false
+              connection2 = InputService.InputBegan:Connect(function(input, gameProcessed)
+                if gameProcessed then
+                  return
+                end
+                if input.UserInputType == enumValues.keyboardInput and input.KeyCode == Enum.KeyCode.Space then
+                  isEnabled = true
+                end
+              end)
+              local connection3 = InputService.InputEnded:Connect(function(input)
+                if input.UserInputType == enumValues.keyboardInput and input.KeyCode == Enum.KeyCode.Space then
+                  isEnabled = false
+                end
+              end)
+              table.insert(items, connection3)
+              local connection4 = RunService.Heartbeat:Connect(function()
+                if isEnabled and humanoid and humanoid.Health > 0 then
+                  local w = character.PrimaryPart or (character:FindFirstChild("HumanoidRootPart"))
+                  if w then
+                    w.AssemblyLinearVelocity =
+                      Vector3.new(w.AssemblyLinearVelocity.X, humanoid.JumpPower or 50, w.AssemblyLinearVelocity.Z)
+                  end
+                end
+              end)
+              table.insert(items, connection4)
+              if humanoidRootPart then
+                for _, child in pairs(humanoidRootPart:GetChildren()) do
+                  if child:IsA("Attachment") or child:IsA("Beam") then
+                    child:Destroy()
+                  end
+                end
+                local connection5 = humanoidRootPart.ChildAdded:Connect(function(child)
+                  if child:IsA("Attachment") or child:IsA("Beam") then
+                    child:Destroy()
+                  end
+                end)
+                table.insert(items, connection5)
+              end
+              local position = nil
+              local amount = 5
+              local amount2 = 10
+              connection = RunService.PreSimulation:Connect(function(w)
+                if
+                  character
+                  and (character:FindFirstChild("Humanoid"))
+                  and character.Humanoid.Health > 0
+                  and humanoidRootPart
+                then
+                  local u = character.PrimaryPart or (character:FindFirstChild("HumanoidRootPart"))
+                  if u then
+                    if amount > 0 then
+                      amount -= 1
+                      position = nil
+                    elseif position and true then
+                      local t = humanoidRootPart.Position
+                      if (t - position).Magnitude > 3 and not _G.RecoveryInProgress then
+                        position = nil
+                        if createUiElement2(t) and _G.AutoRecoverLagback and _G.toggleInvisibleSteal then
+                          _G.RecoveryInProgress = true
+                          task.spawn(function()
+                            pcall(_G.toggleInvisibleSteal)
+                            task.wait(0.5)
+                            pcall(_G.toggleInvisibleSteal)
+                            _G.RecoveryInProgress = false
+                          end)
+                        end
+                      end
+                    end
+                    if clone then
+                      clone.CanCollide = true
+                    end
+                    if localPlayer:GetAttribute("Stealing") and u then
+                      local t = u.AssemblyLinearVelocity
+                      local M = Vector3.new(t.X, 0, t.Z)
+                      local p = M.Magnitude
+                      if p > 0.1 then
+                        local g, B, m = M.Unit, p * (w or 0.016666666666666666) + 3.2, RaycastParams.new()
+                        m.FilterType, m.FilterDescendantsInstances =
+                          enumValues.excludeRaycastFilter, {
+                            character,
+                            humanoidRootPart,
+                            enumValues.Workspace.CurrentCamera,
+                          }
+                        local p, K = Vector3.new(-g.Z, 0, g.X), ipairs
+                        local x, j, L = {
+                          u.Position,
+                          u.Position + p * 1.4,
+                          u.Position - p * 1.4,
+                        }
+                        for H, e in K(x) do
+                          H = WorkspaceRoot:Raycast(e, g * B, m)
+                          if H and H.Instance and H.Instance.CanCollide and math.abs(H.Normal.Y) < 0.6 then
+                            p = (H.Position - e).Magnitude
+                            if not j or p < j then
+                              j, L = p, H.Normal
+                            end
+                          end
+                        end
+                        if L then
+                          g = Vector3.new(L.X, 0, L.Z)
+                          if g.Magnitude > 0.01 then
+                            g = g.Unit
+                            m = M:Dot(g)
+                            u.AssemblyLinearVelocity =
+                              Vector3.new((if m < 0 then M - g * m else M).X, t.Y, (if m < 0 then M - g * m else M).Z)
+                            if j < 3.2 then
+                              u.CFrame = u.CFrame + g * (3.2 - j)
+                            end
+                          end
+                        end
+                      end
+                    end
+                    if u then
+                      local t = u.AssemblyLinearVelocity.Y
+                      if t > 0.1 then
+                        local M, p = t * (w or 0.016666666666666666) + 3.5, RaycastParams.new()
+                        p.FilterType, p.FilterDescendantsInstances =
+                          enumValues.excludeRaycastFilter, {
+                            character,
+                            humanoidRootPart,
+                            enumValues.Workspace.CurrentCamera,
+                          }
+                        local w = WorkspaceRoot:Raycast(u.Position, Vector3.new(0, M, 0), p)
+                        if w and w.Instance and w.Instance.CanCollide and w.Normal.Y < -0.5 then
+                          p = u.AssemblyLinearVelocity
+                          if p.Y > 0 then
+                            u.AssemblyLinearVelocity = Vector3.new(p.X, 0, p.Z)
+                          end
+                          M = (w.Position - u.Position).Magnitude
+                          if M < 3.5 then
+                            u.CFrame = u.CFrame - Vector3.new(0, 3.5 - M, 0)
+                          end
+                        end
+                      end
+                    end
+                    local w = character:FindFirstChildOfClass("Humanoid")
+                    if not (u and humanoidRootPart and w) then
+                      return
+                    end
+                    if amount2 > 0 then
+                      amount2 -= 1
+                      setProperties(humanoidRootPart, {
+                        CFrame = u.CFrame,
+                        AssemblyLinearVelocity = Vector3.zero,
+                        CanCollide = false,
+                      })
+                      position = nil
+                    else
+                      local t, M, M =
+                        _G.AutoRotateInvis and (findTarget()) or (_G.InvisStealAngle or 180),
+                        w.HipHeight + u.Size.Y / 2 - 1 + 0.09,
+                        (_G.SinkSliderValue or 5) * 0.5
+                      local w = u.CFrame - Vector3.new(0, M, 0)
+                      setProperties(humanoidRootPart, {
+                        CFrame = w * CFrame.Angles(math.rad(t), 0, 0),
+                        Velocity = u.Velocity,
+                        CanCollide = false,
+                      })
+                      position = humanoidRootPart.Position
+                    end
+                  end
+                end
+              end)
+            end
+            if _G.updateStealPanelInvisToggle then
+              pcall(function()
+                _G.updateStealPanelInvisToggle(true)
+              end)
+            end
+          end
+          _G.toggleInvisibleSteal = function()
+            if isEnabled then
+              findTarget2()
+            else
+              findTarget3()
+            end
+          end
+          _G._xenIB(function(data)
+            if InputService:GetFocusedTextBox() then
+              return
+            end
+            if _G._xenBindHit(data, _G.INVISIBLE_STEAL_KEY or Enum.KeyCode.U) then
+              pcall(_G.toggleInvisibleSteal)
+              if _G.updateMovementPanelInvisVisual then
+                pcall(_G.updateMovementPanelInvisVisual, _G.invisibleStealEnabled or false)
+              end
+            end
+          end)
+          _G._xenIB(function(data, data2)
+            if data2 then
+              return
+            end
+            if InputService:GetFocusedTextBox() then
+              return
+            end
+            if _G.isSettingKeybind then
+              return
+            end
