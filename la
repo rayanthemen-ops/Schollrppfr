@@ -2072,7 +2072,7 @@ end
 vizPath = function(fromPos, waypoints)
     if _G.MeerkoShowPath ~= true then return end
     if #waypoints == 0 then return end
-    local COL = Color3.fromRGB(0, 200, 140)
+    local COL = Color3.fromRGB(255, 105, 180)
     local prev = fromPos
     for _, wp in ipairs(waypoints) do
         vizLine(prev, wp, COL)
@@ -6478,9 +6478,9 @@ end
         bg2  = Color3.fromRGB(18, 21, 24),
         row  = Color3.fromRGB(24, 28, 32),
         rowH = Color3.fromRGB(36, 42, 48),
-        line = Color3.fromRGB(54, 64, 72),
-        acc  = Color3.fromRGB(0, 200, 140),
-        acc2 = Color3.fromRGB(96, 240, 190),
+        line = Color3.fromRGB(255, 105, 180),
+        acc  = Color3.fromRGB(255, 105, 180),
+        acc2 = Color3.fromRGB(255, 150, 210),
         txt  = Color3.fromRGB(235, 240, 240),
         dim  = Color3.fromRGB(128, 142, 148),
     }
