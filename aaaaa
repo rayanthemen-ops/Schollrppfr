@@ -1,0 +1,40 @@
+-- 1. AU TOUT DÉBUT DU FICHIER :
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local InputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+
+local function newInstance(className, parent)
+    local obj = Instance.new(className)
+    if parent then obj.Parent = parent end
+    return obj
+end
+
+local function setProperties(instance, properties)
+    for property, value in pairs(properties) do
+        instance[property] = value
+    end
+    return instance
+end
+
+local screenGui = localPlayer:WaitForChild("PlayerGui"):FindFirstChild("XenCoreGui") or newInstance("ScreenGui", localPlayer.PlayerGui)
+local walkspeedFrame = screenGui:FindFirstChild("WalkspeedFrame") or setProperties(newInstance("Frame"), {
+    Name = "WalkspeedFrame",
+    Size = UDim2.new(0, 240, 0, 420),
+    Position = UDim2.new(0.5, -120, 0.5, -210),
+    BackgroundColor3 = Color3.fromRGB(20, 20, 30),
+    Parent = screenGui
+})
+local input = walkspeedFrame
+
+-- 2. AU MILIEU : Ton code actuel (celui de ton image)
+pcall(function()
+    setProperties(newInstance("TextLabel"), { ... })
+    -- ... tout ton code de boutons et de l'invisible steal ...
+end)
+
+-- 3. À LA TOUTE FIN DU FICHIER :
+        end)
+    end)
+end)
