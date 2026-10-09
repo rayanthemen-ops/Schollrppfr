@@ -35,9 +35,7 @@ pcall(function()
 end)
 
 -- 3. À LA TOUTE FIN DU FICHIER :
-        end)
-    end)
-end)
+
 
 
 
@@ -2022,3 +2020,7 @@ setProperties(newInstance("TextLabel"), {
             if _G.isSettingKeybind then
               return
             end
+
+end)
+end)
+end)
