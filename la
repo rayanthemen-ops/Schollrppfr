@@ -4815,7 +4815,7 @@ do
         track = Color3.fromRGB(36, 42, 48),
         line = Color3.fromRGB(255, 105, 180),
         acc  = Color3.fromRGB(255, 105, 180),
-        acc2 = Color3.fromRGB(255, 150, 210),
+        acc2 = Color3.fromRGB(255, 105, 180),
         txt  = Color3.fromRGB(235, 240, 240),
         dim  = Color3.fromRGB(128, 142, 148),
     }
