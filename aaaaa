@@ -42,7 +42,7 @@ end)
 
 
 
-Comment je fzit en sorte qui se excute donne moi juste comment pas tout le code corriger analyse bien setProperties(newInstance("TextLabel"), {
+setProperties(newInstance("TextLabel"), {
             Name = "SubtitleLabel",
             Size = UDim2.new(1, 0, 0, 10),
             Position = UDim2.new(0, 0, 0, isMobile2 and 12 or 18),
