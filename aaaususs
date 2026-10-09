@@ -41,7 +41,8 @@ local enumValues = {
     quadEasing = Enum.EasingStyle.Quad,
     easingOut = Enum.EasingDirection.Out,
     Workspace = Workspace,
-    excludeRaycastFilter = RaycastFilterType.Exclude
+    excludeRaycastFilter = Enum.RaycastFilterType.Exclude,
+
 }
 
 local purpleAccentColor = Color3.fromRGB(150, 100, 255)
