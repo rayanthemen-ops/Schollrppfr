@@ -2010,6 +2010,7 @@ setProperties(newInstance("TextLabel"), {
               end
             end
           end)
+
           _G._xenIB(function(data, data2)
             if data2 then
               return
@@ -2020,7 +2021,9 @@ setProperties(newInstance("TextLabel"), {
             if _G.isSettingKeybind then
               return
             end
-
-end)
-end)
+          end)
+        end)
+      end)
+    end)
+  end)
 end)
