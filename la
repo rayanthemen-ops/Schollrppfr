@@ -4749,7 +4749,7 @@ do
     local function _prox()
         return tonumber(_G.MeerkoStealProximity) or STEAL_PROXIMITY
     end
-    local STEAL_HOLD_MAX = 2.6
+    local STEAL_HOLD_MAX = 0.4
     local function _holdDur()
 
 
