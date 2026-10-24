@@ -1,0 +1,578 @@
+-- Horloge de farm - Clean & Secure Mode (5 Studs Sous le Sol + Anti-AFK Intégré)
+--[========================================================================]
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local HttpService = game:GetService("HttpService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
+
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+local camera = Workspace.CurrentCamera
+
+local SAVE_FILE_NAME = "HorlogeAutoFarm_Settings.json"
+
+local function loadData()
+	local success, data = pcall(function()
+		if readfile and isfile and isfile(SAVE_FILE_NAME) then
+			return HttpService:JSONDecode(readfile(SAVE_FILE_NAME))
+		end
+	end)
+	if success and type(data) == "table" then
+		return data
+	end
+	return {}
+end
+
+local function saveData(data)
+	pcall(function()
+		if writefile then
+			writefile(SAVE_FILE_NAME, HttpService:JSONEncode(data))
+		end
+	end)
+end
+
+local savedSettings = loadData()
+
+if playerGui:FindFirstChild("HorlogeAutoFarmGui") then 
+	playerGui.HorlogeAutoFarmGui:Destroy() 
+end
+
+local function playKeyboardSound()
+	pcall(function()
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://6895070853" 
+		sound.Volume = 0.5
+		sound.Pitch = math.random(95, 105) / 100
+		sound.Parent = playerGui
+		sound:Play()
+		sound.Ended:Connect(function() sound:Destroy() end)
+	end)
+end
+
+-- Interface Principale (Noir & Épuré)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HorlogeAutoFarmGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Petit bouton flottant pour réouvrir le panel
+local floatingBtn = Instance.new("TextButton")
+floatingBtn.Name = "FloatingOpenBtn"
+floatingBtn.Size = UDim2.new(0, 45, 0, 45)
+floatingBtn.Position = UDim2.new(0, 20, 0.5, -22)
+floatingBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+floatingBtn.Text = "⚡"
+floatingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+floatingBtn.TextSize = 18
+floatingBtn.Font = Enum.Font.GothamBold
+floatingBtn.Visible = false
+floatingBtn.Active = true
+floatingBtn.Draggable = true
+floatingBtn.Parent = screenGui
+
+local floatCorner = Instance.new("UICorner")
+floatCorner.CornerRadius = UDim.new(0, 12)
+floatCorner.Parent = floatingBtn
+
+local floatStroke = Instance.new("UIStroke")
+floatStroke.Color = Color3.fromRGB(40, 40, 40)
+floatStroke.Thickness = 1.5
+floatStroke.Transparency = 0.2
+floatStroke.Parent = floatingBtn
+
+-- Panel Principal (Hauteur augmentée à 315 pour loger le bouton Anti-AFK)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 340, 0, 315)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 16)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(35, 35, 35)
+mainStroke.Thickness = 1.5
+mainStroke.Transparency = 0.2
+mainStroke.Parent = mainFrame
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 40)
+topBar.BackgroundTransparency = 1
+topBar.ZIndex = 3
+topBar.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -45, 1, 0)
+titleLabel.Position = UDim2.new(0, 15, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Horloge de farm"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 14
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 3
+titleLabel.Parent = topBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -32, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+closeBtn.TextSize = 12
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.ZIndex = 3
+closeBtn.Parent = topBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeBtn
+
+-- Fermeture du panel -> Affiche le petit bouton flottant
+closeBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+	local tw = TweenService:Create(mainFrame, tweenInfo, {
+		Size = UDim2.new(0, 0, 0, 0)
+	})
+	tw:Play()
+	tw.Completed:Connect(function()
+		mainFrame.Visible = false
+		floatingBtn.Visible = true
+		mainFrame.Size = UDim2.new(0, 340, 0, 315)
+	end)
+end)
+
+-- Ouverture du panel via le bouton flottant
+floatingBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	floatingBtn.Visible = false
+	mainFrame.Visible = true
+	mainFrame.Size = UDim2.new(0, 0, 0, 0)
+	local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local tw = TweenService:Create(mainFrame, tweenInfo, {
+		Size = UDim2.new(0, 340, 0, 315)
+	})
+	tw:Play()
+end)
+
+local contentContainer = Instance.new("Frame")
+contentContainer.Size = UDim2.new(1, -24, 1, -55)
+contentContainer.Position = UDim2.new(0, 12, 0, 45)
+contentContainer.BackgroundTransparency = 1
+contentContainer.ZIndex = 3
+contentContainer.Parent = mainFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 10)
+listLayout.Parent = contentContainer
+
+-- Variables Auto-Farm & Anti-AFK
+local autoFarmEnabled = savedSettings.AutoFarmEnabled or false
+local autoFarmSpeed = math.clamp(savedSettings.AutoFarmSpeed or 25, 5, 25)
+local antiAfkEnabled = savedSettings.AntiAfkEnabled or false
+local maxCoinDistance = 4000
+local ignoredCoins = {}
+
+-- 1. Bouton Toggle Auto-Farm
+local autofarmBtn = Instance.new("TextButton")
+autofarmBtn.Size = UDim2.new(1, 0, 0, 45)
+autofarmBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+autofarmBtn.BackgroundTransparency = 0.3
+autofarmBtn.Text = "   Activer Autofarm : " .. (autoFarmEnabled and "ON" or "OFF")
+autofarmBtn.TextColor3 = autoFarmEnabled and Color3.fromRGB(90, 255, 90) or Color3.fromRGB(240, 240, 240)
+autofarmBtn.TextSize = 13
+autofarmBtn.Font = Enum.Font.GothamSemibold
+autofarmBtn.TextXAlignment = Enum.TextXAlignment.Left
+autofarmBtn.LayoutOrder = 1
+autofarmBtn.ZIndex = 3
+autofarmBtn.Parent = contentContainer
+
+local afCorner = Instance.new("UICorner")
+afCorner.CornerRadius = UDim.new(0, 10)
+afCorner.Parent = autofarmBtn
+
+local afStroke = Instance.new("UIStroke")
+afStroke.Color = Color3.fromRGB(40, 40, 40)
+afStroke.Thickness = 1.2
+afStroke.Transparency = 0.4
+afStroke.Parent = autofarmBtn
+
+autofarmBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	autoFarmEnabled = not autoFarmEnabled
+	savedSettings.AutoFarmEnabled = autoFarmEnabled
+	saveData(savedSettings)
+	autofarmBtn.Text = "   Activer Autofarm : " .. (autoFarmEnabled and "ON" or "OFF")
+	autofarmBtn.TextColor3 = autoFarmEnabled and Color3.fromRGB(90, 255, 90) or Color3.fromRGB(240, 240, 240)
+end)
+
+-- 2. Carte Vitesse (Max 25, ajustable)
+local speedCard = Instance.new("Frame")
+speedCard.Size = UDim2.new(1, 0, 0, 65)
+speedCard.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+speedCard.BackgroundTransparency = 0.3
+speedCard.BorderSizePixel = 0
+speedCard.LayoutOrder = 2
+speedCard.ZIndex = 3
+speedCard.Parent = contentContainer
+
+local speedCardCorner = Instance.new("UICorner")
+speedCardCorner.CornerRadius = UDim.new(0, 10)
+speedCardCorner.Parent = speedCard
+
+local speedCardStroke = Instance.new("UIStroke")
+speedCardStroke.Color = Color3.fromRGB(40, 40, 40)
+speedCardStroke.Thickness = 1.2
+speedCardStroke.Transparency = 0.4
+speedCardStroke.Parent = speedCard
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(1, -20, 0, 22)
+speedLabel.Position = UDim2.new(0, 10, 0, 6)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextSize = 12
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Text = "Vitesse (Max 25) : " .. autoFarmSpeed
+speedLabel.ZIndex = 3
+speedLabel.Parent = speedCard
+
+local speedMinusBtn = Instance.new("TextButton")
+speedMinusBtn.Size = UDim2.new(0, 34, 0, 28)
+speedMinusBtn.Position = UDim2.new(0, 10, 0, 30)
+speedMinusBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+speedMinusBtn.Text = "-"
+speedMinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedMinusBtn.TextSize = 14
+speedMinusBtn.Font = Enum.Font.GothamBold
+speedMinusBtn.ZIndex = 3
+speedMinusBtn.Parent = speedCard
+
+local minusCorner = Instance.new("UICorner")
+minusCorner.CornerRadius = UDim.new(0, 6)
+minusCorner.Parent = speedMinusBtn
+
+local speedInputBox = Instance.new("TextBox")
+speedInputBox.Size = UDim2.new(0, 60, 0, 28)
+speedInputBox.Position = UDim2.new(0, 50, 0, 30)
+speedInputBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+speedInputBox.Text = tostring(autoFarmSpeed)
+speedInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInputBox.TextSize = 12
+speedInputBox.Font = Enum.Font.GothamBold
+speedInputBox.ClearTextOnFocus = false
+speedInputBox.ZIndex = 3
+speedInputBox.Parent = speedCard
+
+local speedInputCorner = Instance.new("UICorner")
+speedInputCorner.CornerRadius = UDim.new(0, 6)
+speedInputCorner.Parent = speedInputBox
+
+local speedPlusBtn = Instance.new("TextButton")
+speedPlusBtn.Size = UDim2.new(0, 34, 0, 28)
+speedPlusBtn.Position = UDim2.new(0, 116, 0, 30)
+speedPlusBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+speedPlusBtn.Text = "+"
+speedPlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedPlusBtn.TextSize = 14
+speedPlusBtn.Font = Enum.Font.GothamBold
+speedPlusBtn.ZIndex = 3
+speedPlusBtn.Parent = speedCard
+
+local plusCorner = Instance.new("UICorner")
+plusCorner.CornerRadius = UDim.new(0, 6)
+plusCorner.Parent = speedPlusBtn
+
+speedMinusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	autoFarmSpeed = math.clamp(autoFarmSpeed - 1, 5, 25)
+	speedInputBox.Text = tostring(autoFarmSpeed)
+	savedSettings.AutoFarmSpeed = autoFarmSpeed
+	saveData(savedSettings)
+	speedLabel.Text = "Vitesse (Max 25) : " .. autoFarmSpeed
+end)
+
+speedPlusBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	autoFarmSpeed = math.clamp(autoFarmSpeed + 1, 5, 25)
+	speedInputBox.Text = tostring(autoFarmSpeed)
+	savedSettings.AutoFarmSpeed = autoFarmSpeed
+	saveData(savedSettings)
+	speedLabel.Text = "Vitesse (Max 25) : " .. autoFarmSpeed
+end)
+
+speedInputBox.FocusLost:Connect(function()
+	local num = tonumber(speedInputBox.Text)
+	if num then
+		autoFarmSpeed = math.clamp(math.floor(num), 5, 25)
+		speedInputBox.Text = tostring(autoFarmSpeed)
+		savedSettings.AutoFarmSpeed = autoFarmSpeed
+		saveData(savedSettings)
+		speedLabel.Text = "Vitesse (Max 25) : " .. autoFarmSpeed
+	else
+		speedInputBox.Text = tostring(autoFarmSpeed)
+	end
+end)
+
+-- 3. Bouton Toggle Anti-AFK
+local antiAfkBtn = Instance.new("TextButton")
+antiAfkBtn.Size = UDim2.new(1, 0, 0, 45)
+antiAfkBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+antiAfkBtn.BackgroundTransparency = 0.3
+antiAfkBtn.Text = "   Anti-AFK : " .. (antiAfkEnabled and "ON" or "OFF")
+antiAfkBtn.TextColor3 = antiAfkEnabled and Color3.fromRGB(90, 255, 90) or Color3.fromRGB(240, 240, 240)
+antiAfkBtn.TextSize = 13
+antiAfkBtn.Font = Enum.Font.GothamSemibold
+antiAfkBtn.TextXAlignment = Enum.TextXAlignment.Left
+antiAfkBtn.LayoutOrder = 3
+antiAfkBtn.ZIndex = 3
+antiAfkBtn.Parent = contentContainer
+
+local aaCorner = Instance.new("UICorner")
+aaCorner.CornerRadius = UDim.new(0, 10)
+aaCorner.Parent = antiAfkBtn
+
+local aaStroke = Instance.new("UIStroke")
+aaStroke.Color = Color3.fromRGB(40, 40, 40)
+aaStroke.Thickness = 1.2
+aaStroke.Transparency = 0.4
+aaStroke.Parent = antiAfkBtn
+
+antiAfkBtn.MouseButton1Click:Connect(function()
+	playKeyboardSound()
+	antiAfkEnabled = not antiAfkEnabled
+	savedSettings.AntiAfkEnabled = antiAfkEnabled
+	saveData(savedSettings)
+	antiAfkBtn.Text = "   Anti-AFK : " .. (antiAfkEnabled and "ON" or "OFF")
+	antiAfkBtn.TextColor3 = antiAfkEnabled and Color3.fromRGB(90, 255, 90) or Color3.fromRGB(240, 240, 240)
+end)
+
+-- Logique Anti-AFK (Arrière-plan)
+localPlayer.Idled:Connect(function()
+	if antiAfkEnabled then
+		VirtualUser:CaptureController()
+		VirtualUser:ClickButton2(Vector2.new(0, 0))
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(30)
+		if antiAfkEnabled then
+			pcall(function()
+				-- A. Clic de souris physique sur l'écran
+				local mousePos = Vector2.new(300, 300)
+				VirtualInputManager:SendMouseButtonEvent(mousePos.X, mousePos.Y, 0, true, game, 0)
+				task.wait(0.05)
+				VirtualInputManager:SendMouseButtonEvent(mousePos.X, mousePos.Y, 0, false, game, 0)
+				
+				-- B. Simulation de la touche Espace (Sauter)
+				VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+				task.wait(0.05)
+				VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+				
+				-- C. Micro-mouvement de caméra
+				local cam = Workspace.CurrentCamera
+				if cam then
+					cam.CFrame = cam.CFrame * CFrame.Angles(0, math.rad(1), 0)
+					task.wait(0.05)
+					cam.CFrame = cam.CFrame * CFrame.Angles(0, math.rad(-1), 0)
+				end
+			end)
+		end
+	end
+end)
+
+-- Noclip permanent
+RunService.Stepped:Connect(function()
+	if autoFarmEnabled and localPlayer.Character then
+		for _, part in ipairs(localPlayer.Character:GetDescendants()) do
+			if part:IsA("BasePart") then 
+				part.CanCollide = false 
+			end
+		end
+	end
+end)
+
+-- Vérification de validité d'une pièce
+local function isCoinValid(coin)
+	if not coin or not coin.Parent or not coin:IsDescendantOf(Workspace) or coin.Transparency >= 1 or ignoredCoins[coin] then
+		return false
+	end
+	
+	local char = localPlayer.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local dist = (coin.Position - char.HumanoidRootPart.Position).Magnitude
+		if dist > maxCoinDistance then
+			return false
+		end
+	end
+	
+	return true
+end
+
+-- Détection de la pièce la plus proche
+local function findNearestValidCoin()
+	local nearest = nil
+	local shortestDist = math.huge
+	local char = localPlayer.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
+	local rootPos = char.HumanoidRootPart.Position
+
+	pcall(function()
+		for _, obj in ipairs(Workspace:GetDescendants()) do
+			if obj and obj:IsA("BasePart") and isCoinValid(obj) then
+				local nameLower = obj.Name:lower()
+				if nameLower == "coin" or nameLower == "coins" or nameLower:find("coin") or nameLower:find("piece") or nameLower:find("pièce") then
+					if obj.Size.Magnitude > 0 then
+						local dist = (obj.Position - rootPos).Magnitude
+						if dist <= maxCoinDistance and dist < shortestDist then
+							shortestDist = dist
+							nearest = obj
+						end
+					end
+				end
+			end
+		end
+	end)
+	return nearest
+end
+
+-- Collecte instantanée
+local function simulateCollection(rootPart, coin)
+	pcall(function()
+		if firetouchinterest and rootPart and coin then
+			firetouchinterest(rootPart, coin, 0)
+			firetouchinterest(rootPart, coin, 1)
+			firetouchinterest(coin, rootPart, 0)
+			firetouchinterest(coin, rootPart, 1)
+		end
+		
+		local prompt = coin:FindFirstChildWhichIsA("ProximityPrompt", true) or (coin.Parent and coin.Parent:FindFirstChildWhichIsA("ProximityPrompt", true))
+		if prompt and fireproximityprompt then
+			fireproximityprompt(prompt)
+		end
+	end)
+end
+
+-- Boucle principale d'Auto-Farm Sécurisée (5 studs sous le sol)
+task.spawn(function()
+	while true do
+		task.wait(0.02)
+		
+		if autoFarmEnabled then
+			pcall(function()
+				local char = localPlayer.Character
+				if not char then return end
+				local rootPart = char:FindFirstChild("HumanoidRootPart")
+				local humanoid = char:FindFirstChildOfClass("Humanoid")
+				
+				if not rootPart or not humanoid or humanoid.Health <= 0 then return end
+				
+				local coin = findNearestValidCoin()
+				
+				if not coin then
+					autofarmBtn.Text = "   Activer Autofarm : Attente..."
+					autofarmBtn.TextColor3 = Color3.fromRGB(255, 180, 50)
+					task.wait(0.1)
+				else
+					autofarmBtn.Text = "   Activer Autofarm : ON"
+					autofarmBtn.TextColor3 = Color3.fromRGB(90, 255, 90)
+					
+					humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+					rootPart.AssemblyLinearVelocity = Vector3.zero
+					rootPart.AssemblyAngularVelocity = Vector3.zero
+					
+					local coinPos = coin.Position
+					local undergroundPos = coinPos - Vector3.new(0, 5, 0)
+					local startPos = rootPart.Position
+					
+					-- 1. Se déplacer sous la map (à 5 studs sous la pièce)
+					local distToUnder = (undergroundPos - startPos).Magnitude
+					if distToUnder > 0.5 then
+						local flyTime = distToUnder / math.max(autoFarmSpeed, 1)
+						local elapsed = 0
+						local currentStart = rootPart.Position
+						while elapsed < flyTime and autoFarmEnabled and isCoinValid(coin) do
+							local dt = RunService.RenderStepped:Wait()
+							elapsed = elapsed + dt
+							local alpha = math.min(elapsed / flyTime, 1)
+							undergroundPos = coin.Position - Vector3.new(0, 5, 0)
+							rootPart.CFrame = CFrame.new(currentStart:Lerp(undergroundPos, alpha))
+							rootPart.AssemblyLinearVelocity = Vector3.zero
+						end
+					end
+					
+					if not isCoinValid(coin) then return end
+					
+					-- 2. Remonter rapidement les 5 studs pour attraper la pièce
+					local upStart = rootPart.Position
+					local finalCoinPos = coin.Position
+					local upDist = (finalCoinPos - upStart).Magnitude
+					if upDist > 0.5 then
+						local flyTime = upDist / math.max(autoFarmSpeed, 1)
+						local elapsed = 0
+						while elapsed < flyTime and autoFarmEnabled and isCoinValid(coin) do
+							local dt = RunService.RenderStepped:Wait()
+							elapsed = elapsed + dt
+							local alpha = math.min(elapsed / flyTime, 1)
+							finalCoinPos = coin.Position
+							rootPart.CFrame = CFrame.new(upStart:Lerp(finalCoinPos, alpha))
+							rootPart.AssemblyLinearVelocity = Vector3.zero
+						end
+					end
+					
+					-- 3. Collecter la pièce instantanément
+					if isCoinValid(coin) then
+						rootPart.CFrame = CFrame.new(coin.Position)
+						simulateCollection(rootPart, coin)
+						
+						ignoredCoins[coin] = true
+						task.delay(3, function()
+							ignoredCoins[coin] = nil
+						end)
+					end
+					
+					-- 4. Redescendre immédiatement de 5 studs sous le sol
+					local postCollectPos = rootPart.Position
+					local nextUnderground = postCollectPos - Vector3.new(0, 5, 0)
+					local downDist = (nextUnderground - postCollectPos).Magnitude
+					if downDist > 0.5 then
+						local flyTime = downDist / math.max(autoFarmSpeed, 1)
+						local elapsed = 0
+						while elapsed < flyTime and autoFarmEnabled do
+							local dt = RunService.RenderStepped:Wait()
+							elapsed = elapsed + dt
+							local alpha = math.min(elapsed / flyTime, 1)
+							rootPart.CFrame = CFrame.new(postCollectPos:Lerp(nextUnderground, alpha))
+							rootPart.AssemblyLinearVelocity = Vector3.zero
+						end
+					end
+				end
+			end)
+		else
+			pcall(function()
+				local char = localPlayer.Character
+				if char and char:FindFirstChildOfClass("Humanoid") then
+					char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.GettingUp)
+				end
+			end)
+			task.wait(0.1)
+		end
+	end
+end)
